@@ -1,0 +1,115 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { categoryConfig } from '../lib/categories';
+
+const allItems = await getCollection('items');
+const searchIndex = allItems.map(item => ({
+  id: item.id,
+  title: item.data.title,
+  summary: item.data.summary,
+  category: item.data.category,
+  categoryLabel: categoryConfig[item.data.category]?.label ?? '其他',
+  tags: item.data.tags.join(' '),
+  country: item.data.country ?? '',
+  rating: item.data.rating,
+}));
+---
+
+<BaseLayout title="搜索">
+  <div class="pt-6 pb-4">
+    <div class="relative">
+      <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="搜索电影、书籍、工具…"
+        autofocus
+        class="w-full pl-11 pr-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-300 text-base"
+      />
+    </div>
+  </div>
+
+  <div id="results" class="mt-4"></div>
+  <div id="empty" class="hidden text-center py-16 text-stone-400"><p>没有找到相关内容</p></div>
+  <div id="hint" class="text-center py-16 text-stone-400 text-sm"><p>输入关键词开始搜索</p></div>
+</BaseLayout>
+
+<script define:vars={{ searchIndex }}>
+  const categoryColors = {
+    film: 'text-orange-600 bg-orange-50', book: 'text-green-600 bg-green-50',
+    tool: 'text-blue-600 bg-blue-50', health: 'text-rose-600 bg-rose-50',
+    podcast: 'text-amber-600 bg-amber-50', social: 'text-pink-600 bg-pink-50',
+    communication: 'text-sky-600 bg-sky-50', car: 'text-slate-600 bg-slate-50',
+    camera: 'text-zinc-600 bg-zinc-50', creator: 'text-violet-600 bg-violet-50',
+    video: 'text-red-600 bg-red-50', other: 'text-purple-600 bg-purple-50',
+  };
+
+  const input = document.getElementById('search-input');
+  const resultsEl = document.getElementById('results');
+  const emptyEl = document.getElementById('empty');
+  const hintEl = document.getElementById('hint');
+
+  function renderResults(results) {
+    if (!results.length) {
+      resultsEl.innerHTML = '';
+      emptyEl.classList.remove('hidden');
+      hintEl.classList.add('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    hintEl.classList.add('hidden');
+    resultsEl.innerHTML = `
+      <p class="text-sm text-stone-400 mb-4">${results.length} 个结果</p>
+      <div class="flex flex-col gap-2">
+        ${results.map(({ item }) => {
+          const c = categoryColors[item.category] ?? categoryColors.other;
+          return `<a href="/item/${item.id}" class="flex items-center gap-4 p-4 bg-white rounded-xl border border-stone-200 hover:border-stone-300 hover:shadow-sm transition-all group">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full ${c}">${item.categoryLabel}</span>
+                ${item.country ? `<span class="text-xs text-stone-400">${item.country}</span>` : ''}
+              </div>
+              <div class="font-medium text-stone-900 group-hover:text-orange-500 transition-colors truncate">${item.title}</div>
+              <div class="text-sm text-stone-400 mt-0.5 line-clamp-1">${item.summary}</div>
+            </div>
+            <div class="shrink-0 text-sm text-amber-500 font-medium">${item.rating.toFixed(1)}</div>
+          </a>`;
+        }).join('')}
+      </div>`;
+  }
+
+  async function init() {
+    const { default: Fuse } = await import('https://cdn.jsdelivr.net/npm/fuse.js@7/dist/fuse.mjs');
+    const fuse = new Fuse(searchIndex, {
+      keys: [
+        { name: 'title', weight: 0.5 },
+        { name: 'summary', weight: 0.3 },
+        { name: 'tags', weight: 0.15 },
+        { name: 'country', weight: 0.05 },
+      ],
+      threshold: 0.4,
+    });
+
+    input?.addEventListener('input', (e) => {
+      const q = e.target.value.trim();
+      if (!q) {
+        resultsEl.innerHTML = '';
+        emptyEl.classList.add('hidden');
+        hintEl.classList.remove('hidden');
+        return;
+      }
+      renderResults(fuse.search(q));
+    });
+
+    const urlQ = new URLSearchParams(location.search).get('q');
+    if (urlQ && input) {
+      input.value = urlQ;
+      renderResults(fuse.search(urlQ));
+    }
+  }
+
+  init();
+</script>
