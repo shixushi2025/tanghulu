@@ -70,27 +70,28 @@ const currentPath = Astro.url.pathname;
         </button>
       </div>
 
-      <!-- Mobile menu dropdown -->
-      <div
-        id="mobile-menu"
-        class="hidden md:hidden border-t border-stone-100 bg-stone-50"
-      >
-        <nav class="max-w-4xl mx-auto px-4 py-3 flex flex-col gap-1">
-          {navItems.map(item => (
-            <a
-              href={item.href}
-              class={`px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                currentPath === item.href
-                  ? 'bg-stone-900 text-white'
-                  : 'text-stone-600 hover:bg-stone-100'
-              }`}
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
-      </div>
     </header>
+
+    <!-- Mobile menu overlay -->
+    <div
+      id="mobile-menu"
+      class="hidden md:hidden fixed top-14 left-0 right-0 z-40 bg-stone-50/95 backdrop-blur border-b border-stone-200 shadow-lg"
+    >
+      <nav class="max-w-4xl mx-auto px-4 py-3 flex flex-col gap-1">
+        {navItems.map(item => (
+          <a
+            href={item.href}
+            class={`px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+              currentPath === item.href
+                ? 'bg-stone-900 text-white'
+                : 'text-stone-600 hover:bg-stone-100'
+            }`}
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
+    </div>
 
     <!-- Main -->
     <main class="max-w-4xl mx-auto px-4 py-10">
