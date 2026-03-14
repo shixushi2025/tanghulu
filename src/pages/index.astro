@@ -13,13 +13,22 @@ const sorted = allItems.sort((a, b) => b.data.date.getTime() - a.data.date.getTi
   <div class="text-center pt-16 pb-12">
     <h1 class="text-4xl sm:text-5xl font-bold text-stone-900 mb-3 tracking-tight">精选那些值得你时间的东西</h1>
     <p class="text-stone-400 text-sm">持续收集中</p>
-    <div class="flex justify-center gap-5 mt-6">
-      {visibleCategories.map(key => (
-        <a href={`/category/${key}`} class="text-xs text-stone-400 hover:text-stone-600 transition-colors">
-          <span class="font-medium text-stone-600">{allItems.filter(i => i.data.category === key).length}</span>
-          {' '}{categoryConfig[key].label}
-        </a>
-      ))}
+    <div class="flex justify-center flex-wrap gap-8 mt-8">
+      {visibleCategories.map((key, i) => {
+        const colors: Record<string, string> = {
+          film: 'text-orange-500', book: 'text-green-500', tool: 'text-blue-500',
+          health: 'text-rose-500', podcast: 'text-amber-500',
+        };
+        return (
+          <>
+            {i > 0 && <div class="w-px bg-stone-200 hidden sm:block self-center h-6"></div>}
+            <a href={`/category/${key}`} class="text-center hover:opacity-70 transition-opacity">
+              <div class={`text-2xl font-bold ${colors[key]}`}>{allItems.filter(i => i.data.category === key).length}</div>
+              <div class="text-sm text-stone-400 mt-0.5">{categoryConfig[key].label}</div>
+            </a>
+          </>
+        );
+      })}
     </div>
   </div>
 
