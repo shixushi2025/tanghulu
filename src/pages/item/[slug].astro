@@ -51,18 +51,11 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
 
       <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mb-2">{item.data.title}</h1>
 
-      <!-- 我的评分 + 社区评分 -->
-      <div class="flex items-center gap-3 mb-3">
-        <div class="flex items-center gap-1">
-          <span class="text-xs text-stone-400">收录</span>
-          <span class="text-amber-500 font-semibold">{item.data.rating.toFixed(1)}</span>
-        </div>
-        <span class="text-stone-200">·</span>
-        <div class="flex items-center gap-1">
-          <span class="text-xs text-stone-400">社区</span>
-          <span id="community-avg" class="text-amber-500 font-semibold">—</span>
-          <span id="community-count" class="text-xs text-stone-400"></span>
-        </div>
+      <!-- 社区评分 -->
+      <div class="flex items-center gap-1.5 mb-3">
+        <span class="text-amber-500 font-semibold" id="community-avg">—</span>
+        <span class="text-stone-300 text-sm">/ 5.0</span>
+        <span class="text-xs text-stone-400 ml-1" id="community-count"></span>
       </div>
 
       <p class="text-stone-500 leading-relaxed mb-4">{item.data.summary}</p>

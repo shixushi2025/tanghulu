@@ -5,14 +5,13 @@ interface Props {
   title: string;
   category: string;
   tags?: string[];
-  rating: number;
   summary: string;
   cover?: string;
   slug: string;
   country?: string;
 }
 
-const { title, category, tags = [], rating, summary, cover, slug, country } = Astro.props;
+const { title, category, tags = [], summary, cover, slug, country } = Astro.props;
 const cat = categoryConfig[category] ?? categoryConfig.other;
 ---
 
@@ -43,15 +42,10 @@ const cat = categoryConfig[category] ?? categoryConfig.other;
       )}
     </div>
 
-    <!-- Title & Rating -->
-    <div class="flex items-start justify-between gap-2 mb-2">
-      <h3 class="font-semibold text-stone-900 leading-tight group-hover:text-orange-500 transition-colors">
-        {title}
-      </h3>
-      <span class="shrink-0 text-sm font-medium text-amber-500">
-        {rating.toFixed(1)}
-      </span>
-    </div>
+    <!-- Title -->
+    <h3 class="font-semibold text-stone-900 leading-tight group-hover:text-orange-500 transition-colors mb-2">
+      {title}
+    </h3>
 
     <!-- Summary -->
     <p class="text-sm text-stone-500 leading-relaxed line-clamp-2">{summary}</p>
