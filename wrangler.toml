@@ -1,5 +1,12 @@
-name = "tangluhu"
-compatibility_date = "2024-01-01"
+name = "tanghulu"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "./dist"
 
-[site]
-bucket = "./dist"
+[[kv_namespaces]]
+binding = "TANGHULU_VIEWS"
+id = "303db6ac434149c19c859a3a870497c1"
+
+[[d1_databases]]
+binding = "TANGHULU_DB"
+database_name = "tanghulu-db"
+database_id = "7a164004-e034-4330-ab2e-9b2c56f82046"

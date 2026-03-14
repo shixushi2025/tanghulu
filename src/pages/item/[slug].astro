@@ -35,7 +35,6 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
 
     <!-- Meta -->
     <div class="flex-1">
-      <!-- Category + Country -->
       <div class="flex items-center gap-2 mb-3">
         <a href={`/category/${item.data.category}`} class={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${cat.color} ${cat.bg}`}>
           {cat.label}
@@ -43,13 +42,27 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
         {item.data.country && (
           <span class="text-xs text-stone-400">{item.data.country}</span>
         )}
+        <!-- View count -->
+        <span class="text-xs text-stone-300 ml-auto flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span id="view-count">—</span>
+        </span>
       </div>
 
       <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mb-2">{item.data.title}</h1>
 
-      <div class="flex items-center gap-2 mb-3">
-        <span class="text-amber-500 font-semibold">{item.data.rating.toFixed(1)}</span>
-        <span class="text-stone-300 text-sm">/ 5.0</span>
+      <!-- 我的评分 + 社区评分 -->
+      <div class="flex items-center gap-3 mb-3">
+        <div class="flex items-center gap-1">
+          <span class="text-xs text-stone-400">收录</span>
+          <span class="text-amber-500 font-semibold">{item.data.rating.toFixed(1)}</span>
+        </div>
+        <span class="text-stone-200">·</span>
+        <div class="flex items-center gap-1">
+          <span class="text-xs text-stone-400">社区</span>
+          <span id="community-avg" class="text-amber-500 font-semibold">—</span>
+          <span id="community-count" class="text-xs text-stone-400"></span>
+        </div>
       </div>
 
       <p class="text-stone-500 leading-relaxed mb-4">{item.data.summary}</p>
@@ -79,7 +92,97 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
     <Content />
   </article>
 
-  <div class="mt-10 pt-6 border-t border-stone-100 text-sm text-stone-400">
+  <!-- 用户评分 -->
+  <div class="mt-10 pt-8 border-t border-stone-100">
+    <p class="text-sm text-stone-500 mb-3">你觉得怎么样？</p>
+    <div class="flex items-center gap-1" id="star-rating">
+      {[1,2,3,4,5].map(s => (
+        <button
+          data-score={s}
+          class="star-btn text-2xl text-stone-200 hover:text-amber-400 transition-colors leading-none"
+          aria-label={`${s} 星`}
+        >★</button>
+      ))}
+    </div>
+    <p id="rating-feedback" class="text-xs text-stone-400 mt-2 h-4"></p>
+  </div>
+
+  <div class="mt-6 text-sm text-stone-400">
     记于 {item.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
   </div>
 </BaseLayout>
+
+<script define:vars={{ itemId: item.id }}>
+  const KEY = `rated:${itemId}`;
+
+  // 浏览量：POST 计数，GET 显示
+  async function initViews() {
+    fetch(`/api/views/${itemId}`, { method: 'POST' }).catch(() => {});
+    const res = await fetch(`/api/views/${itemId}`).catch(() => null);
+    if (!res?.ok) return;
+    const { count } = await res.json();
+    const el = document.getElementById('view-count');
+    if (el) el.textContent = count >= 1000 ? `${(count/1000).toFixed(1)}k` : count;
+  }
+
+  // 社区评分
+  async function initRatings() {
+    const res = await fetch(`/api/ratings/${itemId}`).catch(() => null);
+    if (!res?.ok) return;
+    const { average, count } = await res.json();
+    const avgEl = document.getElementById('community-avg');
+    const cntEl = document.getElementById('community-count');
+    if (avgEl) avgEl.textContent = average ? average.toFixed(1) : '暂无';
+    if (cntEl) cntEl.textContent = count > 0 ? `(${count})` : '';
+  }
+
+  // 星星评分
+  function initStars() {
+    const stars = document.querySelectorAll('.star-btn');
+    const feedback = document.getElementById('rating-feedback');
+    const saved = localStorage.getItem(KEY);
+
+    if (saved) {
+      highlightStars(parseInt(saved));
+      if (feedback) feedback.textContent = '已评分，可以重新选择';
+    }
+
+    stars.forEach(btn => {
+      btn.addEventListener('mouseenter', () => highlightStars(parseInt(btn.dataset.score)));
+      btn.addEventListener('mouseleave', () => highlightStars(parseInt(localStorage.getItem(KEY) ?? '0')));
+      btn.addEventListener('click', async () => {
+        const score = parseInt(btn.dataset.score);
+        localStorage.setItem(KEY, String(score));
+        highlightStars(score);
+        if (feedback) feedback.textContent = '提交中…';
+
+        const res = await fetch(`/api/ratings/${itemId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ score }),
+        }).catch(() => null);
+
+        if (res?.ok) {
+          const { average, count } = await res.json();
+          const avgEl = document.getElementById('community-avg');
+          const cntEl = document.getElementById('community-count');
+          if (avgEl) avgEl.textContent = average ? average.toFixed(1) : '—';
+          if (cntEl) cntEl.textContent = count > 0 ? `(${count})` : '';
+          if (feedback) feedback.textContent = '感谢评分';
+        } else {
+          if (feedback) feedback.textContent = '提交失败，请稍后再试';
+        }
+      });
+    });
+  }
+
+  function highlightStars(score) {
+    document.querySelectorAll('.star-btn').forEach(btn => {
+      btn.style.color = parseInt(btn.dataset.score) <= score ? '#f59e0b' : '';
+    });
+  }
+
+  initViews();
+  initRatings();
+  initStars();
+</script>
