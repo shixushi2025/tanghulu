@@ -6,44 +6,11 @@ import { visibleCategories, categoryConfig } from '../lib/categories';
 
 const allItems = await getCollection('items');
 const sorted = allItems.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
-
-const stats = visibleCategories.map(key => ({
-  key,
-  label: categoryConfig[key].label,
-  color: {
-    film: 'text-orange-500', book: 'text-green-500', tool: 'text-blue-500',
-    health: 'text-rose-500', podcast: 'text-amber-500',
-  }[key] ?? 'text-stone-500',
-  count: allItems.filter(i => i.data.category === key).length,
-}));
 ---
 
 <BaseLayout>
-  <!-- Hero -->
-  <section class="text-center py-12 mb-10">
-    <h1 class="text-4xl font-bold text-stone-900 mb-3">
-      记一些觉得还不错的东西
-    </h1>
-    <p class="text-stone-400 text-base max-w-sm mx-auto">
-      只是个人感受，不构成任何建议
-    </p>
-
-    <!-- Stats -->
-    <div class="flex justify-center flex-wrap gap-6 mt-8">
-      {stats.map((s, i) => (
-        <>
-          {i > 0 && <div class="w-px bg-stone-200 hidden sm:block"></div>}
-          <div class="text-center">
-            <div class={`text-2xl font-bold ${s.color}`}>{s.count}</div>
-            <div class="text-sm text-stone-400 mt-0.5">{s.label}</div>
-          </div>
-        </>
-      ))}
-    </div>
-  </section>
-
   <!-- Category filter tabs -->
-  <div class="flex gap-2 mb-8 overflow-x-auto pb-1">
+  <div class="flex gap-2 mt-2 mb-8 overflow-x-auto pb-1">
     <a href="/" class="shrink-0 px-4 py-2 rounded-full text-sm font-medium bg-stone-900 text-white">全部</a>
     {visibleCategories.map(key => (
       <a
