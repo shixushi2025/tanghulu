@@ -12,20 +12,24 @@ interface Props {
 const { title, category, tags = [], rating, summary, cover, slug } = Astro.props;
 
 const categoryConfig: Record<string, { label: string; color: string; bg: string }> = {
-  film:  { label: '电影', color: 'text-orange-600', bg: 'bg-orange-50' },
-  book:  { label: '书籍', color: 'text-green-600',  bg: 'bg-green-50' },
-  tool:  { label: 'AI 工具', color: 'text-blue-600', bg: 'bg-blue-50' },
-  other: { label: '其他', color: 'text-purple-600', bg: 'bg-purple-50' },
+  film:    { label: '电影',    color: 'text-orange-600', bg: 'bg-orange-50' },
+  book:    { label: '书籍',    color: 'text-green-600',  bg: 'bg-green-50' },
+  tool:    { label: 'AI 工具', color: 'text-blue-600',   bg: 'bg-blue-50' },
+  health:  { label: '健康',    color: 'text-rose-600',   bg: 'bg-rose-50' },
+  podcast: { label: '播客',    color: 'text-amber-600',  bg: 'bg-amber-50' },
+  other:   { label: '其他',    color: 'text-purple-600', bg: 'bg-purple-50' },
 };
 
 const cat = categoryConfig[category] ?? categoryConfig.other;
 
 const initial = title.charAt(0);
 const placeholderColors: Record<string, string> = {
-  film:  'bg-orange-100 text-orange-400',
-  book:  'bg-green-100 text-green-400',
-  tool:  'bg-blue-100 text-blue-400',
-  other: 'bg-purple-100 text-purple-400',
+  film:    'bg-orange-100 text-orange-400',
+  book:    'bg-green-100 text-green-400',
+  tool:    'bg-blue-100 text-blue-400',
+  health:  'bg-rose-100 text-rose-400',
+  podcast: 'bg-amber-100 text-amber-400',
+  other:   'bg-purple-100 text-purple-400',
 };
 ---
 

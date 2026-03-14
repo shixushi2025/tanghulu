@@ -14,19 +14,23 @@ const { item } = Astro.props;
 const { Content } = await render(item);
 
 const categoryConfig: Record<string, { label: string; color: string; bg: string; href: string }> = {
-  film:  { label: '电影', color: 'text-orange-600', bg: 'bg-orange-50', href: '/category/film' },
-  book:  { label: '书籍', color: 'text-green-600',  bg: 'bg-green-50',  href: '/category/book' },
-  tool:  { label: 'AI 工具', color: 'text-blue-600', bg: 'bg-blue-50', href: '/category/tool' },
-  other: { label: '其他', color: 'text-purple-600', bg: 'bg-purple-50', href: '/category/other' },
+  film:    { label: '电影',    color: 'text-orange-600', bg: 'bg-orange-50', href: '/category/film' },
+  book:    { label: '书籍',    color: 'text-green-600',  bg: 'bg-green-50',  href: '/category/book' },
+  tool:    { label: 'AI 工具', color: 'text-blue-600',   bg: 'bg-blue-50',   href: '/category/tool' },
+  health:  { label: '健康',    color: 'text-rose-600',   bg: 'bg-rose-50',   href: '/category/health' },
+  podcast: { label: '播客',    color: 'text-amber-600',  bg: 'bg-amber-50',  href: '/category/podcast' },
+  other:   { label: '其他',    color: 'text-purple-600', bg: 'bg-purple-50', href: '/category/other' },
 };
 
 const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
 
 const placeholderColors: Record<string, string> = {
-  film:  'bg-orange-100 text-orange-300',
-  book:  'bg-green-100 text-green-300',
-  tool:  'bg-blue-100 text-blue-300',
-  other: 'bg-purple-100 text-purple-300',
+  film:    'bg-orange-100 text-orange-300',
+  book:    'bg-green-100 text-green-300',
+  tool:    'bg-blue-100 text-blue-300',
+  health:  'bg-rose-100 text-rose-300',
+  podcast: 'bg-amber-100 text-amber-300',
+  other:   'bg-purple-100 text-purple-300',
 };
 ---
 

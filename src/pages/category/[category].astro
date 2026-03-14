@@ -8,6 +8,8 @@ export async function getStaticPaths() {
     { params: { category: 'film' } },
     { params: { category: 'book' } },
     { params: { category: 'tool' } },
+    { params: { category: 'health' } },
+    { params: { category: 'podcast' } },
     { params: { category: 'other' } },
   ];
 }
@@ -20,11 +22,22 @@ const filtered = allItems
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
 const categoryLabels: Record<string, string> = {
-  film: '电影',
-  book: '书籍',
-  tool: 'AI 工具',
-  other: '其他',
+  film:    '电影',
+  book:    '书籍',
+  tool:    'AI 工具',
+  health:  '健康',
+  podcast: '播客',
+  other:   '其他',
 };
+
+const tabs = [
+  { key: 'all',     label: '全部',    href: '/' },
+  { key: 'film',    label: '电影',    href: '/category/film' },
+  { key: 'book',    label: '书籍',    href: '/category/book' },
+  { key: 'tool',    label: 'AI 工具', href: '/category/tool' },
+  { key: 'health',  label: '健康',    href: '/category/health' },
+  { key: 'podcast', label: '播客',    href: '/category/podcast' },
+];
 
 const label = categoryLabels[category] ?? '其他';
 ---
@@ -35,12 +48,17 @@ const label = categoryLabels[category] ?? '其他';
     <p class="text-stone-400 mt-1">{filtered.length} 条推荐</p>
   </div>
 
-  <!-- Category filter tabs -->
   <div class="flex gap-2 mb-8 overflow-x-auto pb-1">
-    <a href="/" class="shrink-0 px-4 py-2 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">全部</a>
-    <a href="/category/film" class={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${category === 'film' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>电影</a>
-    <a href="/category/book" class={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${category === 'book' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>书籍</a>
-    <a href="/category/tool" class={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${category === 'tool' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>AI 工具</a>
+    {tabs.map(tab => (
+      <a
+        href={tab.href}
+        class={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+          tab.key === category ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'
+        }`}
+      >
+        {tab.label}
+      </a>
+    ))}
   </div>
 
   {filtered.length === 0 ? (
