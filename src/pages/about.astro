@@ -5,7 +5,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 <BaseLayout title="关于" description="关于糖葫芦这个网站">
   <div class="max-w-2xl mx-auto">
     <div class="text-center py-10 mb-10">
-      <div class="text-6xl mb-4">🍡</div>
+      <div class="flex justify-center mb-4">
+        <img src="/favicon.svg" alt="糖葫芦" class="w-16 h-16" />
+      </div>
       <h1 class="text-3xl font-bold text-stone-900 mb-3">关于糖葫芦</h1>
       <p class="text-stone-500">精选那些值得你时间的东西</p>
     </div>
@@ -16,22 +18,30 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         这里的每一条推荐都来自真实的使用体验，每一句话都是认真说的。
       </p>
       <p>
-        名字叫「糖葫芦」，是因为糖葫芦就是把好东西串在一起——一串串的，每一颗都是精心挑选的。
+        名字叫「糖葫芦」，因为糖葫芦就是把好东西串在一起——一串串的，每一颗都是精心挑选的。
       </p>
 
       <h2 class="text-xl font-bold text-stone-900 pt-4">推荐什么</h2>
-      <ul class="space-y-2">
-        <li class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-orange-400"></span>
+      <ul class="space-y-3">
+        <li class="flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-orange-400 shrink-0"></span>
           <span><strong>电影</strong> — 不只说评分，说清楚适合什么心情看</span>
         </li>
-        <li class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-green-400"></span>
+        <li class="flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
           <span><strong>书籍</strong> — 重点推那些被低估的好书</span>
         </li>
-        <li class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+        <li class="flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
           <span><strong>AI 工具</strong> — 真实测评，说清楚有什么坑</span>
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-rose-400 shrink-0"></span>
+          <span><strong>健康</strong> — 运动、睡眠、心理健康相关的好东西</span>
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+          <span><strong>播客</strong> — 推荐具体的节目，而不只是频道名</span>
         </li>
       </ul>
     </div>
