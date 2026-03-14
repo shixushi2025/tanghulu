@@ -9,8 +9,21 @@ const sorted = allItems.sort((a, b) => b.data.date.getTime() - a.data.date.getTi
 ---
 
 <BaseLayout>
+  <!-- Quiet header -->
+  <div class="pt-6 pb-8">
+    <p class="text-stone-400 text-sm">没什么主题，记了些觉得不错的东西。</p>
+    <div class="flex gap-5 mt-3">
+      {visibleCategories.map(key => (
+        <a href={`/category/${key}`} class="text-xs text-stone-400 hover:text-stone-600 transition-colors">
+          <span class="font-medium text-stone-600">{allItems.filter(i => i.data.category === key).length}</span>
+          {' '}{categoryConfig[key].label}
+        </a>
+      ))}
+    </div>
+  </div>
+
   <!-- Category filter tabs -->
-  <div class="flex gap-2 mt-2 mb-8 overflow-x-auto pb-1">
+  <div class="flex gap-2 mb-8 overflow-x-auto pb-1">
     <a href="/" class="shrink-0 px-4 py-2 rounded-full text-sm font-medium bg-stone-900 text-white">全部</a>
     {visibleCategories.map(key => (
       <a
