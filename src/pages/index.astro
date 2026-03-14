@@ -9,11 +9,11 @@ const sorted = allItems.sort((a, b) => b.data.date.getTime() - a.data.date.getTi
 ---
 
 <BaseLayout>
-  <!-- Quiet header -->
-  <div class="pt-6 pb-8">
-    <h1 class="text-2xl font-bold text-stone-900 mb-1">精选那些值得你时间的东西</h1>
+  <!-- Hero -->
+  <div class="text-center pt-16 pb-12">
+    <h1 class="text-4xl sm:text-5xl font-bold text-stone-900 mb-3 tracking-tight">精选那些值得你时间的东西</h1>
     <p class="text-stone-400 text-sm">持续收集中</p>
-    <div class="flex gap-5 mt-3">
+    <div class="flex justify-center gap-5 mt-6">
       {visibleCategories.map(key => (
         <a href={`/category/${key}`} class="text-xs text-stone-400 hover:text-stone-600 transition-colors">
           <span class="font-medium text-stone-600">{allItems.filter(i => i.data.category === key).length}</span>
