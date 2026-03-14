@@ -41,7 +41,9 @@ const currentPath = Astro.url.pathname;
           <span class="text-2xl">🍡</span>
           <span>糖葫芦</span>
         </a>
-        <nav class="flex items-center gap-1">
+
+        <!-- Desktop nav -->
+        <nav class="hidden md:flex items-center gap-1">
           {navItems.map(item => (
             <a
               href={item.href}
@@ -49,6 +51,38 @@ const currentPath = Astro.url.pathname;
                 currentPath === item.href
                   ? 'bg-stone-900 text-white'
                   : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+              }`}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <!-- Mobile hamburger -->
+        <button
+          id="menu-btn"
+          class="md:hidden flex flex-col justify-center gap-1.5 w-8 h-8 p-1"
+          aria-label="菜单"
+        >
+          <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar1"></span>
+          <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar2"></span>
+          <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar3"></span>
+        </button>
+      </div>
+
+      <!-- Mobile menu dropdown -->
+      <div
+        id="mobile-menu"
+        class="hidden md:hidden border-t border-stone-100 bg-stone-50"
+      >
+        <nav class="max-w-4xl mx-auto px-4 py-3 flex flex-col gap-1">
+          {navItems.map(item => (
+            <a
+              href={item.href}
+              class={`px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                currentPath === item.href
+                  ? 'bg-stone-900 text-white'
+                  : 'text-stone-600 hover:bg-stone-100'
               }`}
             >
               {item.label}
@@ -69,5 +103,28 @@ const currentPath = Astro.url.pathname;
         <p>糖葫芦 · 精选那些值得你时间的东西</p>
       </div>
     </footer>
+
+    <script>
+      const btn = document.getElementById('menu-btn');
+      const menu = document.getElementById('mobile-menu');
+      const bar1 = document.getElementById('bar1');
+      const bar2 = document.getElementById('bar2');
+      const bar3 = document.getElementById('bar3');
+
+      btn?.addEventListener('click', () => {
+        const isOpen = !menu?.classList.contains('hidden');
+        if (isOpen) {
+          menu?.classList.add('hidden');
+          bar1!.style.transform = '';
+          bar2!.style.opacity = '';
+          bar3!.style.transform = '';
+        } else {
+          menu?.classList.remove('hidden');
+          bar1!.style.transform = 'translateY(8px) rotate(45deg)';
+          bar2!.style.opacity = '0';
+          bar3!.style.transform = 'translateY(-8px) rotate(-45deg)';
+        }
+      });
+    </script>
   </body>
 </html>
