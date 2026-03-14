@@ -1,0 +1,66 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ItemCard from '../../components/ItemCard.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  return [
+    { params: { category: 'film' } },
+    { params: { category: 'book' } },
+    { params: { category: 'tool' } },
+    { params: { category: 'other' } },
+  ];
+}
+
+const { category } = Astro.params;
+
+const allItems = await getCollection('items');
+const filtered = allItems
+  .filter(i => i.data.category === category)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const categoryLabels: Record<string, string> = {
+  film: '电影',
+  book: '书籍',
+  tool: 'AI 工具',
+  other: '其他',
+};
+
+const label = categoryLabels[category] ?? '其他';
+---
+
+<BaseLayout title={label}>
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-stone-900">{label}</h1>
+    <p class="text-stone-400 mt-1">{filtered.length} 条推荐</p>
+  </div>
+
+  <!-- Category filter tabs -->
+  <div class="flex gap-2 mb-8 overflow-x-auto pb-1">
+    <a href="/" class="shrink-0 px-4 py-2 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">全部</a>
+    <a href="/category/film" class={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${category === 'film' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>电影</a>
+    <a href="/category/book" class={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${category === 'book' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>书籍</a>
+    <a href="/category/tool" class={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${category === 'tool' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>AI 工具</a>
+  </div>
+
+  {filtered.length === 0 ? (
+    <div class="text-center py-20 text-stone-400">
+      <p class="text-4xl mb-4">🍡</p>
+      <p>这个分类还没有内容，敬请期待</p>
+    </div>
+  ) : (
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {filtered.map(item => (
+        <ItemCard
+          title={item.data.title}
+          category={item.data.category}
+          tags={item.data.tags}
+          rating={item.data.rating}
+          summary={item.data.summary}
+          cover={item.data.cover}
+          slug={item.id}
+        />
+      ))}
+    </div>
+  )}
+</BaseLayout>
