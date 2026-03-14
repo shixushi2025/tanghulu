@@ -2,66 +2,57 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ItemCard from '../components/ItemCard.astro';
 import { getCollection } from 'astro:content';
+import { visibleCategories, categoryConfig } from '../lib/categories';
 
 const allItems = await getCollection('items');
 const sorted = allItems.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
-const stats = {
-  film:    allItems.filter(i => i.data.category === 'film').length,
-  book:    allItems.filter(i => i.data.category === 'book').length,
-  tool:    allItems.filter(i => i.data.category === 'tool').length,
-  health:  allItems.filter(i => i.data.category === 'health').length,
-  podcast: allItems.filter(i => i.data.category === 'podcast').length,
-};
+const stats = visibleCategories.map(key => ({
+  key,
+  label: categoryConfig[key].label,
+  color: {
+    film: 'text-orange-500', book: 'text-green-500', tool: 'text-blue-500',
+    health: 'text-rose-500', podcast: 'text-amber-500',
+  }[key] ?? 'text-stone-500',
+  count: allItems.filter(i => i.data.category === key).length,
+}));
 ---
 
 <BaseLayout>
   <!-- Hero -->
   <section class="text-center py-12 mb-10">
     <h1 class="text-4xl font-bold text-stone-900 mb-3">
-      精选那些值得你时间的东西
+      记一些觉得还不错的东西
     </h1>
-    <p class="text-stone-500 text-lg max-w-md mx-auto">
-      电影、书籍、AI 工具、健康、播客 — 每一条都是真实体验后的推荐
+    <p class="text-stone-400 text-base max-w-sm mx-auto">
+      只是个人感受，不构成任何建议
     </p>
 
     <!-- Stats -->
     <div class="flex justify-center flex-wrap gap-6 mt-8">
-      <div class="text-center">
-        <div class="text-2xl font-bold text-orange-500">{stats.film}</div>
-        <div class="text-sm text-stone-400 mt-0.5">电影</div>
-      </div>
-      <div class="w-px bg-stone-200 hidden sm:block"></div>
-      <div class="text-center">
-        <div class="text-2xl font-bold text-green-500">{stats.book}</div>
-        <div class="text-sm text-stone-400 mt-0.5">书籍</div>
-      </div>
-      <div class="w-px bg-stone-200 hidden sm:block"></div>
-      <div class="text-center">
-        <div class="text-2xl font-bold text-blue-500">{stats.tool}</div>
-        <div class="text-sm text-stone-400 mt-0.5">AI 工具</div>
-      </div>
-      <div class="w-px bg-stone-200 hidden sm:block"></div>
-      <div class="text-center">
-        <div class="text-2xl font-bold text-rose-500">{stats.health}</div>
-        <div class="text-sm text-stone-400 mt-0.5">健康</div>
-      </div>
-      <div class="w-px bg-stone-200 hidden sm:block"></div>
-      <div class="text-center">
-        <div class="text-2xl font-bold text-amber-500">{stats.podcast}</div>
-        <div class="text-sm text-stone-400 mt-0.5">播客</div>
-      </div>
+      {stats.map((s, i) => (
+        <>
+          {i > 0 && <div class="w-px bg-stone-200 hidden sm:block"></div>}
+          <div class="text-center">
+            <div class={`text-2xl font-bold ${s.color}`}>{s.count}</div>
+            <div class="text-sm text-stone-400 mt-0.5">{s.label}</div>
+          </div>
+        </>
+      ))}
     </div>
   </section>
 
   <!-- Category filter tabs -->
   <div class="flex gap-2 mb-8 overflow-x-auto pb-1">
     <a href="/" class="shrink-0 px-4 py-2 rounded-full text-sm font-medium bg-stone-900 text-white">全部</a>
-    <a href="/category/film"    class="shrink-0 px-4 py-2 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">电影</a>
-    <a href="/category/book"    class="shrink-0 px-4 py-2 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">书籍</a>
-    <a href="/category/tool"    class="shrink-0 px-4 py-2 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">AI 工具</a>
-    <a href="/category/health"  class="shrink-0 px-4 py-2 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">健康</a>
-    <a href="/category/podcast" class="shrink-0 px-4 py-2 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors">播客</a>
+    {visibleCategories.map(key => (
+      <a
+        href={`/category/${key}`}
+        class="shrink-0 px-4 py-2 rounded-full text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors"
+      >
+        {categoryConfig[key].label}
+      </a>
+    ))}
   </div>
 
   <!-- Grid -->
@@ -75,6 +66,7 @@ const stats = {
         summary={item.data.summary}
         cover={item.data.cover}
         slug={item.id}
+        country={item.data.country}
       />
     ))}
   </div>

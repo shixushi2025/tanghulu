@@ -5,7 +5,11 @@ const items = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/items' }),
   schema: z.object({
     title: z.string(),
-    category: z.enum(['film', 'book', 'tool', 'health', 'podcast', 'other']),
+    category: z.enum([
+      'film', 'book', 'tool', 'health', 'podcast',
+      'social', 'communication', 'car', 'camera', 'creator', 'video',
+      'other',
+    ]),
     tags: z.array(z.string()).default([]),
     rating: z.number().min(0).max(5),
     summary: z.string(),
@@ -13,6 +17,7 @@ const items = defineCollection({
     date: z.date(),
     link: z.string().optional().default(''),
     mood: z.array(z.string()).default([]),
+    country: z.string().optional().default(''),
   }),
 });
 

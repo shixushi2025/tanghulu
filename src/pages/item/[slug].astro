@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getCollection, render } from 'astro:content';
+import { categoryConfig } from '../../lib/categories';
 
 export async function getStaticPaths() {
   const items = await getCollection('items');
@@ -12,42 +13,21 @@ export async function getStaticPaths() {
 
 const { item } = Astro.props;
 const { Content } = await render(item);
-
-const categoryConfig: Record<string, { label: string; color: string; bg: string; href: string }> = {
-  film:    { label: '电影',    color: 'text-orange-600', bg: 'bg-orange-50', href: '/category/film' },
-  book:    { label: '书籍',    color: 'text-green-600',  bg: 'bg-green-50',  href: '/category/book' },
-  tool:    { label: 'AI 工具', color: 'text-blue-600',   bg: 'bg-blue-50',   href: '/category/tool' },
-  health:  { label: '健康',    color: 'text-rose-600',   bg: 'bg-rose-50',   href: '/category/health' },
-  podcast: { label: '播客',    color: 'text-amber-600',  bg: 'bg-amber-50',  href: '/category/podcast' },
-  other:   { label: '其他',    color: 'text-purple-600', bg: 'bg-purple-50', href: '/category/other' },
-};
-
 const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
-
-const placeholderColors: Record<string, string> = {
-  film:    'bg-orange-100 text-orange-300',
-  book:    'bg-green-100 text-green-300',
-  tool:    'bg-blue-100 text-blue-300',
-  health:  'bg-rose-100 text-rose-300',
-  podcast: 'bg-amber-100 text-amber-300',
-  other:   'bg-purple-100 text-purple-300',
-};
 ---
 
 <BaseLayout title={item.data.title} description={item.data.summary}>
-  <!-- Back -->
   <a href="javascript:history.back()" class="inline-flex items-center gap-1 text-sm text-stone-400 hover:text-stone-700 transition-colors mb-8">
     ← 返回
   </a>
 
-  <!-- Header -->
   <div class="flex flex-col sm:flex-row gap-6 mb-10">
     <!-- Cover -->
     <div class="shrink-0 w-full sm:w-40 h-48 sm:h-52 rounded-xl overflow-hidden">
       {item.data.cover ? (
         <img src={item.data.cover} alt={item.data.title} class="w-full h-full object-cover" />
       ) : (
-        <div class={`w-full h-full flex items-center justify-center text-6xl font-bold ${placeholderColors[item.data.category] ?? placeholderColors.other}`}>
+        <div class={`w-full h-full flex items-center justify-center text-6xl font-bold ${cat.detailPlaceholder}`}>
           {item.data.title.charAt(0)}
         </div>
       )}
@@ -55,16 +35,25 @@ const placeholderColors: Record<string, string> = {
 
     <!-- Meta -->
     <div class="flex-1">
-      <a href={cat.href} class={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-3 ${cat.color} ${cat.bg}`}>
-        {cat.label}
-      </a>
-      <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mb-2">{item.data.title}</h1>
+      <!-- Category + Country -->
       <div class="flex items-center gap-2 mb-3">
-        <span class="text-amber-500 font-semibold text-lg">⭐ {item.data.rating.toFixed(1)}</span>
+        <a href={`/category/${item.data.category}`} class={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${cat.color} ${cat.bg}`}>
+          {cat.label}
+        </a>
+        {item.data.country && (
+          <span class="text-xs text-stone-400">{item.data.country}</span>
+        )}
       </div>
+
+      <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mb-2">{item.data.title}</h1>
+
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-amber-500 font-semibold">{item.data.rating.toFixed(1)}</span>
+        <span class="text-stone-300 text-sm">/ 5.0</span>
+      </div>
+
       <p class="text-stone-500 leading-relaxed mb-4">{item.data.summary}</p>
 
-      <!-- Tags -->
       {item.data.tags.length > 0 && (
         <div class="flex flex-wrap gap-2 mb-4">
           {item.data.tags.map(tag => (
@@ -73,7 +62,6 @@ const placeholderColors: Record<string, string> = {
         </div>
       )}
 
-      <!-- External link -->
       {item.data.link && (
         <a
           href={item.data.link}
@@ -87,13 +75,11 @@ const placeholderColors: Record<string, string> = {
     </div>
   </div>
 
-  <!-- Content -->
   <article class="prose prose-stone max-w-none prose-headings:font-bold prose-a:text-orange-500">
     <Content />
   </article>
 
-  <!-- Date -->
   <div class="mt-10 pt-6 border-t border-stone-100 text-sm text-stone-400">
-    推荐于 {item.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
+    记于 {item.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
   </div>
 </BaseLayout>

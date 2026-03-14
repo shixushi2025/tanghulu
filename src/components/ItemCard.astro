@@ -1,4 +1,6 @@
 ---
+import { categoryConfig } from '../lib/categories';
+
 interface Props {
   title: string;
   category: string;
@@ -7,30 +9,11 @@ interface Props {
   summary: string;
   cover?: string;
   slug: string;
+  country?: string;
 }
 
-const { title, category, tags = [], rating, summary, cover, slug } = Astro.props;
-
-const categoryConfig: Record<string, { label: string; color: string; bg: string }> = {
-  film:    { label: '电影',    color: 'text-orange-600', bg: 'bg-orange-50' },
-  book:    { label: '书籍',    color: 'text-green-600',  bg: 'bg-green-50' },
-  tool:    { label: 'AI 工具', color: 'text-blue-600',   bg: 'bg-blue-50' },
-  health:  { label: '健康',    color: 'text-rose-600',   bg: 'bg-rose-50' },
-  podcast: { label: '播客',    color: 'text-amber-600',  bg: 'bg-amber-50' },
-  other:   { label: '其他',    color: 'text-purple-600', bg: 'bg-purple-50' },
-};
-
+const { title, category, tags = [], rating, summary, cover, slug, country } = Astro.props;
 const cat = categoryConfig[category] ?? categoryConfig.other;
-
-const initial = title.charAt(0);
-const placeholderColors: Record<string, string> = {
-  film:    'bg-orange-100 text-orange-400',
-  book:    'bg-green-100 text-green-400',
-  tool:    'bg-blue-100 text-blue-400',
-  health:  'bg-rose-100 text-rose-400',
-  podcast: 'bg-amber-100 text-amber-400',
-  other:   'bg-purple-100 text-purple-400',
-};
 ---
 
 <a
@@ -42,26 +25,31 @@ const placeholderColors: Record<string, string> = {
     {cover ? (
       <img src={cover} alt={title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
     ) : (
-      <div class={`w-full h-full flex items-center justify-center text-5xl font-bold ${placeholderColors[category] ?? placeholderColors.other}`}>
-        {initial}
+      <div class={`w-full h-full flex items-center justify-center text-5xl font-bold ${cat.cardPlaceholder}`}>
+        {title.charAt(0)}
       </div>
     )}
   </div>
 
   <!-- Content -->
   <div class="p-4">
-    <!-- Category badge -->
-    <span class={`inline-block text-xs font-medium px-2 py-0.5 rounded-full mb-2 ${cat.color} ${cat.bg}`}>
-      {cat.label}
-    </span>
+    <!-- Category + Country -->
+    <div class="flex items-center gap-1.5 mb-2">
+      <span class={`text-xs font-medium px-2 py-0.5 rounded-full ${cat.color} ${cat.bg}`}>
+        {cat.label}
+      </span>
+      {country && (
+        <span class="text-xs text-stone-400">{country}</span>
+      )}
+    </div>
 
     <!-- Title & Rating -->
     <div class="flex items-start justify-between gap-2 mb-2">
       <h3 class="font-semibold text-stone-900 leading-tight group-hover:text-orange-500 transition-colors">
         {title}
       </h3>
-      <span class="shrink-0 text-sm font-medium text-amber-500 flex items-center gap-0.5">
-        ⭐ {rating.toFixed(1)}
+      <span class="shrink-0 text-sm font-medium text-amber-500">
+        {rating.toFixed(1)}
       </span>
     </div>
 
