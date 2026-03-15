@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { visibleCategories, categoryConfig } from '../lib/categories';
 
 interface Props {
   title?: string;
@@ -11,11 +12,12 @@ const {
   description = '糖葫芦',
 } = Astro.props;
 
-const navItems = [
-  { label: '关于', href: '/about' },
-];
-
 const currentPath = Astro.url.pathname;
+
+// Determine active category from path
+const categoryMatch = currentPath.match(/^\/category\/([^/]+)/);
+const activeCategory = categoryMatch ? categoryMatch[1] : null;
+const isHome = currentPath === '/';
 ---
 
 <!doctype html>
@@ -27,81 +29,90 @@ const currentPath = Astro.url.pathname;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title === '糖葫芦' ? title : `${title} · 糖葫芦`}</title>
   </head>
-  <body>
+  <body class="bg-stone-50 text-stone-900 antialiased">
     <!-- Header -->
-    <header class="sticky top-0 z-50 bg-stone-50/90 backdrop-blur border-b border-stone-200">
-      <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+    <header class="sticky top-0 z-50 bg-stone-50/95 backdrop-blur border-b border-stone-200">
+      <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+        <!-- Logo -->
         <a href="/" class="flex items-center gap-2 font-bold text-lg text-stone-900 hover:text-orange-500 transition-colors">
-          <span class="text-2xl">🍡</span>
+          <img src="/favicon.svg" alt="" class="w-6 h-6" />
           <span>糖葫芦</span>
         </a>
 
-        <!-- Desktop nav -->
-        <nav class="hidden md:flex items-center gap-1">
-          {navItems.map(item => (
+        <!-- Desktop nav: categories + about -->
+        <nav class="hidden md:flex items-center gap-0.5">
+          <a
+            href="/"
+            class={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              isHome ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
+            }`}
+          >全部</a>
+          {visibleCategories.map(key => (
             <a
-              href={item.href}
+              href={`/category/${key}`}
               class={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                currentPath === item.href
-                  ? 'bg-stone-900 text-white'
-                  : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100'
+                activeCategory === key ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
               }`}
             >
-              {item.label}
+              {categoryConfig[key].label}
             </a>
           ))}
+          <span class="w-px h-4 bg-stone-200 mx-1"></span>
+          <a
+            href="/about"
+            class={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              currentPath === '/about' ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
+            }`}
+          >关于</a>
         </nav>
 
-        <!-- Search button -->
-        <a href="/search" class="flex items-center justify-center w-8 h-8 text-stone-400 hover:text-stone-700 transition-colors" aria-label="搜索">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-          </svg>
-        </a>
-
-        <!-- Mobile hamburger -->
-        <button
-          id="menu-btn"
-          class="md:hidden flex flex-col justify-center gap-1.5 w-8 h-8 p-1"
-          aria-label="菜单"
-        >
-          <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar1"></span>
-          <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar2"></span>
-          <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar3"></span>
-        </button>
+        <!-- Right: search + hamburger -->
+        <div class="flex items-center gap-2">
+          <a href="/search" class="flex items-center justify-center w-8 h-8 text-stone-400 hover:text-stone-700 transition-colors" aria-label="搜索">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+          </a>
+          <button
+            id="menu-btn"
+            class="md:hidden flex flex-col justify-center gap-1.5 w-8 h-8 p-1"
+            aria-label="菜单"
+          >
+            <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar1"></span>
+            <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar2"></span>
+            <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar3"></span>
+          </button>
+        </div>
       </div>
-
     </header>
 
-    <!-- Mobile menu overlay -->
+    <!-- Mobile menu -->
     <div
       id="mobile-menu"
-      class="hidden md:hidden fixed top-14 left-0 right-0 z-40 bg-stone-50/95 backdrop-blur border-b border-stone-200 shadow-lg"
+      class="hidden md:hidden fixed top-14 left-0 right-0 z-40 bg-stone-50/98 backdrop-blur border-b border-stone-200 shadow-lg"
     >
-      <nav class="max-w-4xl mx-auto px-4 py-3 flex flex-col gap-1">
-        {navItems.map(item => (
+      <nav class="max-w-5xl mx-auto px-4 py-3 grid grid-cols-3 gap-1">
+        <a href="/" class={`px-3 py-2 rounded-xl text-sm font-medium text-center transition-colors ${isHome ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>全部</a>
+        {visibleCategories.map(key => (
           <a
-            href={item.href}
-            class={`px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              currentPath === item.href
-                ? 'bg-stone-900 text-white'
-                : 'text-stone-600 hover:bg-stone-100'
-            }`}
+            href={`/category/${key}`}
+            class={`px-3 py-2 rounded-xl text-sm font-medium text-center transition-colors ${activeCategory === key ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}
           >
-            {item.label}
+            {categoryConfig[key].label}
           </a>
         ))}
+        <a href="/about" class={`px-3 py-2 rounded-xl text-sm font-medium text-center transition-colors ${currentPath === '/about' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>关于</a>
       </nav>
     </div>
 
     <!-- Main -->
-    <main class="max-w-4xl mx-auto px-4 py-10">
+    <main class="max-w-5xl mx-auto px-4 py-10">
       <slot />
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-stone-200 mt-16">
-      <div class="max-w-4xl mx-auto px-4 py-8 text-center text-sm text-stone-400">
+    <footer class="border-t border-stone-100 mt-16">
+      <div class="max-w-5xl mx-auto px-4 py-8 text-center text-sm text-stone-400">
         <p>糖葫芦 · 精选那些值得你时间的东西</p>
       </div>
     </footer>
