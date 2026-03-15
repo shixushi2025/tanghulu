@@ -2,6 +2,7 @@
 import { env } from 'cloudflare:workers';
 import { getAllItems } from '../../lib/db';
 import { categoryConfig } from '../../lib/categories';
+import '../../styles/global.css';
 
 const db = env.TANGHULU_DB;
 const items = await getAllItems(db);

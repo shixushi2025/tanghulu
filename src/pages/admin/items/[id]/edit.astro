@@ -2,6 +2,7 @@
 import { env } from 'cloudflare:workers';
 import { getItemById } from '../../../../lib/db';
 import { allCategories, categoryConfig } from '../../../../lib/categories';
+import '../../../../styles/global.css';
 
 const { id } = Astro.params;
 const db = env.TANGHULU_DB;
