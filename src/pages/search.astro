@@ -1,18 +1,18 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
 import { categoryConfig } from '../lib/categories';
+import { getAllItems } from '../lib/db';
 
-const allItems = await getCollection('items');
+const db = Astro.locals.runtime.env.TANGHULU_DB;
+const allItems = await getAllItems(db);
 const searchIndex = allItems.map(item => ({
   id: item.id,
-  title: item.data.title,
-  summary: item.data.summary,
-  category: item.data.category,
-  categoryLabel: categoryConfig[item.data.category]?.label ?? '其他',
-  tags: item.data.tags.join(' '),
-  country: item.data.country ?? '',
-  rating: item.data.rating,
+  title: item.title,
+  summary: item.summary,
+  category: item.category,
+  categoryLabel: categoryConfig[item.category]?.label ?? '其他',
+  tags: item.tags.join(' '),
+  country: item.country ?? '',
 }));
 ---
 
@@ -75,7 +75,6 @@ const searchIndex = allItems.map(item => ({
               <div class="font-medium text-stone-900 group-hover:text-orange-500 transition-colors truncate">${item.title}</div>
               <div class="text-sm text-stone-400 mt-0.5 line-clamp-1">${item.summary}</div>
             </div>
-            <div class="shrink-0 text-sm text-amber-500 font-medium">${item.rating.toFixed(1)}</div>
           </a>`;
         }).join('')}
       </div>`;

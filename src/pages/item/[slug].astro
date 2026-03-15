@@ -1,22 +1,20 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getCollection, render } from 'astro:content';
 import { categoryConfig } from '../../lib/categories';
+import { getItemById } from '../../lib/db';
+import { marked } from 'marked';
 
-export async function getStaticPaths() {
-  const items = await getCollection('items');
-  return items.map(item => ({
-    params: { slug: item.id },
-    props: { item },
-  }));
-}
+const { slug } = Astro.params;
+const db = Astro.locals.runtime.env.TANGHULU_DB;
+const item = await getItemById(db, slug);
 
-const { item } = Astro.props;
-const { Content } = await render(item);
-const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
+if (!item) return Astro.redirect('/404');
+
+const cat = categoryConfig[item.category] ?? categoryConfig.other;
+const bodyHtml = item.body ? marked(item.body) : '';
 ---
 
-<BaseLayout title={item.data.title} description={item.data.summary}>
+<BaseLayout title={item.title} description={item.summary}>
   <a href="javascript:history.back()" class="inline-flex items-center gap-1 text-sm text-stone-400 hover:text-stone-700 transition-colors mb-8">
     ← 返回
   </a>
@@ -24,11 +22,11 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
   <div class="flex flex-col sm:flex-row gap-6 mb-10">
     <!-- Cover -->
     <div class="shrink-0 w-full sm:w-40 h-48 sm:h-52 rounded-xl overflow-hidden">
-      {item.data.cover ? (
-        <img src={item.data.cover} alt={item.data.title} class="w-full h-full object-cover" />
+      {item.cover ? (
+        <img src={item.cover} alt={item.title} class="w-full h-full object-cover" />
       ) : (
         <div class={`w-full h-full flex items-center justify-center text-6xl font-bold ${cat.detailPlaceholder}`}>
-          {item.data.title.charAt(0)}
+          {item.title.charAt(0)}
         </div>
       )}
     </div>
@@ -36,11 +34,11 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
     <!-- Meta -->
     <div class="flex-1">
       <div class="flex items-center gap-2 mb-3">
-        <a href={`/category/${item.data.category}`} class={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${cat.color} ${cat.bg}`}>
+        <a href={`/category/${item.category}`} class={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${cat.color} ${cat.bg}`}>
           {cat.label}
         </a>
-        {item.data.country && (
-          <span class="text-xs text-stone-400">{item.data.country}</span>
+        {item.country && (
+          <span class="text-xs text-stone-400">{item.country}</span>
         )}
         <!-- View count -->
         <span class="text-xs text-stone-300 ml-auto flex items-center gap-1">
@@ -49,7 +47,7 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
         </span>
       </div>
 
-      <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mb-2">{item.data.title}</h1>
+      <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mb-2">{item.title}</h1>
 
       <!-- 社区评分 -->
       <div class="flex items-center gap-1.5 mb-3">
@@ -58,19 +56,19 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
         <span class="text-xs text-stone-400 ml-1" id="community-count"></span>
       </div>
 
-      <p class="text-stone-500 leading-relaxed mb-4">{item.data.summary}</p>
+      <p class="text-stone-500 leading-relaxed mb-4">{item.summary}</p>
 
-      {item.data.tags.length > 0 && (
+      {item.tags.length > 0 && (
         <div class="flex flex-wrap gap-2 mb-4">
-          {item.data.tags.map(tag => (
+          {item.tags.map(tag => (
             <span class="text-xs text-stone-400 bg-stone-100 px-2.5 py-1 rounded-full">{tag}</span>
           ))}
         </div>
       )}
 
-      {item.data.link && (
+      {item.link && (
         <a
-          href={item.data.link}
+          href={item.link}
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex items-center gap-1.5 text-sm text-stone-600 bg-stone-100 hover:bg-stone-200 px-4 py-2 rounded-full transition-colors"
@@ -81,9 +79,9 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
     </div>
   </div>
 
-  <article class="prose prose-stone max-w-none prose-headings:font-bold prose-a:text-orange-500">
-    <Content />
-  </article>
+  {bodyHtml && (
+    <article class="prose prose-stone max-w-none prose-headings:font-bold prose-a:text-orange-500" set:html={bodyHtml} />
+  )}
 
   <!-- 用户评分 -->
   <div class="mt-10 pt-8 border-t border-stone-100">
@@ -101,14 +99,13 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
   </div>
 
   <div class="mt-6 text-sm text-stone-400">
-    记于 {item.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
+    记于 {item.date}
   </div>
 </BaseLayout>
 
 <script define:vars={{ itemId: item.id }}>
   const KEY = `rated:${itemId}`;
 
-  // 浏览量：POST 计数，GET 显示
   async function initViews() {
     fetch(`/api/views/${itemId}`, { method: 'POST' }).catch(() => {});
     const res = await fetch(`/api/views/${itemId}`).catch(() => null);
@@ -118,7 +115,6 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
     if (el) el.textContent = count >= 1000 ? `${(count/1000).toFixed(1)}k` : count;
   }
 
-  // 社区评分
   async function initRatings() {
     const res = await fetch(`/api/ratings/${itemId}`).catch(() => null);
     if (!res?.ok) return;
@@ -129,7 +125,6 @@ const cat = categoryConfig[item.data.category] ?? categoryConfig.other;
     if (cntEl) cntEl.textContent = count > 0 ? `(${count})` : '';
   }
 
-  // 星星评分
   function initStars() {
     const stars = document.querySelectorAll('.star-btn');
     const feedback = document.getElementById('rating-feedback');

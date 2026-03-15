@@ -1,26 +1,20 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ItemCard from '../../components/ItemCard.astro';
-import { getCollection } from 'astro:content';
-import { allCategories, visibleCategories, categoryConfig } from '../../lib/categories';
-
-export async function getStaticPaths() {
-  return allCategories.map(category => ({ params: { category } }));
-}
+import { visibleCategories, categoryConfig } from '../../lib/categories';
+import { getItemsByCategory } from '../../lib/db';
 
 const { category } = Astro.params;
 const cat = categoryConfig[category] ?? categoryConfig.other;
 
-const allItems = await getCollection('items');
-const filtered = allItems
-  .filter(i => i.data.category === category)
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const db = Astro.locals.runtime.env.TANGHULU_DB;
+const items = await getItemsByCategory(db, category);
 ---
 
 <BaseLayout title={cat.label}>
   <div class="mb-8">
     <h1 class="text-3xl font-bold text-stone-900">{cat.label}</h1>
-    <p class="text-stone-400 mt-1">{filtered.length} 条</p>
+    <p class="text-stone-400 mt-1">{items.length} 条</p>
   </div>
 
   <!-- Tabs: 只显示主要分类 -->
@@ -38,7 +32,7 @@ const filtered = allItems
     ))}
   </div>
 
-  {filtered.length === 0 ? (
+  {items.length === 0 ? (
     <div class="text-center py-20 text-stone-400">
       <div class="flex justify-center mb-4">
         <img src="/favicon.svg" alt="" class="w-12 h-12 opacity-30" />
@@ -47,16 +41,15 @@ const filtered = allItems
     </div>
   ) : (
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {filtered.map(item => (
+      {items.map(item => (
         <ItemCard
-          title={item.data.title}
-          category={item.data.category}
-          tags={item.data.tags}
-
-          summary={item.data.summary}
-          cover={item.data.cover}
+          title={item.title}
+          category={item.category}
+          tags={item.tags}
+          summary={item.summary}
+          cover={item.cover}
           slug={item.id}
-          country={item.data.country}
+          country={item.country}
         />
       ))}
     </div>
