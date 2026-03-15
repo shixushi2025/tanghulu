@@ -1,30 +1,34 @@
 /**
- * Prepares the dist/ directory for Cloudflare Pages advanced mode deployment.
+ * Prepares dist/ for Cloudflare Pages advanced mode (_worker.js).
  *
- * CF Pages advanced mode: place _worker.js at the root of pages_build_output_dir.
- * CF Pages automatically detects it and routes all non-static requests through it.
- *
- * Steps:
- * 1. Flatten dist/client/* → dist/* so static assets are at the correct URL paths
- * 2. Create dist/_worker.js that re-exports the Astro SSR handler
- * 3. Remove .wrangler/deploy redirect (we use wrangler.toml directly, no main field)
+ * CF Pages advanced mode requires _worker.js to be a single self-contained
+ * bundle — it cannot resolve multi-file module imports at runtime.
+ * So we use esbuild to bundle dist/server/entry.mjs → dist/_worker.js.
  */
-import { cpSync, writeFileSync, existsSync, rmSync } from 'fs';
+import { cpSync, existsSync, rmSync } from 'fs';
+import { execFileSync } from 'child_process';
+import { resolve } from 'path';
 
-// 1. Flatten static assets so /_astro/*, /favicon.svg etc. are served correctly
+// 1. Flatten dist/client/* → dist/ so static assets are at the correct URL paths
 if (existsSync('dist/client')) {
   cpSync('dist/client', 'dist', { recursive: true });
   console.log('fix-deploy: dist/client/ → dist/ ✓');
 }
 
-// 2. Create _worker.js — CF Pages detects this automatically in pages_build_output_dir
-writeFileSync('dist/_worker.js', [
-  '// Auto-generated: Astro SSR handler for Cloudflare Pages',
-  "export { default } from './server/entry.mjs';",
-  "export * from './server/entry.mjs';",
-].join('\n') + '\n');
-console.log('fix-deploy: dist/_worker.js created ✓');
+// 2. Bundle the SSR worker into a single self-contained dist/_worker.js
+const esbuild = resolve('node_modules/.bin/esbuild');
+execFileSync(esbuild, [
+  'dist/server/entry.mjs',
+  '--bundle',
+  '--outfile=dist/_worker.js',
+  '--format=esm',
+  '--platform=browser',
+  '--conditions=workerd',
+  '--external:cloudflare:*',
+  '--external:node:*',
+], { stdio: 'inherit' });
+console.log('fix-deploy: dist/_worker.js bundled ✓');
 
-// 3. Remove adapter-generated .wrangler/deploy redirect to avoid config conflicts
+// 3. Remove .wrangler/deploy redirect — use wrangler.toml directly
 rmSync('.wrangler', { recursive: true, force: true });
 console.log('fix-deploy: .wrangler/ removed ✓');
