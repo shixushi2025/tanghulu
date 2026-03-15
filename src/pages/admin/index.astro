@@ -1,7 +1,8 @@
 ---
+import { env } from 'cloudflare:workers';
 import { getAdminToken, verifyToken } from '../../lib/auth';
 
-const password = Astro.locals.runtime?.env?.ADMIN_PASSWORD;
+const password = env.ADMIN_PASSWORD;
 if (password) {
   const token = getAdminToken(Astro.request);
   if (token && await verifyToken(token, password)) {

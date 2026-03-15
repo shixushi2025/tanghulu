@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import type { APIRoute } from 'astro';
 
 function isValidId(id: string): boolean {
@@ -8,7 +9,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
   const id = params.id!;
   if (!isValidId(id)) return Response.json({ error: 'Invalid id' }, { status: 400 });
 
-  const kv = locals.runtime.env.TANGHULU_VIEWS;
+  const kv = env.TANGHULU_VIEWS;
   const count = await kv.get(id);
   return Response.json({ count: parseInt(count ?? '0') }, {
     headers: { 'Cache-Control': 'no-store' },
@@ -21,7 +22,7 @@ export const POST: APIRoute = async ({ params, locals, request }) => {
 
   // Simple rate limit: 1 view per IP per item per hour via KV TTL key
   const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
-  const kv = locals.runtime.env.TANGHULU_VIEWS;
+  const kv = env.TANGHULU_VIEWS;
   const throttleKey = `throttle:${id}:${ip}`;
   const throttled = await kv.get(throttleKey);
   if (!throttled) {

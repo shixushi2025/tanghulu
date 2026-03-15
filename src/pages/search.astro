@@ -1,9 +1,10 @@
 ---
+import { env } from 'cloudflare:workers';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { categoryConfig } from '../lib/categories';
 import { getAllItems } from '../lib/db';
 
-const db = Astro.locals.runtime.env.TANGHULU_DB;
+const db = env.TANGHULU_DB;
 const allItems = await getAllItems(db);
 const searchIndex = allItems.map(item => ({
   id: item.id,

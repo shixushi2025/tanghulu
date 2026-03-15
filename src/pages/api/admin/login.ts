@@ -1,8 +1,9 @@
+import { env } from 'cloudflare:workers';
 import type { APIRoute } from 'astro';
 import { createToken, tokenCookie } from '../../../lib/auth';
 
 export const POST: APIRoute = async ({ locals, request }) => {
-  const password = (locals as App.Locals).runtime?.env?.ADMIN_PASSWORD;
+  const password = env.ADMIN_PASSWORD;
   if (!password) {
     return Response.json({ error: 'Admin not configured' }, { status: 503 });
   }

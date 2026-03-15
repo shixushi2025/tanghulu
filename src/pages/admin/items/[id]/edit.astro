@@ -1,9 +1,10 @@
 ---
+import { env } from 'cloudflare:workers';
 import { getItemById } from '../../../../lib/db';
 import { allCategories, categoryConfig } from '../../../../lib/categories';
 
 const { id } = Astro.params;
-const db = Astro.locals.runtime.env.TANGHULU_DB;
+const db = env.TANGHULU_DB;
 const item = await getItemById(db, id!);
 
 if (!item) return Astro.redirect('/admin/dashboard');

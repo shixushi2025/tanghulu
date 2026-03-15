@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import type { APIRoute } from 'astro';
 import { createItem, getItemById } from '../../../../lib/db';
 import { allCategories } from '../../../../lib/categories';
@@ -33,7 +34,7 @@ export const POST: APIRoute = async ({ locals, request }) => {
   const parsed = parseBody(body);
   if ('error' in parsed) return Response.json({ error: parsed.error }, { status: 400 });
 
-  const db = (locals as App.Locals).runtime.env.TANGHULU_DB;
+  const db = env.TANGHULU_DB;
 
   const existing = await getItemById(db, parsed.id);
   if (existing) return Response.json({ error: 'ID already exists' }, { status: 409 });

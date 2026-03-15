@@ -1,11 +1,12 @@
 ---
+import { env } from 'cloudflare:workers';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { categoryConfig } from '../../lib/categories';
 import { getItemById } from '../../lib/db';
 import { marked } from 'marked';
 
 const { slug } = Astro.params;
-const db = Astro.locals.runtime.env.TANGHULU_DB;
+const db = env.TANGHULU_DB;
 const item = await getItemById(db, slug);
 
 if (!item) return Astro.redirect('/404');

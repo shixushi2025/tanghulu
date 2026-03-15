@@ -1,8 +1,9 @@
 ---
+import { env } from 'cloudflare:workers';
 import { getAllItems } from '../../lib/db';
 import { categoryConfig } from '../../lib/categories';
 
-const db = Astro.locals.runtime.env.TANGHULU_DB;
+const db = env.TANGHULU_DB;
 const items = await getAllItems(db);
 
 const q = Astro.url.searchParams.get('q') ?? '';

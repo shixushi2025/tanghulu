@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import { defineMiddleware } from 'astro:middleware';
 import { getAdminToken, verifyToken } from './lib/auth';
 
@@ -10,7 +11,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     pathname === '/api/admin/login';
 
   if (!isPublic && (pathname.startsWith('/admin') || pathname.startsWith('/api/admin'))) {
-    const password = (context.locals as App.Locals).runtime?.env?.ADMIN_PASSWORD;
+    const password = env.ADMIN_PASSWORD;
 
     if (!password) {
       return pathname.startsWith('/api/')

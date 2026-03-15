@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import type { APIRoute } from 'astro';
 import { updateItem, deleteItem } from '../../../../lib/db';
 import { allCategories } from '../../../../lib/categories';
@@ -38,7 +39,7 @@ export const PUT: APIRoute = async ({ params, locals, request }) => {
   const parsed = parseBody(id, body);
   if ('error' in parsed) return Response.json({ error: parsed.error }, { status: 400 });
 
-  const db = (locals as App.Locals).runtime.env.TANGHULU_DB;
+  const db = env.TANGHULU_DB;
   await updateItem(db, id, parsed.data);
   return Response.json({ ok: true });
 };
@@ -47,7 +48,7 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   const id = params.id!;
   if (!isValidId(id)) return Response.json({ error: 'Invalid id' }, { status: 400 });
 
-  const db = (locals as App.Locals).runtime.env.TANGHULU_DB;
+  const db = env.TANGHULU_DB;
   await deleteItem(db, id);
   return Response.json({ ok: true });
 };

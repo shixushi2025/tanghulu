@@ -1,3 +1,4 @@
+import { env } from 'cloudflare:workers';
 import type { APIRoute } from 'astro';
 
 function isValidId(id: string): boolean {
@@ -19,7 +20,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
   const id = params.id!;
   if (!isValidId(id)) return Response.json({ error: 'Invalid id' }, { status: 400 });
 
-  const db = locals.runtime.env.TANGHULU_DB;
+  const db = env.TANGHULU_DB;
   return Response.json(await getRatingResult(db, id), {
     headers: { 'Cache-Control': 'no-store' },
   });
@@ -42,7 +43,7 @@ export const POST: APIRoute = async ({ params, locals, request }) => {
   }
 
   const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
-  const db = locals.runtime.env.TANGHULU_DB;
+  const db = env.TANGHULU_DB;
 
   await db
     .prepare(
