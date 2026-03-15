@@ -1,48 +1,30 @@
 /**
- * Patches dist/server/wrangler.json to pass CF Pages validation.
- * The @astrojs/cloudflare adapter generates fields for CF Workers
- * that are invalid in a CF Pages context.
+ * Prepares the dist/ directory for Cloudflare Pages advanced mode deployment.
+ *
+ * CF Pages advanced mode: place _worker.js at the root of pages_build_output_dir.
+ * CF Pages automatically detects it and routes all non-static requests through it.
+ *
+ * Steps:
+ * 1. Flatten dist/client/* → dist/* so static assets are at the correct URL paths
+ * 2. Create dist/_worker.js that re-exports the Astro SSR handler
+ * 3. Remove .wrangler/deploy redirect (we use wrangler.toml directly, no main field)
  */
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { cpSync, writeFileSync, existsSync, rmSync } from 'fs';
 
-const path = 'dist/server/wrangler.json';
-
-if (!existsSync(path)) {
-  console.log('fix-deploy: dist/server/wrangler.json not found, skipping');
-  process.exit(0);
+// 1. Flatten static assets so /_astro/*, /favicon.svg etc. are served correctly
+if (existsSync('dist/client')) {
+  cpSync('dist/client', 'dist', { recursive: true });
+  console.log('fix-deploy: dist/client/ → dist/ ✓');
 }
 
-const cfg = JSON.parse(readFileSync(path, 'utf8'));
+// 2. Create _worker.js — CF Pages detects this automatically in pages_build_output_dir
+writeFileSync('dist/_worker.js', [
+  '// Auto-generated: Astro SSR handler for Cloudflare Pages',
+  "export { default } from './server/entry.mjs';",
+  "export * from './server/entry.mjs';",
+].join('\n') + '\n');
+console.log('fix-deploy: dist/_worker.js created ✓');
 
-// Pages does not support "main" alongside "pages_build_output_dir"
-delete cfg.main;
-
-// Pages does not support these fields at all
-delete cfg.no_bundle;
-delete cfg.rules;
-delete cfg.dev;
-
-// Remove extra top-level fields that cause "unexpected fields" warnings
-const extraTopLevel = [
-  'definedEnvironments', 'images', 'secrets_store_secrets',
-  'unsafe_hello_world', 'worker_loaders', 'ratelimits',
-  'vpc_services', 'python_modules',
-  // internal adapter fields
-  'configPath', 'userConfigPath', 'legacy_env',
-  'jsx_factory', 'jsx_fragment',
-];
-for (const f of extraTopLevel) delete cfg[f];
-
-// triggers must be { crons: [] }, not {}
-if (cfg.triggers !== undefined) cfg.triggers = { crons: [] };
-
-// Remove SESSION kv_namespace (auto-added by adapter, no id = invalid for Pages)
-if (Array.isArray(cfg.kv_namespaces)) {
-  cfg.kv_namespaces = cfg.kv_namespaces.filter(kv => kv.binding !== 'SESSION');
-}
-
-// Remove ASSETS binding (reserved name in CF Pages)
-if (cfg.assets?.binding === 'ASSETS') delete cfg.assets;
-
-writeFileSync(path, JSON.stringify(cfg, null, 2));
-console.log('fix-deploy: patched dist/server/wrangler.json ✓');
+// 3. Remove adapter-generated .wrangler/deploy redirect to avoid config conflicts
+rmSync('.wrangler', { recursive: true, force: true });
+console.log('fix-deploy: .wrangler/ removed ✓');
