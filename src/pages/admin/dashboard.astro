@@ -1,0 +1,191 @@
+---
+import { getAllItems } from '../../lib/db';
+import { categoryConfig } from '../../lib/categories';
+
+const db = Astro.locals.runtime.env.TANGHULU_DB;
+const items = await getAllItems(db);
+
+const q = Astro.url.searchParams.get('q') ?? '';
+const filterCat = Astro.url.searchParams.get('cat') ?? '';
+
+const filtered = items.filter(item => {
+  const matchQ = !q || item.title.toLowerCase().includes(q.toLowerCase());
+  const matchCat = !filterCat || item.category === filterCat;
+  return matchQ && matchCat;
+});
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Dashboard · Admin</title>
+  </head>
+  <body class="bg-stone-50 text-stone-900 antialiased min-h-screen">
+
+    <!-- Admin Header -->
+    <header class="sticky top-0 z-50 bg-white border-b border-stone-200">
+      <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <a href="/" class="flex items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors text-sm">
+            <img src="/favicon.svg" alt="" class="w-5 h-5" />
+            <span>糖葫芦</span>
+          </a>
+          <span class="text-stone-300">/</span>
+          <span class="font-semibold text-sm">Admin</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="/admin/items/new" class="px-3 py-1.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity">
+            + 新增
+          </a>
+          <button id="logout-btn" class="px-3 py-1.5 text-sm text-stone-500 hover:text-stone-900 transition-colors">
+            退出
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+
+      <!-- Stats -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        {(['film','book','tool','health','podcast'] as const).map(key => (
+          <a href={`/admin/dashboard?cat=${key}`} class={`bg-white border rounded-xl p-4 hover:border-stone-300 transition-colors ${filterCat === key ? 'border-stone-900' : 'border-stone-200'}`}>
+            <div class="text-2xl font-bold text-stone-900">{items.filter(i => i.category === key).length}</div>
+            <div class="text-sm text-stone-400 mt-0.5">{categoryConfig[key].label}</div>
+          </a>
+        ))}
+        <a href="/admin/dashboard" class={`bg-white border rounded-xl p-4 hover:border-stone-300 transition-colors ${!filterCat ? 'border-stone-900' : 'border-stone-200'}`}>
+          <div class="text-2xl font-bold text-stone-900">{items.length}</div>
+          <div class="text-sm text-stone-400 mt-0.5">全部</div>
+        </a>
+      </div>
+
+      <!-- Search filter -->
+      <div class="flex gap-3 mb-6">
+        <form action="/admin/dashboard" method="get" class="flex gap-2 flex-1">
+          {filterCat && <input type="hidden" name="cat" value={filterCat} />}
+          <input
+            name="q"
+            value={q}
+            placeholder="搜索标题…"
+            class="flex-1 px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-400"
+          />
+          <button type="submit" class="px-4 py-2 bg-stone-100 text-stone-700 text-sm rounded-lg hover:bg-stone-200 transition-colors">搜索</button>
+          {(q || filterCat) && <a href="/admin/dashboard" class="px-4 py-2 text-stone-500 text-sm rounded-lg hover:bg-stone-100 transition-colors self-center">清空</a>}
+        </form>
+      </div>
+
+      <!-- Table -->
+      <div class="bg-white border border-stone-200 rounded-xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-stone-100 text-left">
+              <th class="px-4 py-3 font-medium text-stone-500 w-2/5">标题</th>
+              <th class="px-4 py-3 font-medium text-stone-500 hidden sm:table-cell">分类</th>
+              <th class="px-4 py-3 font-medium text-stone-500 hidden md:table-cell">日期</th>
+              <th class="px-4 py-3 font-medium text-stone-500 hidden lg:table-cell">国家/地区</th>
+              <th class="px-4 py-3 font-medium text-stone-500 text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colspan="5" class="px-4 py-12 text-center text-stone-400">没有内容</td>
+              </tr>
+            ) : (
+              filtered.map(item => {
+                const cat = categoryConfig[item.category];
+                return (
+                  <tr class="border-b border-stone-50 hover:bg-stone-50 transition-colors last:border-0">
+                    <td class="px-4 py-3">
+                      <a href={`/item/${item.id}`} target="_blank" class="font-medium hover:text-orange-500 transition-colors line-clamp-1">{item.title}</a>
+                      <div class="text-xs text-stone-400 mt-0.5 font-mono">{item.id}</div>
+                    </td>
+                    <td class="px-4 py-3 hidden sm:table-cell">
+                      <span class={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${cat?.color ?? ''} ${cat?.bg ?? ''}`}>
+                        {cat?.label ?? item.category}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 hidden md:table-cell text-stone-500">{item.date}</td>
+                    <td class="px-4 py-3 hidden lg:table-cell text-stone-500">{item.country || '—'}</td>
+                    <td class="px-4 py-3 text-right">
+                      <div class="flex items-center justify-end gap-2">
+                        <a href={`/admin/items/${item.id}/edit`} class="px-2.5 py-1 text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-md transition-colors">编辑</a>
+                        <button data-id={item.id} data-title={item.title} class="delete-btn px-2.5 py-1 text-xs text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors">删除</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+        {filtered.length > 0 && (
+          <div class="px-4 py-2 text-xs text-stone-400 border-t border-stone-100">
+            共 {filtered.length} 条{filtered.length !== items.length ? `（全部 ${items.length} 条）` : ''}
+          </div>
+        )}
+      </div>
+    </main>
+
+    <!-- Delete confirm modal -->
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl">
+        <h2 class="font-semibold text-lg mb-1">确认删除</h2>
+        <p class="text-stone-500 text-sm mb-5">删除 "<span id="modal-title" class="font-medium text-stone-900"></span>"？此操作不可撤销。</p>
+        <div class="flex gap-3">
+          <button id="modal-cancel" class="flex-1 px-4 py-2 text-sm border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors">取消</button>
+          <button id="modal-confirm" class="flex-1 px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Logout
+      document.getElementById('logout-btn')?.addEventListener('click', async () => {
+        await fetch('/api/admin/logout', { method: 'POST' });
+        location.href = '/admin';
+      });
+
+      // Delete
+      const modal = document.getElementById('modal');
+      const modalTitle = document.getElementById('modal-title');
+      const modalConfirm = document.getElementById('modal-confirm');
+      const modalCancel = document.getElementById('modal-cancel');
+      let pendingId = '';
+
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          pendingId = btn.dataset.id;
+          modalTitle.textContent = btn.dataset.title;
+          modal.classList.remove('hidden');
+        });
+      });
+
+      modalCancel?.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        pendingId = '';
+      });
+
+      modal?.addEventListener('click', e => {
+        if (e.target === modal) { modal.classList.add('hidden'); pendingId = ''; }
+      });
+
+      modalConfirm?.addEventListener('click', async () => {
+        if (!pendingId) return;
+        modalConfirm.disabled = true;
+        const res = await fetch(`/api/admin/items/${pendingId}`, { method: 'DELETE' });
+        if (res.ok) {
+          location.reload();
+        } else {
+          const data = await res.json();
+          alert(data.error ?? '删除失败');
+          modalConfirm.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>

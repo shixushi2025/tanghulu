@@ -60,6 +60,54 @@ export async function searchItems(db: D1Database, q: string): Promise<Item[]> {
   return results.map(parseItem);
 }
 
+export type ItemInput = Omit<Item, 'id'> & { id?: string };
+
+export async function createItem(db: D1Database, id: string, data: Omit<Item, 'id'>): Promise<void> {
+  await db
+    .prepare(
+      'INSERT INTO items (id, title, category, tags, summary, cover, date, link, mood, country, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    )
+    .bind(
+      id,
+      data.title,
+      data.category,
+      JSON.stringify(data.tags),
+      data.summary,
+      data.cover,
+      data.date,
+      data.link,
+      JSON.stringify(data.mood),
+      data.country,
+      data.body,
+    )
+    .run();
+}
+
+export async function updateItem(db: D1Database, id: string, data: Omit<Item, 'id'>): Promise<void> {
+  await db
+    .prepare(
+      'UPDATE items SET title=?, category=?, tags=?, summary=?, cover=?, date=?, link=?, mood=?, country=?, body=?, updated_at=unixepoch() WHERE id=?',
+    )
+    .bind(
+      data.title,
+      data.category,
+      JSON.stringify(data.tags),
+      data.summary,
+      data.cover,
+      data.date,
+      data.link,
+      JSON.stringify(data.mood),
+      data.country,
+      data.body,
+      id,
+    )
+    .run();
+}
+
+export async function deleteItem(db: D1Database, id: string): Promise<void> {
+  await db.prepare('DELETE FROM items WHERE id = ?').bind(id).run();
+}
+
 export async function countByCategory(db: D1Database): Promise<Record<string, number>> {
   const { results } = await db
     .prepare('SELECT category, COUNT(*) as count FROM items GROUP BY category')
