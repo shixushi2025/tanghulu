@@ -51,6 +51,14 @@ export async function getItemById(db: D1Database, id: string): Promise<Item | nu
   return row ? parseItem(row) : null;
 }
 
+export async function getRelatedItems(db: D1Database, id: string, category: string, limit = 4): Promise<Item[]> {
+  const { results } = await db
+    .prepare('SELECT * FROM items WHERE category = ? AND id != ? ORDER BY date DESC LIMIT ?')
+    .bind(category, id, limit)
+    .all();
+  return results.map(parseItem);
+}
+
 export async function searchItems(db: D1Database, q: string): Promise<Item[]> {
   const like = `%${q}%`;
   const { results } = await db

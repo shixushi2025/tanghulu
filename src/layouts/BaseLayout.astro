@@ -5,14 +5,22 @@ import { visibleCategories, categoryConfig } from '../lib/categories';
 interface Props {
   title?: string;
   description?: string;
+  image?: string;
+  type?: 'website' | 'article';
 }
 
 const {
   title = '糖葫芦',
-  description = '糖葫芦',
+  description = '精选那些值得你时间的东西',
+  image,
+  type = 'website',
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
+const siteName = '糖葫芦';
+const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
+const canonical = new URL(currentPath, Astro.url).href;
+const ogImage = new URL(image ?? '/favicon.svg', Astro.url).href;
 
 // Determine active category from path
 const categoryMatch = currentPath.match(/^\/category\/([^/]+)/);
@@ -27,7 +35,23 @@ const isHome = currentPath === '/';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title === '糖葫芦' ? title : `${title} · 糖葫芦`}</title>
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title={siteName} href="/rss.xml" />
+    <title>{fullTitle}</title>
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
   </head>
   <body class="bg-stone-50 text-stone-900 antialiased">
     <!-- Header -->

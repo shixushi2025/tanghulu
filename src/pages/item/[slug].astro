@@ -1,22 +1,24 @@
 ---
 import { env } from 'cloudflare:workers';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import ItemCard from '../../components/ItemCard.astro';
 import { categoryConfig } from '../../lib/categories';
-import { getItemById } from '../../lib/db';
+import { getItemById, getRelatedItems } from '../../lib/db';
 import { marked } from 'marked';
 
 const { slug } = Astro.params;
 const db = env.TANGHULU_DB;
 const item = await getItemById(db, slug);
 
-if (!item) return Astro.redirect('/404');
+if (!item) return Astro.rewrite('/404');
 
 const cat = categoryConfig[item.category] ?? categoryConfig.other;
-const bodyHtml = item.body ? marked(item.body) : '';
+const bodyHtml = item.body ? await marked.parse(item.body) : '';
+const related = await getRelatedItems(db, item.id, item.category);
 ---
 
-<BaseLayout title={item.title} description={item.summary}>
-  <a href="javascript:history.back()" class="inline-flex items-center gap-1 text-sm text-stone-400 hover:text-stone-700 transition-colors mb-8">
+<BaseLayout title={item.title} description={item.summary} image={item.cover || undefined} type="article">
+  <a href={`/category/${item.category}`} id="back-link" class="inline-flex items-center gap-1 text-sm text-stone-400 hover:text-stone-700 transition-colors mb-8">
     ← 返回
   </a>
 
@@ -102,6 +104,25 @@ const bodyHtml = item.body ? marked(item.body) : '';
   <div class="mt-6 text-sm text-stone-400">
     记于 {item.date}
   </div>
+
+  {related.length > 0 && (
+    <section class="mt-16 pt-10 border-t border-stone-100">
+      <h2 class="text-lg font-bold text-stone-900 mb-5">同类的{cat.label}</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {related.map(r => (
+          <ItemCard
+            title={r.title}
+            category={r.category}
+            tags={r.tags}
+            summary={r.summary}
+            cover={r.cover}
+            slug={r.id}
+            country={r.country}
+          />
+        ))}
+      </div>
+    </section>
+  )}
 </BaseLayout>
 
 <script define:vars={{ itemId: item.id }}>
@@ -168,6 +189,15 @@ const bodyHtml = item.body ? marked(item.body) : '';
   function highlightStars(score) {
     document.querySelectorAll('.star-btn').forEach(btn => {
       btn.style.color = parseInt(btn.dataset.score) <= score ? '#f59e0b' : '';
+    });
+  }
+
+  // 若是站内跳转过来的，"返回"优先回到上一页
+  const backLink = document.getElementById('back-link');
+  if (backLink && document.referrer && new URL(document.referrer).origin === location.origin) {
+    backLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      history.back();
     });
   }
 

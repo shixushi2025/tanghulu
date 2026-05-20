@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+Astro.response.status = 404;
+---
+
+<BaseLayout title="页面不存在" description="找不到这个页面">
+  <div class="text-center py-24">
+    <div class="flex justify-center mb-6">
+      <img src="/favicon.svg" alt="" class="w-16 h-16 opacity-30" />
+    </div>
+    <h1 class="text-3xl font-bold text-stone-900 mb-2">404</h1>
+    <p class="text-stone-400 mb-8">这串糖葫芦上没有这一颗</p>
+    <a href="/" class="inline-flex items-center gap-1.5 text-sm text-stone-600 bg-stone-100 hover:bg-stone-200 px-5 py-2.5 rounded-full transition-colors">
+      回首页 →
+    </a>
+  </div>
+</BaseLayout>

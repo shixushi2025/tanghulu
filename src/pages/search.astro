@@ -36,9 +36,24 @@ const searchIndex = allItems.map(item => ({
   <div id="results" class="mt-4"></div>
   <div id="empty" class="hidden text-center py-16 text-stone-400"><p>没有找到相关内容</p></div>
   <div id="hint" class="text-center py-16 text-stone-400 text-sm"><p>输入关键词开始搜索</p></div>
+
+  <script type="application/json" id="search-data" set:html={JSON.stringify(searchIndex)}></script>
 </BaseLayout>
 
-<script define:vars={{ searchIndex }}>
+<script>
+  import Fuse from 'fuse.js';
+
+  const searchIndex = JSON.parse(document.getElementById('search-data')?.textContent || '[]');
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   const categoryColors = {
     film: 'text-orange-600 bg-orange-50', book: 'text-green-600 bg-green-50',
     tool: 'text-blue-600 bg-blue-50', health: 'text-rose-600 bg-rose-50',
@@ -67,22 +82,21 @@ const searchIndex = allItems.map(item => ({
       <div class="flex flex-col gap-2">
         ${results.map(({ item }) => {
           const c = categoryColors[item.category] ?? categoryColors.other;
-          return `<a href="/item/${item.id}" class="flex items-center gap-4 p-4 bg-white rounded-xl border border-stone-200 hover:border-stone-300 hover:shadow-sm transition-all group">
+          return `<a href="/item/${encodeURIComponent(item.id)}" class="flex items-center gap-4 p-4 bg-white rounded-xl border border-stone-200 hover:border-stone-300 hover:shadow-sm transition-all group">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs font-medium px-2 py-0.5 rounded-full ${c}">${item.categoryLabel}</span>
-                ${item.country ? `<span class="text-xs text-stone-400">${item.country}</span>` : ''}
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full ${c}">${escapeHtml(item.categoryLabel)}</span>
+                ${item.country ? `<span class="text-xs text-stone-400">${escapeHtml(item.country)}</span>` : ''}
               </div>
-              <div class="font-medium text-stone-900 group-hover:text-orange-500 transition-colors truncate">${item.title}</div>
-              <div class="text-sm text-stone-400 mt-0.5 line-clamp-1">${item.summary}</div>
+              <div class="font-medium text-stone-900 group-hover:text-orange-500 transition-colors truncate">${escapeHtml(item.title)}</div>
+              <div class="text-sm text-stone-400 mt-0.5 line-clamp-1">${escapeHtml(item.summary)}</div>
             </div>
           </a>`;
         }).join('')}
       </div>`;
   }
 
-  async function init() {
-    const { default: Fuse } = await import('https://cdn.jsdelivr.net/npm/fuse.js@7/dist/fuse.mjs');
+  function init() {
     const fuse = new Fuse(searchIndex, {
       keys: [
         { name: 'title', weight: 0.5 },
