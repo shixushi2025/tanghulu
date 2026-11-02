@@ -2,10 +2,9 @@
 
 个人精选站：[tanghulu.life](https://tanghulu.life) — 「精选那些值得你时间的东西」。
 
-- **Frontend**: Astro static + 客户端请求 API（Cloudflare Pages）
-- **Backend**: 独立 Cloudflare Worker（D1 条目、KV 浏览次数、admin 鉴权、评分、sitemap）
+单一 Cloudflare Worker：Astro 静态/CSR 前端（Workers Static Assets）+ `/api`（D1、KV、admin、评分、sitemap）。没有 Pages。
 
-部署细节见 [DEPLOYMENT.md](./DEPLOYMENT.md)。
+部署见 [DEPLOYMENT.md](./DEPLOYMENT.md)。
 
 ## 本地
 
@@ -16,8 +15,10 @@ npm run dev:api   # 另一个终端
 npm run dev
 ```
 
-后台：`/admin`（Worker secret `ADMIN_PASSWORD`）。
+或一次跑通生产形态：`npm run preview`（http://localhost:8787）。
+
+后台：`/admin`（`wrangler secret put ADMIN_PASSWORD`）。
 
 ## 内容
 
-条目 seed 在 `src/content/items/*.md`，运行时以 D1 为准。首页「精选」读取 `featured` 列（迁移 `migrations/0004_featured.sql`）；未迁移时 Worker 会用内置 ID 兜底。
+条目 seed 在 `src/content/items/*.md`，运行时以 D1 为准。首页「精选」读 `featured` 列（`migrations/0004_featured.sql`）；未迁移时 Worker 用内置 ID 兜底。

@@ -18,6 +18,7 @@ export type Bindings = {
   TANGHULU_DB: D1Database;
   TANGHULU_VIEWS: KVNamespace;
   ADMIN_PASSWORD: string;
+  ASSETS: Fetcher;
 };
 
 const SITE_URL = 'https://tanghulu.life';
@@ -42,6 +43,8 @@ const CORS_ORIGINS = [
   'https://www.tanghulu.life',
   'http://localhost:4321',
   'http://127.0.0.1:4321',
+  'http://localhost:8787',
+  'http://127.0.0.1:8787',
 ];
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -332,9 +335,29 @@ app.delete('/api/admin/items/:id', async (c) => {
   return c.json({ ok: true });
 });
 
-app.all('*', (c) => {
-  if (c.req.path.startsWith('/api/')) return c.json({ error: 'Not found' }, 404);
-  return c.json({ error: 'Not found' }, 404);
-});
+app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
 
-export default app;
+function serveAsset(env: Bindings, request: Request, pathname: string) {
+  return env.ASSETS.fetch(new Request(new URL(pathname, request.url), request));
+}
+
+export default {
+  fetch(request: Request, env: Bindings, ctx: ExecutionContext) {
+    const { pathname } = new URL(request.url);
+
+    if (pathname.startsWith('/api/')) {
+      return app.fetch(request, env, ctx);
+    }
+
+    // CSR shells (Astro emits these as /item/index.html and /admin/edit/index.html).
+    // Workers SPA not_found_handling only serves the site-root /index.html.
+    if (/^\/item\/[A-Za-z0-9_-]+\/?$/.test(pathname)) {
+      return serveAsset(env, request, '/item/');
+    }
+    if (/^\/admin\/items\/[A-Za-z0-9_-]+\/edit\/?$/.test(pathname)) {
+      return serveAsset(env, request, '/admin/edit/');
+    }
+
+    return env.ASSETS.fetch(request);
+  },
+};

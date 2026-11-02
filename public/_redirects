@@ -1,4 +1,0 @@
-# SPA fallbacks for dynamic public/admin paths (static Pages has no SSR).
-# Existing generated files take precedence; these only apply when no asset matches.
-/item/:slug  /item/index.html  200
-/admin/items/:id/edit  /admin/edit/index.html  200

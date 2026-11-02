@@ -2,7 +2,7 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 
-/** Rewrite dynamic public/admin URLs in `astro dev` / `astro preview` (Pages uses public/_redirects). */
+/** Rewrite dynamic public/admin URLs in `astro dev`. Production uses Worker ASSETS rewrites (see wrangler.toml). */
 function spaFallback() {
   /** @param {string} url */
   function rewrite(url) {
