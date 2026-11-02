@@ -5,6 +5,7 @@ tags: [历史, 人类学, 宏观叙事, 必读]
 rating: 4.8
 summary: "尤瓦尔·赫拉利用全新视角重述人类历史，颠覆你对「文明」和「进步」的理解。"
 cover: ""
+featured: true
 date: 2026-03-11
 link: ""
 mood: [周末, 长途旅行, 宏观视野]

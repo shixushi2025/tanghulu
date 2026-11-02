@@ -18,6 +18,7 @@ const items = defineCollection({
     link: z.string().optional().default(''),
     mood: z.array(z.string()).default([]),
     country: z.string().optional().default(''),
+    featured: z.boolean().optional().default(false),
   }),
 });
 

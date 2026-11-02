@@ -1,50 +1,84 @@
 ---
-import { env } from 'cloudflare:workers';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ItemCard from '../components/ItemCard.astro';
 import { visibleCategories, categoryConfig } from '../lib/categories';
-
-import { getAllItems, countByCategory } from '../lib/db';
-
-const db = env.TANGHULU_DB;
-const [items, counts] = await Promise.all([getAllItems(db), countByCategory(db)]);
-
-const colors: Record<string, string> = {
-  film: 'text-orange-500', book: 'text-green-500', tool: 'text-blue-500',
-  health: 'text-rose-500', podcast: 'text-amber-500',
-};
+import { SITE_DESCRIPTION, SITE_SLOGAN } from '../lib/site';
 ---
 
-<BaseLayout>
-  <!-- Hero -->
-  <div class="text-center pt-16 pb-12">
-    <h1 class="text-4xl sm:text-5xl font-bold text-stone-900 mb-3 tracking-tight">精选那些值得你时间的东西</h1>
-    <p class="text-stone-400 text-sm">持续收集中</p>
-    <div class="flex justify-center flex-wrap gap-8 mt-8">
-      {visibleCategories.map((key, i) => (
-        <>
-          {i > 0 && <div class="w-px bg-stone-200 hidden sm:block self-center h-6"></div>}
-          <a href={`/category/${key}`} class="text-center hover:opacity-70 transition-opacity">
-            <div class={`text-2xl font-bold ${colors[key]}`}>{counts[key] ?? 0}</div>
-            <div class="text-sm text-stone-400 mt-0.5">{categoryConfig[key].label}</div>
-          </a>
-        </>
+<BaseLayout description={SITE_DESCRIPTION}>
+  <section class="text-center pt-6 pb-10">
+    <h1 class="text-4xl sm:text-5xl font-bold text-ink mb-4 tracking-tight scroll-mt-20">{SITE_SLOGAN}</h1>
+    <p class="text-muted text-base max-w-xl mx-auto leading-relaxed">
+      电影、书籍、工具、健康与播客的个人精选。只记真正花过时间的东西。
+    </p>
+    <div id="category-chips" class="flex justify-center flex-wrap gap-2 mt-8">
+      {visibleCategories.map((key) => (
+        <a
+          href={`/category/${key}`}
+          data-count-for={key}
+          class="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3.5 py-1.5 text-sm text-ink hover:border-brand hover:text-brand transition-colors"
+        >
+          <span>{categoryConfig[key].label}</span>
+          <span data-count class="tabular-nums text-muted">–</span>
+        </a>
       ))}
     </div>
-  </div>
+  </section>
 
-  <!-- Grid -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-    {items.map(item => (
-      <ItemCard
-        title={item.title}
-        category={item.category}
-        tags={item.tags}
-        summary={item.summary}
-        cover={item.cover}
-        slug={item.id}
-        country={item.country}
-      />
-    ))}
-  </div>
+  <section class="mb-12" aria-labelledby="featured-heading">
+    <div class="flex items-baseline justify-between mb-4">
+      <h2 id="featured-heading" class="text-xl font-bold text-ink scroll-mt-20">精选</h2>
+      <p class="text-sm text-muted">编辑挑出来的入口</p>
+    </div>
+    <div id="featured-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {[1, 2, 3].map(() => (
+        <div class="rounded-2xl border border-line bg-white overflow-hidden animate-pulse">
+          <div class="aspect-[4/3] bg-line/60"></div>
+          <div class="p-4 space-y-2">
+            <div class="h-3 w-16 bg-line rounded"></div>
+            <div class="h-4 w-2/3 bg-line rounded"></div>
+            <div class="h-3 w-full bg-line rounded"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section aria-labelledby="all-heading">
+    <div class="flex items-baseline justify-between mb-4">
+      <h2 id="all-heading" class="text-xl font-bold text-ink scroll-mt-20">全部</h2>
+      <p id="all-count" class="text-sm text-muted"></p>
+    </div>
+    <div id="all-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    <p id="home-error" class="hidden text-center py-16 text-muted"></p>
+  </section>
 </BaseLayout>
+
+<script>
+  import { fetchHome } from '../lib/api';
+  import { itemCardsHTML } from '../lib/item-card';
+
+  const featuredGrid = document.getElementById('featured-grid');
+  const allGrid = document.getElementById('all-grid');
+  const allCount = document.getElementById('all-count');
+  const errorEl = document.getElementById('home-error');
+
+  try {
+    const { featured, items, counts } = await fetchHome();
+
+    document.querySelectorAll<HTMLElement>('[data-count-for]').forEach((chip) => {
+      const key = chip.dataset.countFor;
+      const span = chip.querySelector('[data-count]');
+      if (key && span) span.textContent = String(counts[key] ?? 0);
+    });
+
+    if (featuredGrid) featuredGrid.innerHTML = itemCardsHTML(featured);
+    if (allGrid) allGrid.innerHTML = itemCardsHTML(items);
+    if (allCount) allCount.textContent = `${items.length} 条`;
+  } catch {
+    if (featuredGrid) featuredGrid.innerHTML = '';
+    if (errorEl) {
+      errorEl.textContent = '内容暂时加载不出来，请确认 API Worker 已启动。';
+      errorEl.classList.remove('hidden');
+    }
+  }
+</script>

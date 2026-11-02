@@ -1,0 +1,239 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SITE_DESCRIPTION } from '../../lib/site';
+---
+
+<BaseLayout title="条目" description={SITE_DESCRIPTION}>
+  <a id="back-link" href="/" class="inline-flex items-center gap-1 text-sm text-muted hover:text-ink transition-colors mb-8">
+    ← 返回
+  </a>
+
+  <div id="item-error" class="hidden text-center py-20 text-muted">
+    <p>没有这条内容</p>
+    <a href="/" class="inline-block mt-4 text-sm text-brand hover:underline">回到首页</a>
+  </div>
+
+  <div id="item-body" class="hidden">
+    <div class="flex flex-col sm:flex-row gap-6 mb-10">
+      <div id="item-cover" class="shrink-0 w-full sm:w-40 overflow-hidden rounded-xl"></div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-3">
+          <a id="item-cat" href="#" class="inline-block text-xs font-medium px-2 py-0.5 rounded-full"></a>
+          <span id="item-country" class="text-xs text-muted"></span>
+          <span class="text-xs text-line ml-auto flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span id="view-count">—</span>
+          </span>
+        </div>
+
+        <h1 id="item-title" class="text-2xl sm:text-3xl font-bold text-ink mb-2 scroll-mt-20"></h1>
+
+        <div id="community-rating" class="hidden items-center gap-1.5 mb-3">
+          <span class="text-brand-soft font-semibold" id="community-avg"></span>
+          <span class="text-muted text-sm">/ 5.0</span>
+          <span class="text-xs text-muted ml-1" id="community-count"></span>
+        </div>
+
+        <p id="item-summary" class="text-muted leading-relaxed mb-4"></p>
+        <div id="item-tags" class="flex flex-wrap gap-2 mb-4"></div>
+        <a
+          id="item-link"
+          href="#"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hidden inline-flex items-center gap-1.5 text-sm text-ink bg-white border border-line hover:border-brand hover:text-brand px-4 py-2 rounded-full transition-colors"
+        >查看详情 →</a>
+      </div>
+    </div>
+
+    <article id="item-article" class="prose prose-stone max-w-none prose-headings:font-bold prose-a:text-brand-soft"></article>
+
+    <div class="mt-10 pt-8 border-t border-line">
+      <p class="text-sm text-muted mb-3">你觉得怎么样？</p>
+      <div class="flex items-center gap-1" id="star-rating">
+        {[1, 2, 3, 4, 5].map((s) => (
+          <button data-score={s} class="star-btn text-2xl text-line hover:text-brand-warm transition-colors leading-none" aria-label={`${s} 星`}>★</button>
+        ))}
+      </div>
+      <p id="rating-feedback" class="text-xs text-muted mt-2 h-4"></p>
+    </div>
+
+    <div id="item-date" class="mt-6 text-sm text-muted"></div>
+
+    <section id="related-section" class="hidden mt-14">
+      <h2 class="text-xl font-bold text-ink mb-4 scroll-mt-20">同分类</h2>
+      <div id="related-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  import { marked } from 'marked';
+  import { fetchItem, fetchRelated, api } from '../../lib/api';
+  import { categoryConfig } from '../../lib/categories';
+  import { coverAspect, escapeHtml, itemCardsHTML } from '../../lib/item-card';
+  import { placeholderIcon } from '../../lib/placeholders';
+  import { SITE_NAME, SITE_URL } from '../../lib/site';
+
+  const slug = location.pathname.split('/').filter(Boolean)[1];
+  const back = document.getElementById('back-link');
+  if (back && document.referrer) {
+    try {
+      const ref = new URL(document.referrer);
+      if (ref.origin === location.origin && ref.pathname !== location.pathname) {
+        back.setAttribute('href', ref.pathname + ref.search);
+      }
+    } catch { /* ignore */ }
+  }
+
+  function setMeta(title: string, description: string, url: string) {
+    document.title = `${title} · ${SITE_NAME}`;
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute('content', description);
+    const canonical = document.getElementById('canonical') as HTMLLinkElement | null;
+    if (canonical) canonical.href = url;
+    const ogTitle = document.getElementById('og-title');
+    const ogDesc = document.getElementById('og-description');
+    const ogUrl = document.getElementById('og-url');
+    ogTitle?.setAttribute('content', `${title} · ${SITE_NAME}`);
+    ogDesc?.setAttribute('content', description);
+    ogUrl?.setAttribute('content', url);
+    document.getElementById('twitter-title')?.setAttribute('content', `${title} · ${SITE_NAME}`);
+    document.getElementById('twitter-description')?.setAttribute('content', description);
+  }
+
+  if (!slug) {
+    document.getElementById('item-error')?.classList.remove('hidden');
+  } else {
+    try {
+      const { item } = await fetchItem(slug);
+      const cat = categoryConfig[item.category] ?? categoryConfig.other;
+      const url = `${SITE_URL}/item/${item.id}`;
+      setMeta(item.title, item.summary, url);
+
+      const cover = document.getElementById('item-cover');
+      if (cover) {
+        const isPodcast = item.category === 'podcast';
+        cover.className = `shrink-0 w-full sm:w-40 overflow-hidden rounded-xl ${isPodcast ? 'aspect-square' : coverAspect(item.category)}`;
+        if (item.cover) {
+          cover.innerHTML = `<img src="${escapeHtml(item.cover)}" alt="${escapeHtml(item.title)}" class="w-full h-full object-cover ${isPodcast ? 'rounded-full' : ''}" />`;
+        } else {
+          cover.innerHTML = `<div class="w-full h-full flex items-center justify-center ${cat.detailPlaceholder}">${placeholderIcon(item.category)}</div>`;
+        }
+      }
+
+      const catEl = document.getElementById('item-cat') as HTMLAnchorElement | null;
+      if (catEl) {
+        catEl.href = `/category/${item.category}`;
+        catEl.textContent = cat.label;
+        catEl.className = `inline-block text-xs font-medium px-2 py-0.5 rounded-full ${cat.color} ${cat.bg}`;
+      }
+      const countryEl = document.getElementById('item-country');
+      if (countryEl) countryEl.textContent = item.country || '';
+      const titleEl = document.getElementById('item-title');
+      if (titleEl) titleEl.textContent = item.title;
+      const summaryEl = document.getElementById('item-summary');
+      if (summaryEl) summaryEl.textContent = item.summary;
+      const tagsEl = document.getElementById('item-tags');
+      if (tagsEl) {
+        tagsEl.innerHTML = item.tags
+          .map((tag) => `<span class="text-xs text-muted bg-white border border-line px-2.5 py-1 rounded-full">${escapeHtml(tag)}</span>`)
+          .join('');
+      }
+      const linkEl = document.getElementById('item-link') as HTMLAnchorElement | null;
+      if (linkEl && item.link) {
+        linkEl.href = item.link;
+        linkEl.classList.remove('hidden');
+      }
+      const article = document.getElementById('item-article');
+      if (article && item.body) article.innerHTML = await marked.parse(item.body);
+      const dateEl = document.getElementById('item-date');
+      if (dateEl) dateEl.textContent = `记于 ${item.date}`;
+
+      document.getElementById('item-body')?.classList.remove('hidden');
+
+      const KEY = `rated:${item.id}`;
+
+      async function initViews() {
+        fetch(`/api/views/${item.id}`, { method: 'POST' }).catch(() => {});
+        const res = await fetch(`/api/views/${item.id}`).catch(() => null);
+        if (!res?.ok) return;
+        const { count } = await res.json();
+        const el = document.getElementById('view-count');
+        if (el) el.textContent = count >= 1000 ? `${(count / 1000).toFixed(1)}k` : String(count);
+      }
+
+      function showCommunity(average: number | null, count: number) {
+        const wrap = document.getElementById('community-rating');
+        if (!wrap || !count) {
+          wrap?.classList.add('hidden');
+          wrap?.classList.remove('flex');
+          return;
+        }
+        wrap.classList.remove('hidden');
+        wrap.classList.add('flex');
+        const avgEl = document.getElementById('community-avg');
+        const cntEl = document.getElementById('community-count');
+        if (avgEl) avgEl.textContent = average ? average.toFixed(1) : '';
+        if (cntEl) cntEl.textContent = `(${count})`;
+      }
+
+      async function initRatings() {
+        const res = await fetch(`/api/ratings/${item.id}`).catch(() => null);
+        if (!res?.ok) return;
+        const { average, count } = await res.json();
+        showCommunity(average, count);
+      }
+
+      function highlightStars(score: number) {
+        document.querySelectorAll<HTMLElement>('.star-btn').forEach((btn) => {
+          btn.style.color = parseInt(btn.dataset.score ?? '0', 10) <= score ? '#EA580C' : '';
+        });
+      }
+
+      function initStars() {
+        const stars = document.querySelectorAll<HTMLElement>('.star-btn');
+        const feedback = document.getElementById('rating-feedback');
+        const saved = localStorage.getItem(KEY);
+        if (saved) {
+          highlightStars(parseInt(saved, 10));
+          if (feedback) feedback.textContent = '已评分，可以重新选择';
+        }
+        stars.forEach((btn) => {
+          btn.addEventListener('mouseenter', () => highlightStars(parseInt(btn.dataset.score ?? '0', 10)));
+          btn.addEventListener('mouseleave', () => highlightStars(parseInt(localStorage.getItem(KEY) ?? '0', 10)));
+          btn.addEventListener('click', async () => {
+            const score = parseInt(btn.dataset.score ?? '0', 10);
+            localStorage.setItem(KEY, String(score));
+            highlightStars(score);
+            if (feedback) feedback.textContent = '提交中…';
+            try {
+              const { average, count } = await api<{ average: number | null; count: number }>(`/api/ratings/${item.id}`, {
+                method: 'POST',
+                body: JSON.stringify({ score }),
+              });
+              showCommunity(average, count);
+              if (feedback) feedback.textContent = '感谢评分';
+            } catch {
+              if (feedback) feedback.textContent = '提交失败，请稍后再试';
+            }
+          });
+        });
+      }
+
+      initViews();
+      initRatings();
+      initStars();
+
+      const { items: related } = await fetchRelated(item.id).catch(() => ({ items: [] }));
+      if (related.length) {
+        const section = document.getElementById('related-section');
+        const relatedGrid = document.getElementById('related-grid');
+        if (relatedGrid) relatedGrid.innerHTML = itemCardsHTML(related);
+        section?.classList.remove('hidden');
+      }
+    } catch {
+      document.getElementById('item-error')?.classList.remove('hidden');
+    }
+  }
+</script>

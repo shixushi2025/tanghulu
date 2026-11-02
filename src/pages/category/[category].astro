@@ -1,43 +1,55 @@
 ---
-import { env } from 'cloudflare:workers';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import ItemCard from '../../components/ItemCard.astro';
-import { categoryConfig } from '../../lib/categories';
-import { getItemsByCategory } from '../../lib/db';
+import { allCategories, categoryConfig } from '../../lib/categories';
+import { SITE_DESCRIPTION } from '../../lib/site';
+
+export function getStaticPaths() {
+  return allCategories.map((category) => ({ params: { category } }));
+}
 
 const { category } = Astro.params;
-const cat = categoryConfig[category] ?? categoryConfig.other;
-
-const db = env.TANGHULU_DB;
-const items = await getItemsByCategory(db, category);
+const cat = categoryConfig[category ?? ''] ?? categoryConfig.other;
 ---
 
-<BaseLayout title={cat.label}>
+<BaseLayout title={cat.label} description={`${cat.label}精选 · ${SITE_DESCRIPTION}`}>
   <div class="mb-8">
-    <h1 class="text-3xl font-bold text-stone-900">{cat.label}</h1>
-    <p class="text-stone-400 mt-1">{items.length} 条</p>
+    <h1 class="text-3xl font-bold text-ink scroll-mt-20">{cat.label}</h1>
+    <p id="cat-count" class="text-muted mt-1">加载中…</p>
   </div>
 
-  {items.length === 0 ? (
-    <div class="text-center py-20 text-stone-400">
-      <div class="flex justify-center mb-4">
-        <img src="/favicon.svg" alt="" class="w-12 h-12 opacity-30" />
-      </div>
-      <p>还没有这个分类的内容</p>
+  <div id="cat-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  <div id="cat-empty" class="hidden text-center py-20 text-muted">
+    <div class="flex justify-center mb-4">
+      <img src="/favicon.svg" alt="" class="w-12 h-12 opacity-30" />
     </div>
-  ) : (
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      {items.map(item => (
-        <ItemCard
-          title={item.title}
-          category={item.category}
-          tags={item.tags}
-          summary={item.summary}
-          cover={item.cover}
-          slug={item.id}
-          country={item.country}
-        />
-      ))}
-    </div>
-  )}
+    <p>还没有这个分类的内容</p>
+  </div>
+  <p id="cat-error" class="hidden text-center py-16 text-muted"></p>
 </BaseLayout>
+
+<script>
+  import { fetchItems } from '../../lib/api';
+  import { itemCardsHTML } from '../../lib/item-card';
+
+  const category = location.pathname.split('/').filter(Boolean)[1];
+  const grid = document.getElementById('cat-grid');
+  const empty = document.getElementById('cat-empty');
+  const countEl = document.getElementById('cat-count');
+  const errorEl = document.getElementById('cat-error');
+
+  try {
+    const { items } = await fetchItems({ category });
+    if (countEl) countEl.textContent = `${items.length} 条`;
+    if (!items.length) {
+      empty?.classList.remove('hidden');
+    } else if (grid) {
+      grid.innerHTML = itemCardsHTML(items);
+    }
+  } catch {
+    if (countEl) countEl.textContent = '';
+    if (errorEl) {
+      errorEl.textContent = '内容暂时加载不出来，请确认 API Worker 已启动。';
+      errorEl.classList.remove('hidden');
+    }
+  }
+</script>

@@ -5,6 +5,7 @@ tags: [科幻, 烧脑, 父女情, 适合独处]
 rating: 4.9
 summary: "看完之后会沉默很久的那种电影，关于时间、爱与宇宙的史诗。"
 cover: ""
+featured: true
 date: 2026-03-01
 link: "https://movie.douban.com/subject/1889243/"
 mood: [深夜, 独自, 思考]

@@ -1,5 +1,5 @@
 ---
-import { categoryConfig } from '../lib/categories';
+import { itemCardHTML } from '../lib/item-card';
 
 interface Props {
   title: string;
@@ -11,54 +11,16 @@ interface Props {
   country?: string;
 }
 
-const { title, category, tags = [], summary, cover, slug, country } = Astro.props;
-const cat = categoryConfig[category] ?? categoryConfig.other;
+const { title, category, tags = [], summary, cover = '', slug, country = '' } = Astro.props;
+const html = itemCardHTML({
+  id: slug,
+  title,
+  category,
+  tags,
+  summary,
+  cover,
+  country,
+});
 ---
 
-<a
-  href={`/item/${slug}`}
-  class="group block bg-white rounded-2xl border border-stone-200 overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-200"
->
-  <!-- Cover -->
-  <div class="aspect-[4/3] overflow-hidden">
-    {cover ? (
-      <img src={cover} alt={title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-    ) : (
-      <div class={`w-full h-full flex items-center justify-center text-5xl font-bold ${cat.cardPlaceholder}`}>
-        {title.charAt(0)}
-      </div>
-    )}
-  </div>
-
-  <!-- Content -->
-  <div class="p-4">
-    <!-- Category + Country -->
-    <div class="flex items-center gap-1.5 mb-2">
-      <span class={`text-xs font-medium px-2 py-0.5 rounded-full ${cat.color} ${cat.bg}`}>
-        {cat.label}
-      </span>
-      {country && (
-        <span class="text-xs text-stone-400">{country}</span>
-      )}
-    </div>
-
-    <!-- Title -->
-    <h3 class="font-semibold text-stone-900 leading-tight group-hover:text-orange-500 transition-colors mb-2">
-      {title}
-    </h3>
-
-    <!-- Summary -->
-    <p class="text-sm text-stone-500 leading-relaxed line-clamp-2">{summary}</p>
-
-    <!-- Tags -->
-    {tags.length > 0 && (
-      <div class="flex flex-wrap gap-1 mt-3">
-        {tags.slice(0, 3).map(tag => (
-          <span class="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">
-            {tag}
-          </span>
-        ))}
-      </div>
-    )}
-  </div>
-</a>
+<Fragment set:html={html} />

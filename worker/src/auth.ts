@@ -13,11 +13,13 @@ async function getKey(password: string): Promise<CryptoKey> {
 
 function b64url(buf: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buf)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
 }
 
 function fromb64url(s: string): Uint8Array {
-  return Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+  return Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
 }
 
 export async function createToken(password: string): Promise<string> {
@@ -32,7 +34,7 @@ export async function verifyToken(token: string, password: string): Promise<bool
     const dot = token.indexOf('.');
     if (dot === -1) return false;
     const expiry = atob(token.slice(0, dot));
-    if (Date.now() > parseInt(expiry)) return false;
+    if (Date.now() > parseInt(expiry, 10)) return false;
     const key = await getKey(password);
     const sig = fromb64url(token.slice(dot + 1));
     return crypto.subtle.verify('HMAC', key, sig, new TextEncoder().encode(expiry));
@@ -47,10 +49,26 @@ export function getAdminToken(request: Request): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-export function tokenCookie(token: string): string {
-  return `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${7 * 24 * 3600}`;
+export function tokenCookie(token: string, secure: boolean): string {
+  const flags = [
+    `${COOKIE_NAME}=${encodeURIComponent(token)}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+    `Max-Age=${7 * 24 * 3600}`,
+  ];
+  if (secure) flags.push('Secure');
+  return flags.join('; ');
 }
 
-export function clearCookie(): string {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`;
+export function clearCookie(secure: boolean): string {
+  const flags = [
+    `${COOKIE_NAME}=`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+    'Max-Age=0',
+  ];
+  if (secure) flags.push('Secure');
+  return flags.join('; ');
 }

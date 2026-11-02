@@ -1,20 +1,5 @@
 ---
-import { env } from 'cloudflare:workers';
-import { getAllItems } from '../../lib/db';
-import { categoryConfig } from '../../lib/categories';
 import '../../styles/global.css';
-
-const db = env.TANGHULU_DB;
-const items = await getAllItems(db);
-
-const q = Astro.url.searchParams.get('q') ?? '';
-const filterCat = Astro.url.searchParams.get('cat') ?? '';
-
-const filtered = items.filter(item => {
-  const matchQ = !q || item.title.toLowerCase().includes(q.toLowerCase());
-  const matchCat = !filterCat || item.category === filterCat;
-  return matchQ && matchCat;
-});
 ---
 
 <!doctype html>
@@ -22,27 +7,26 @@ const filtered = items.filter(item => {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Dashboard · Admin</title>
   </head>
-  <body class="bg-stone-50 text-stone-900 antialiased min-h-screen">
-
-    <!-- Admin Header -->
-    <header class="sticky top-0 z-50 bg-white border-b border-stone-200">
+  <body class="bg-paper text-ink antialiased min-h-screen">
+    <header class="sticky top-0 z-50 bg-white border-b border-line">
       <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-          <a href="/" class="flex items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors text-sm">
-            <img src="/favicon.svg" alt="" class="w-5 h-5" />
+          <a href="/" class="flex items-center gap-2 text-muted hover:text-brand transition-colors text-sm">
+            <img src="/favicon.svg" alt="" class="w-8 h-8" />
             <span>糖葫芦</span>
           </a>
-          <span class="text-stone-300">/</span>
+          <span class="text-line">/</span>
           <span class="font-semibold text-sm">Admin</span>
         </div>
         <div class="flex items-center gap-3">
-          <a href="/admin/items/new" class="px-3 py-1.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity">
+          <a href="/admin/items/new" class="px-3 py-1.5 bg-ink text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity">
             + 新增
           </a>
-          <button id="logout-btn" class="px-3 py-1.5 text-sm text-stone-500 hover:text-stone-900 transition-colors">
+          <button id="logout-btn" class="px-3 py-1.5 text-sm text-muted hover:text-ink transition-colors">
             退出
           </button>
         </div>
@@ -50,140 +34,167 @@ const filtered = items.filter(item => {
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-8">
+      <div id="stats" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8"></div>
 
-      <!-- Stats -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        {(['film','book','tool','health','podcast'] as const).map(key => (
-          <a href={`/admin/dashboard?cat=${key}`} class={`bg-white border rounded-xl p-4 hover:border-stone-300 transition-colors ${filterCat === key ? 'border-stone-900' : 'border-stone-200'}`}>
-            <div class="text-2xl font-bold text-stone-900">{items.filter(i => i.category === key).length}</div>
-            <div class="text-sm text-stone-400 mt-0.5">{categoryConfig[key].label}</div>
-          </a>
-        ))}
-        <a href="/admin/dashboard" class={`bg-white border rounded-xl p-4 hover:border-stone-300 transition-colors ${!filterCat ? 'border-stone-900' : 'border-stone-200'}`}>
-          <div class="text-2xl font-bold text-stone-900">{items.length}</div>
-          <div class="text-sm text-stone-400 mt-0.5">全部</div>
-        </a>
-      </div>
-
-      <!-- Search filter -->
       <div class="flex gap-3 mb-6">
-        <form action="/admin/dashboard" method="get" class="flex gap-2 flex-1">
-          {filterCat && <input type="hidden" name="cat" value={filterCat} />}
+        <form id="filter-form" class="flex gap-2 flex-1">
           <input
             name="q"
-            value={q}
+            id="q"
             placeholder="搜索标题…"
-            class="flex-1 px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-400"
+            class="flex-1 px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-ink"
           />
-          <button type="submit" class="px-4 py-2 bg-stone-100 text-stone-700 text-sm rounded-lg hover:bg-stone-200 transition-colors">搜索</button>
-          {(q || filterCat) && <a href="/admin/dashboard" class="px-4 py-2 text-stone-500 text-sm rounded-lg hover:bg-stone-100 transition-colors self-center">清空</a>}
+          <button type="submit" class="px-4 py-2 bg-white border border-line text-ink text-sm rounded-lg hover:border-brand transition-colors">搜索</button>
+          <a href="/admin/dashboard" id="clear-filters" class="hidden px-4 py-2 text-muted text-sm rounded-lg hover:bg-white transition-colors self-center">清空</a>
         </form>
       </div>
 
-      <!-- Table -->
-      <div class="bg-white border border-stone-200 rounded-xl overflow-hidden">
+      <div class="bg-white border border-line rounded-xl overflow-hidden">
         <table class="w-full text-sm">
           <thead>
-            <tr class="border-b border-stone-100 text-left">
-              <th class="px-4 py-3 font-medium text-stone-500 w-2/5">标题</th>
-              <th class="px-4 py-3 font-medium text-stone-500 hidden sm:table-cell">分类</th>
-              <th class="px-4 py-3 font-medium text-stone-500 hidden md:table-cell">日期</th>
-              <th class="px-4 py-3 font-medium text-stone-500 hidden lg:table-cell">国家/地区</th>
-              <th class="px-4 py-3 font-medium text-stone-500 text-right">操作</th>
+            <tr class="border-b border-line text-left">
+              <th class="px-4 py-3 font-medium text-muted w-2/5">标题</th>
+              <th class="px-4 py-3 font-medium text-muted hidden sm:table-cell">分类</th>
+              <th class="px-4 py-3 font-medium text-muted hidden md:table-cell">日期</th>
+              <th class="px-4 py-3 font-medium text-muted hidden lg:table-cell">国家/地区</th>
+              <th class="px-4 py-3 font-medium text-muted text-right">操作</th>
             </tr>
           </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colspan="5" class="px-4 py-12 text-center text-stone-400">没有内容</td>
-              </tr>
-            ) : (
-              filtered.map(item => {
-                const cat = categoryConfig[item.category];
-                return (
-                  <tr class="border-b border-stone-50 hover:bg-stone-50 transition-colors last:border-0">
-                    <td class="px-4 py-3">
-                      <a href={`/item/${item.id}`} target="_blank" class="font-medium hover:text-orange-500 transition-colors line-clamp-1">{item.title}</a>
-                      <div class="text-xs text-stone-400 mt-0.5 font-mono">{item.id}</div>
-                    </td>
-                    <td class="px-4 py-3 hidden sm:table-cell">
-                      <span class={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${cat?.color ?? ''} ${cat?.bg ?? ''}`}>
-                        {cat?.label ?? item.category}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3 hidden md:table-cell text-stone-500">{item.date}</td>
-                    <td class="px-4 py-3 hidden lg:table-cell text-stone-500">{item.country || '—'}</td>
-                    <td class="px-4 py-3 text-right">
-                      <div class="flex items-center justify-end gap-2">
-                        <a href={`/admin/items/${item.id}/edit`} class="px-2.5 py-1 text-xs text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-md transition-colors">编辑</a>
-                        <button data-id={item.id} data-title={item.title} class="delete-btn px-2.5 py-1 text-xs text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors">删除</button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+          <tbody id="table-body">
+            <tr><td colspan="5" class="px-4 py-12 text-center text-muted">加载中…</td></tr>
           </tbody>
         </table>
-        {filtered.length > 0 && (
-          <div class="px-4 py-2 text-xs text-stone-400 border-t border-stone-100">
-            共 {filtered.length} 条{filtered.length !== items.length ? `（全部 ${items.length} 条）` : ''}
-          </div>
-        )}
+        <div id="table-foot" class="hidden px-4 py-2 text-xs text-muted border-t border-line"></div>
       </div>
     </main>
 
-    <!-- Delete confirm modal -->
     <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div class="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl">
         <h2 class="font-semibold text-lg mb-1">确认删除</h2>
-        <p class="text-stone-500 text-sm mb-5">删除 "<span id="modal-title" class="font-medium text-stone-900"></span>"？此操作不可撤销。</p>
+        <p class="text-muted text-sm mb-5">删除 "<span id="modal-title" class="font-medium text-ink"></span>"？此操作不可撤销。</p>
         <div class="flex gap-3">
-          <button id="modal-cancel" class="flex-1 px-4 py-2 text-sm border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors">取消</button>
-          <button id="modal-confirm" class="flex-1 px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">删除</button>
+          <button id="modal-cancel" class="flex-1 px-4 py-2 text-sm border border-line rounded-lg hover:bg-paper transition-colors">取消</button>
+          <button id="modal-confirm" class="flex-1 px-4 py-2 text-sm bg-brand text-white rounded-lg hover:opacity-90 transition-opacity">删除</button>
         </div>
       </div>
     </div>
 
     <script>
-      // Logout
+      import { fetchSession, fetchItems } from '../../lib/api';
+      import { categoryConfig } from '../../lib/categories';
+      import { escapeHtml } from '../../lib/item-card';
+      import type { Item } from '../../lib/types';
+
+      const navCats = ['film', 'book', 'tool', 'health', 'podcast'] as const;
+
+      try {
+        await fetchSession();
+      } catch {
+        location.href = '/admin';
+        throw new Error('unauth');
+      }
+
+      const params = new URLSearchParams(location.search);
+      const q = (params.get('q') ?? '').trim();
+      const filterCat = params.get('cat') ?? '';
+      const qInput = document.getElementById('q') as HTMLInputElement | null;
+      if (qInput) qInput.value = q;
+      if (q || filterCat) document.getElementById('clear-filters')?.classList.remove('hidden');
+
+      const { items } = await fetchItems();
+      const filtered = items.filter((item) => {
+        const matchQ = !q || item.title.toLowerCase().includes(q.toLowerCase());
+        const matchCat = !filterCat || item.category === filterCat;
+        return matchQ && matchCat;
+      });
+
+      const stats = document.getElementById('stats');
+      if (stats) {
+        const cards = navCats.map((key) => {
+          const active = filterCat === key ? 'border-ink' : 'border-line';
+          const n = items.filter((i) => i.category === key).length;
+          return `<a href="/admin/dashboard?cat=${key}" class="bg-white border rounded-xl p-4 hover:border-ink/40 transition-colors ${active}">
+            <div class="text-2xl font-bold text-ink">${n}</div>
+            <div class="text-sm text-muted mt-0.5">${categoryConfig[key].label}</div>
+          </a>`;
+        });
+        cards.push(`<a href="/admin/dashboard" class="bg-white border rounded-xl p-4 hover:border-ink/40 transition-colors ${!filterCat ? 'border-ink' : 'border-line'}">
+          <div class="text-2xl font-bold text-ink">${items.length}</div>
+          <div class="text-sm text-muted mt-0.5">全部</div>
+        </a>`);
+        stats.innerHTML = cards.join('');
+      }
+
+      const tbody = document.getElementById('table-body');
+      if (tbody) {
+        if (!filtered.length) {
+          tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-12 text-center text-muted">没有内容</td></tr>`;
+        } else {
+          tbody.innerHTML = filtered.map((item: Item) => {
+            const cat = categoryConfig[item.category];
+            return `<tr class="border-b border-line/60 hover:bg-paper transition-colors last:border-0">
+              <td class="px-4 py-3">
+                <a href="/item/${escapeHtml(item.id)}" target="_blank" class="font-medium hover:text-brand transition-colors line-clamp-1">${escapeHtml(item.title)}</a>
+                <div class="text-xs text-muted mt-0.5 font-mono">${escapeHtml(item.id)}${item.featured ? ' · 精选' : ''}</div>
+              </td>
+              <td class="px-4 py-3 hidden sm:table-cell">
+                <span class="inline-block text-xs font-medium px-2 py-0.5 rounded-full ${cat?.color ?? ''} ${cat?.bg ?? ''}">${escapeHtml(cat?.label ?? item.category)}</span>
+              </td>
+              <td class="px-4 py-3 hidden md:table-cell text-muted">${escapeHtml(item.date)}</td>
+              <td class="px-4 py-3 hidden lg:table-cell text-muted">${escapeHtml(item.country || '—')}</td>
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <a href="/admin/items/${escapeHtml(item.id)}/edit" class="px-2.5 py-1 text-xs text-ink bg-paper hover:bg-line rounded-md transition-colors">编辑</a>
+                  <button data-id="${escapeHtml(item.id)}" data-title="${escapeHtml(item.title)}" class="delete-btn px-2.5 py-1 text-xs text-brand bg-red-50 hover:bg-red-100 rounded-md transition-colors">删除</button>
+                </div>
+              </td>
+            </tr>`;
+          }).join('');
+        }
+      }
+
+      const foot = document.getElementById('table-foot');
+      if (foot && filtered.length) {
+        foot.classList.remove('hidden');
+        foot.textContent = `共 ${filtered.length} 条${filtered.length !== items.length ? `（全部 ${items.length} 条）` : ''}`;
+      }
+
       document.getElementById('logout-btn')?.addEventListener('click', async () => {
-        await fetch('/api/admin/logout', { method: 'POST' });
+        await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
         location.href = '/admin';
       });
 
-      // Delete
       const modal = document.getElementById('modal');
       const modalTitle = document.getElementById('modal-title');
-      const modalConfirm = document.getElementById('modal-confirm');
+      const modalConfirm = document.getElementById('modal-confirm') as HTMLButtonElement | null;
       const modalCancel = document.getElementById('modal-cancel');
       let pendingId = '';
 
-      document.querySelectorAll('.delete-btn').forEach(btn => {
+      document.querySelectorAll<HTMLButtonElement>('.delete-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
-          pendingId = btn.dataset.id;
-          modalTitle.textContent = btn.dataset.title;
-          modal.classList.remove('hidden');
+          pendingId = btn.dataset.id ?? '';
+          if (modalTitle) modalTitle.textContent = btn.dataset.title ?? '';
+          modal?.classList.remove('hidden');
         });
       });
 
       modalCancel?.addEventListener('click', () => {
-        modal.classList.add('hidden');
+        modal?.classList.add('hidden');
         pendingId = '';
       });
-
-      modal?.addEventListener('click', e => {
-        if (e.target === modal) { modal.classList.add('hidden'); pendingId = ''; }
+      modal?.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.add('hidden');
+          pendingId = '';
+        }
       });
-
       modalConfirm?.addEventListener('click', async () => {
         if (!pendingId) return;
         modalConfirm.disabled = true;
-        const res = await fetch(`/api/admin/items/${pendingId}`, { method: 'DELETE' });
-        if (res.ok) {
-          location.reload();
-        } else {
-          const data = await res.json();
+        const res = await fetch(`/api/admin/items/${pendingId}`, { method: 'DELETE', credentials: 'include' });
+        if (res.ok) location.reload();
+        else {
+          const data = await res.json().catch(() => ({}));
           alert(data.error ?? '删除失败');
           modalConfirm.disabled = false;
         }

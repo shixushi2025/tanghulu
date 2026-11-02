@@ -1,0 +1,188 @@
+---
+import { allCategories, categoryConfig } from '../../lib/categories';
+import '../../styles/global.css';
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>编辑 · Admin</title>
+  </head>
+  <body class="bg-paper text-ink antialiased min-h-screen">
+    <header class="sticky top-0 z-50 bg-white border-b border-line">
+      <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3 min-w-0">
+          <a href="/admin/dashboard" class="shrink-0 text-muted hover:text-ink transition-colors text-sm">← 返回</a>
+          <span class="text-line shrink-0">/</span>
+          <span id="header-title" class="font-semibold text-sm truncate">编辑</span>
+        </div>
+        <a id="preview-link" href="#" target="_blank" class="shrink-0 text-xs text-muted hover:text-ink transition-colors">预览 ↗</a>
+      </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+      <p id="load-error" class="hidden text-sm text-brand mb-4"></p>
+      <form id="item-form" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-5">
+          <div class="bg-white border border-line rounded-xl p-5 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">标题 <span class="text-brand">*</span></label>
+              <input id="f-title" type="text" required class="w-full px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-ink transition-colors" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">摘要 <span class="text-brand">*</span></label>
+              <textarea id="f-summary" rows="3" required class="w-full px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-ink transition-colors resize-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">正文（Markdown）</label>
+              <textarea id="f-body" rows="10" class="w-full px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-ink transition-colors resize-y font-mono"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-5">
+          <div class="bg-white border border-line rounded-xl p-5 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">ID（slug）</label>
+              <input id="f-id" type="text" readonly class="w-full px-3 py-2 border border-line/60 rounded-lg text-sm font-mono bg-paper text-muted cursor-not-allowed" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">分类 <span class="text-brand">*</span></label>
+              <select id="f-category" class="w-full px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-ink transition-colors bg-white">
+                {allCategories.map(key => (
+                  <option value={key}>{categoryConfig[key]?.label ?? key}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">日期 <span class="text-brand">*</span></label>
+              <input id="f-date" type="date" required class="w-full px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-ink transition-colors" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">国家/地区</label>
+              <input id="f-country" type="text" class="w-full px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-ink transition-colors" placeholder="美国、中国…" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">标签</label>
+              <input id="f-tags" type="text" class="w-full px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-ink transition-colors" placeholder="逗号分隔" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">封面图 URL</label>
+              <input id="f-cover" type="url" class="w-full px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-ink transition-colors" placeholder="https://…" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-ink mb-1.5">链接</label>
+              <input id="f-link" type="url" class="w-full px-3 py-2 border border-line rounded-lg text-sm focus:outline-none focus:border-ink transition-colors" placeholder="https://…" />
+            </div>
+            <label class="flex items-center gap-2 text-sm text-ink">
+              <input id="f-featured" type="checkbox" class="rounded border-line" />
+              精选（出现在首页精选）
+            </label>
+          </div>
+
+          <div class="flex gap-3">
+            <a href="/admin/dashboard" class="flex-1 px-4 py-2.5 text-sm text-center border border-line rounded-lg hover:bg-white transition-colors">取消</a>
+            <button type="submit" id="submit-btn" class="flex-1 px-4 py-2.5 text-sm bg-ink text-white rounded-lg hover:opacity-90 transition-opacity font-medium">保存</button>
+          </div>
+          <p id="form-error" class="text-sm text-brand hidden"></p>
+        </div>
+      </form>
+    </main>
+
+    <script>
+      import { fetchSession, fetchItem } from '../../lib/api';
+
+      function itemIdFromLocation() {
+        const fromPath = location.pathname.match(/^\/admin\/items\/([^/]+)\/edit/);
+        if (fromPath) return fromPath[1];
+        return new URLSearchParams(location.search).get('id');
+      }
+
+      try { await fetchSession(); } catch { location.href = '/admin'; throw new Error('unauth'); }
+
+      const itemId = itemIdFromLocation();
+      const errLoad = document.getElementById('load-error');
+      if (!itemId) {
+        if (errLoad) {
+          errLoad.textContent = '缺少条目 ID';
+          errLoad.classList.remove('hidden');
+        }
+      } else {
+        try {
+          const { item } = await fetchItem(itemId);
+          (document.getElementById('f-id') as HTMLInputElement).value = item.id;
+          (document.getElementById('f-title') as HTMLInputElement).value = item.title;
+          (document.getElementById('f-summary') as HTMLTextAreaElement).value = item.summary;
+          (document.getElementById('f-body') as HTMLTextAreaElement).value = item.body;
+          (document.getElementById('f-category') as HTMLSelectElement).value = item.category;
+          (document.getElementById('f-date') as HTMLInputElement).value = item.date;
+          (document.getElementById('f-country') as HTMLInputElement).value = item.country;
+          (document.getElementById('f-tags') as HTMLInputElement).value = item.tags.join(', ');
+          (document.getElementById('f-cover') as HTMLInputElement).value = item.cover;
+          (document.getElementById('f-link') as HTMLInputElement).value = item.link;
+          (document.getElementById('f-featured') as HTMLInputElement).checked = Boolean(item.featured);
+          const header = document.getElementById('header-title');
+          if (header) header.textContent = item.title;
+          const preview = document.getElementById('preview-link') as HTMLAnchorElement | null;
+          if (preview) preview.href = `/item/${item.id}`;
+          document.getElementById('item-form')?.classList.remove('hidden');
+        } catch {
+          if (errLoad) {
+            errLoad.textContent = '加载失败';
+            errLoad.classList.remove('hidden');
+          }
+        }
+      }
+
+      document.getElementById('item-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!itemId) return;
+        const btn = document.getElementById('submit-btn') as HTMLButtonElement;
+        const errEl = document.getElementById('form-error') as HTMLElement;
+        btn.disabled = true;
+        btn.textContent = '保存中…';
+        errEl.classList.add('hidden');
+
+        const payload = {
+          title: (document.getElementById('f-title') as HTMLInputElement).value.trim(),
+          summary: (document.getElementById('f-summary') as HTMLTextAreaElement).value.trim(),
+          body: (document.getElementById('f-body') as HTMLTextAreaElement).value.trim(),
+          category: (document.getElementById('f-category') as HTMLSelectElement).value,
+          date: (document.getElementById('f-date') as HTMLInputElement).value,
+          country: (document.getElementById('f-country') as HTMLInputElement).value.trim(),
+          tags: (document.getElementById('f-tags') as HTMLInputElement).value.trim(),
+          cover: (document.getElementById('f-cover') as HTMLInputElement).value.trim(),
+          link: (document.getElementById('f-link') as HTMLInputElement).value.trim(),
+          featured: (document.getElementById('f-featured') as HTMLInputElement).checked,
+        };
+
+        try {
+          const res = await fetch(`/api/admin/items/${itemId}`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            location.href = `/item/${itemId}`;
+          } else {
+            errEl.textContent = data.error ?? '保存失败';
+            errEl.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = '保存';
+          }
+        } catch {
+          errEl.textContent = '网络错误，请重试';
+          errEl.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = '保存';
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,15 +1,5 @@
 ---
-import { env } from 'cloudflare:workers';
-import { getAdminToken, verifyToken } from '../../lib/auth';
 import '../../styles/global.css';
-
-const password = env.ADMIN_PASSWORD;
-if (password) {
-  const token = getAdminToken(Astro.request);
-  if (token && await verifyToken(token, password)) {
-    return Astro.redirect('/admin/dashboard');
-  }
-}
 ---
 
 <!doctype html>
@@ -17,6 +7,7 @@ if (password) {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Admin · 糖葫芦</title>
     <style>
@@ -24,10 +15,10 @@ if (password) {
       body { font-family: system-ui, sans-serif; background: #fafaf9; color: #1c1917; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
       .card { background: #fff; border: 1px solid #e7e5e4; border-radius: 12px; padding: 2rem; width: 100%; max-width: 360px; }
       .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.125rem; margin-bottom: 1.5rem; }
-      .logo img { width: 24px; height: 24px; }
+      .logo img { width: 32px; height: 32px; }
       label { display: block; font-size: 0.875rem; font-weight: 500; color: #57534e; margin-bottom: 4px; }
       input[type=password] { width: 100%; padding: 0.625rem 0.75rem; border: 1px solid #d6d3d1; border-radius: 8px; font-size: 0.9375rem; outline: none; transition: border-color 0.15s; }
-      input[type=password]:focus { border-color: #1c1917; }
+      input[type=password]:focus { border-color: #dc2626; }
       button { width: 100%; margin-top: 1rem; padding: 0.625rem; background: #1c1917; color: #fff; border: none; border-radius: 8px; font-size: 0.9375rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
       button:hover { opacity: 0.85; }
       button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -46,9 +37,13 @@ if (password) {
       <p id="err" class="error" hidden></p>
     </div>
     <script>
-      const input = document.getElementById('pwd');
-      const btn = document.getElementById('btn');
-      const err = document.getElementById('err');
+      fetch('/api/admin/session', { credentials: 'include' }).then((res) => {
+        if (res.ok) location.href = '/admin/dashboard';
+      }).catch(() => {});
+
+      const input = document.getElementById('pwd') as HTMLInputElement;
+      const btn = document.getElementById('btn') as HTMLButtonElement;
+      const err = document.getElementById('err') as HTMLElement;
 
       async function login() {
         const password = input.value;
@@ -58,6 +53,7 @@ if (password) {
         try {
           const res = await fetch('/api/admin/login', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password }),
           });
@@ -69,14 +65,14 @@ if (password) {
             err.hidden = false;
           }
         } catch {
-          err.textContent = '网络错误';
+          err.textContent = '网络错误（API Worker 是否已启动？）';
           err.hidden = false;
         }
         btn.disabled = false;
       }
 
       btn.addEventListener('click', login);
-      input.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
       input.focus();
     </script>
   </body>

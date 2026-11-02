@@ -5,6 +5,7 @@ tags: [科技, AI, 英文, 深度访谈]
 rating: 4.7
 summary: "和全球最聪明的人深度对话，Musk、Altman、Zuckerberg 都来过，每期动辄 3 小时。"
 cover: ""
+featured: true
 date: 2026-03-15
 link: "https://lexfridman.com/podcast"
 mood: [长途, 健身, 深度]

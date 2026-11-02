@@ -5,6 +5,7 @@ tags: [AI对话, 写作, 长文本, Anthropic]
 rating: 4.8
 summary: "目前写作和长文本理解最强的 AI，回答质量高、逻辑清晰，特别适合深度思考类任务。"
 cover: ""
+featured: true
 date: 2026-03-15
 link: "https://claude.ai"
 mood: [写作, 思考, 深度工作]

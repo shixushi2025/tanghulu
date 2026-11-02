@@ -26,6 +26,8 @@ function parseFrontmatter(content) {
       } catch {
         data[key] = val.slice(1, -1).split(',').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
       }
+    } else if (val === 'true' || val === 'false') {
+      data[key] = val === 'true';
     // quoted string
     } else if (val.startsWith('"') || val.startsWith("'")) {
       data[key] = val.replace(/^['"]|['"]$/g, '');
@@ -59,8 +61,10 @@ for (const file of files) {
   const mood = JSON.stringify(Array.isArray(data.mood) ? data.mood : []);
   const date = data.date ? String(data.date).slice(0, 10) : new Date().toISOString().slice(0, 10);
 
+  const featured = data.featured ? 1 : 0;
+
   statements.push(
-    `INSERT OR REPLACE INTO items (id, title, category, tags, summary, cover, date, link, mood, country, body) VALUES ('${escape(id)}', '${escape(data.title)}', '${escape(data.category)}', '${escape(tags)}', '${escape(data.summary)}', '${escape(data.cover || '')}', '${escape(date)}', '${escape(data.link || '')}', '${escape(mood)}', '${escape(data.country || '')}', '${escape(body)}');`
+    `INSERT OR REPLACE INTO items (id, title, category, tags, summary, cover, date, link, mood, country, body, featured) VALUES ('${escape(id)}', '${escape(data.title)}', '${escape(data.category)}', '${escape(tags)}', '${escape(data.summary)}', '${escape(data.cover || '')}', '${escape(date)}', '${escape(data.link || '')}', '${escape(mood)}', '${escape(data.country || '')}', '${escape(body)}', ${featured});`
   );
 }
 

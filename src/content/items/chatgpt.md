@@ -5,6 +5,7 @@ tags: [AI对话, 写作, 通用, OpenAI]
 rating: 4.7
 summary: "AI 对话的开山鼻祖，生态最完整，插件和 GPTs 丰富，日常用途覆盖面最广。"
 cover: ""
+featured: true
 date: 2026-03-15
 link: "https://chatgpt.com"
 mood: [工作, 写作, 学习]

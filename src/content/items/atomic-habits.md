@@ -5,6 +5,7 @@ tags: [习惯, 自我提升, 心理, 必读]
 rating: 4.8
 summary: "改变行为最实用的指南，不靠意志力，靠系统。读完之后真的会去改变一些事情。"
 cover: ""
+featured: true
 date: 2026-03-15
 link: ""
 mood: [早晨, 改变, 行动]

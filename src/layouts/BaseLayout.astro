@@ -1,23 +1,27 @@
 ---
 import '../styles/global.css';
 import { visibleCategories, categoryConfig } from '../lib/categories';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_SLOGAN, SITE_URL } from '../lib/site';
 
 interface Props {
   title?: string;
   description?: string;
+  noIndex?: boolean;
 }
 
 const {
-  title = '糖葫芦',
-  description = '糖葫芦',
+  title,
+  description = SITE_DESCRIPTION,
+  noIndex = false,
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
+const canonical = new URL(currentPath, SITE_URL).href;
+const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} · ${SITE_SLOGAN}`;
 
-// Determine active category from path
 const categoryMatch = currentPath.match(/^\/category\/([^/]+)/);
 const activeCategory = categoryMatch ? categoryMatch[1] : null;
-const isHome = currentPath === '/';
+const isHome = currentPath === '/' || currentPath === '';
 ---
 
 <!doctype html>
@@ -25,50 +29,57 @@ const isHome = currentPath === '/';
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    {noIndex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="canonical" href={canonical} id="canonical" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title === '糖葫芦' ? title : `${title} · 糖葫芦`}</title>
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:type" content={isHome ? 'website' : 'article'} />
+    <meta property="og:title" content={fullTitle} id="og-title" />
+    <meta property="og:description" content={description} id="og-description" />
+    <meta property="og:url" content={canonical} id="og-url" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={fullTitle} id="twitter-title" />
+    <meta name="twitter:description" content={description} id="twitter-description" />
   </head>
-  <body class="bg-stone-50 text-stone-900 antialiased">
-    <!-- Header -->
-    <header class="sticky top-0 z-50 bg-stone-50/95 backdrop-blur border-b border-stone-200">
+  <body class="bg-paper text-ink antialiased min-h-screen flex flex-col">
+    <header class="sticky top-0 z-50 bg-paper/95 backdrop-blur border-b border-line">
       <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-        <!-- Logo -->
-        <a href="/" class="flex items-center gap-2 font-bold text-lg text-stone-900 hover:text-orange-500 transition-colors">
-          <img src="/favicon.svg" alt="" class="w-6 h-6" />
-          <span>糖葫芦</span>
+        <a href="/" class="flex items-center gap-2 font-bold text-lg text-ink hover:text-brand transition-colors">
+          <img src="/favicon.svg" alt="" class="w-8 h-8" width="32" height="32" />
+          <span>{SITE_NAME}</span>
         </a>
 
-        <!-- Desktop nav: categories + about -->
         <nav class="hidden md:flex items-center gap-0.5">
           <a
             href="/"
             class={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              isHome ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
+              isHome ? 'bg-ink text-white' : 'text-muted hover:text-brand hover:bg-white'
             }`}
           >全部</a>
           {visibleCategories.map(key => (
             <a
               href={`/category/${key}`}
               class={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                activeCategory === key ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
+                activeCategory === key ? 'bg-ink text-white' : 'text-muted hover:text-brand hover:bg-white'
               }`}
             >
               {categoryConfig[key].label}
             </a>
           ))}
-          <span class="w-px h-4 bg-stone-200 mx-1"></span>
+          <span class="w-px h-4 bg-line mx-1"></span>
           <a
             href="/about"
             class={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              currentPath === '/about' ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
+              currentPath === '/about' ? 'bg-ink text-white' : 'text-muted hover:text-brand hover:bg-white'
             }`}
           >关于</a>
         </nav>
 
-        <!-- Right: search + hamburger -->
         <div class="flex items-center gap-2">
-          <a href="/search" class="flex items-center justify-center w-8 h-8 text-stone-400 hover:text-stone-700 transition-colors" aria-label="搜索">
+          <a href="/search" class="flex items-center justify-center w-8 h-8 text-muted hover:text-brand transition-colors" aria-label="搜索">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
             </svg>
@@ -77,43 +88,45 @@ const isHome = currentPath === '/';
             id="menu-btn"
             class="md:hidden flex flex-col justify-center gap-1.5 w-8 h-8 p-1"
             aria-label="菜单"
+            aria-expanded="false"
           >
-            <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar1"></span>
-            <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar2"></span>
-            <span class="block h-0.5 bg-stone-700 rounded transition-all duration-200" id="bar3"></span>
+            <span class="block h-0.5 bg-ink rounded transition-all duration-200" id="bar1"></span>
+            <span class="block h-0.5 bg-ink rounded transition-all duration-200" id="bar2"></span>
+            <span class="block h-0.5 bg-ink rounded transition-all duration-200" id="bar3"></span>
           </button>
         </div>
       </div>
     </header>
 
-    <!-- Mobile menu -->
     <div
       id="mobile-menu"
-      class="hidden md:hidden fixed top-14 left-0 right-0 z-40 bg-stone-50/98 backdrop-blur border-b border-stone-200 shadow-lg"
+      class="hidden md:hidden fixed top-14 left-0 right-0 z-40 bg-paper/98 backdrop-blur border-b border-line shadow-lg"
     >
       <nav class="max-w-5xl mx-auto px-4 py-3 grid grid-cols-3 gap-1">
-        <a href="/" class={`px-3 py-2 rounded-xl text-sm font-medium text-center transition-colors ${isHome ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>全部</a>
+        <a href="/" class={`px-3 py-2 rounded-xl text-sm font-medium text-center transition-colors ${isHome ? 'bg-ink text-white' : 'text-ink hover:bg-white'}`}>全部</a>
         {visibleCategories.map(key => (
           <a
             href={`/category/${key}`}
-            class={`px-3 py-2 rounded-xl text-sm font-medium text-center transition-colors ${activeCategory === key ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+            class={`px-3 py-2 rounded-xl text-sm font-medium text-center transition-colors ${activeCategory === key ? 'bg-ink text-white' : 'text-ink hover:bg-white'}`}
           >
             {categoryConfig[key].label}
           </a>
         ))}
-        <a href="/about" class={`px-3 py-2 rounded-xl text-sm font-medium text-center transition-colors ${currentPath === '/about' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}>关于</a>
+        <a href="/about" class={`px-3 py-2 rounded-xl text-sm font-medium text-center transition-colors ${currentPath === '/about' ? 'bg-ink text-white' : 'text-ink hover:bg-white'}`}>关于</a>
       </nav>
     </div>
 
-    <!-- Main -->
-    <main class="max-w-5xl mx-auto px-4 py-10">
+    <main class="flex-1 max-w-5xl mx-auto w-full px-4 pt-12 pb-10">
       <slot />
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-stone-100 mt-16">
-      <div class="max-w-5xl mx-auto px-4 py-8 text-center text-sm text-stone-400">
-        <p>糖葫芦 · 精选那些值得你时间的东西</p>
+    <footer class="border-t border-line mt-8">
+      <div class="max-w-5xl mx-auto px-4 py-8 text-center text-sm text-muted space-y-3">
+        <p>{SITE_NAME} · {SITE_SLOGAN}</p>
+        <nav class="flex justify-center gap-5">
+          <a href="/about" class="hover:text-brand transition-colors">关于</a>
+          <a href="/search" class="hover:text-brand transition-colors">搜索</a>
+        </nav>
       </div>
     </footer>
 
@@ -128,11 +141,13 @@ const isHome = currentPath === '/';
         const isOpen = !menu?.classList.contains('hidden');
         if (isOpen) {
           menu?.classList.add('hidden');
+          btn?.setAttribute('aria-expanded', 'false');
           bar1!.style.transform = '';
           bar2!.style.opacity = '';
           bar3!.style.transform = '';
         } else {
           menu?.classList.remove('hidden');
+          btn?.setAttribute('aria-expanded', 'true');
           bar1!.style.transform = 'translateY(8px) rotate(45deg)';
           bar2!.style.opacity = '0';
           bar3!.style.transform = 'translateY(-8px) rotate(-45deg)';

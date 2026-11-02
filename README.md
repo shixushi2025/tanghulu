@@ -1,43 +1,23 @@
-# Astro Starter Kit: Minimal
+# 糖葫芦
 
-```sh
-npm create astro@latest -- --template minimal
+个人精选站：[tanghulu.life](https://tanghulu.life) — 「精选那些值得你时间的东西」。
+
+- **Frontend**: Astro static + 客户端请求 API（Cloudflare Pages）
+- **Backend**: 独立 Cloudflare Worker（D1 条目、KV 浏览次数、admin 鉴权、评分、sitemap）
+
+部署细节见 [DEPLOYMENT.md](./DEPLOYMENT.md)。
+
+## 本地
+
+```bash
+npm install
+npm run db:migrate:local
+npm run dev:api   # 另一个终端
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+后台：`/admin`（Worker secret `ADMIN_PASSWORD`）。
 
-## 🚀 Project Structure
+## 内容
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+条目 seed 在 `src/content/items/*.md`，运行时以 D1 为准。首页「精选」读取 `featured` 列（迁移 `migrations/0004_featured.sql`）；未迁移时 Worker 会用内置 ID 兜底。
