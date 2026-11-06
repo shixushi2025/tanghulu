@@ -1,177 +1,290 @@
 ---
 import { env } from 'cloudflare:workers';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import ItemCard from '../../components/ItemCard.astro';
+import CoverImage from '../../components/CoverImage.astro';
+import { imageMetadata } from '../../lib/images';
 import { categoryConfig } from '../../lib/categories';
-import { getItemById } from '../../lib/db';
+import { getItemById, getRelatedItems } from '../../lib/db';
 import { marked } from 'marked';
+import xss, { getDefaultWhiteList } from 'xss';
 
 const { slug } = Astro.params;
 const db = env.TANGHULU_DB;
-const item = await getItemById(db, slug);
+const item = slug ? await getItemById(db, slug) : null;
 
-if (!item) return Astro.redirect('/404');
+if (!item) Astro.response.status = 404;
 
-const cat = categoryConfig[item.category] ?? categoryConfig.other;
-const bodyHtml = item.body ? marked(item.body) : '';
+const cat = item ? (categoryConfig[item.category] ?? categoryConfig.other) : categoryConfig.other;
+const rawBody = item?.body ? await marked(item.body) : '';
+let bodyHtml = xss(rawBody, {
+  whiteList: {
+    ...getDefaultWhiteList(),
+    a: ['href', 'title', 'target', 'rel'],
+    img: ['src', 'alt', 'title', 'width', 'height', 'loading'],
+  },
+  stripIgnoreTag: true,
+  stripIgnoreTagBody: ['script', 'style', 'iframe', 'object'],
+});
+
+const headings: { id: string; title: string }[] = [];
+bodyHtml = bodyHtml.replace(/<h2>([\s\S]*?)<\/h2>/g, (_, title: string) => {
+  const id = `section-${headings.length + 1}`;
+  headings.push({ id, title: title.replace(/<[^>]+>/g, '') });
+  return `<h2 id="${id}">${title}</h2>`;
+});
+const readingMinutes = Math.max(1, Math.ceil((item?.body.length ?? 0) / 400));
+const relatedItems = item ? await getRelatedItems(db, item.category, item.id) : [];
+
+const coverMetadata = imageMetadata(item?.cover);
+const externalLabel = item
+  ? item.category === 'tool' ? `打开 ${item.title}`
+    : item.category === 'film' ? '去豆瓣看看'
+    : item.category === 'podcast' ? '去听听'
+    : item.category === 'book' ? '查看这本书'
+    : '打开原页面'
+  : '';
 ---
 
-<BaseLayout title={item.title} description={item.summary}>
-  <a href="javascript:history.back()" class="inline-flex items-center gap-1 text-sm text-stone-400 hover:text-stone-700 transition-colors mb-8">
-    ← 返回
-  </a>
+{item ? (
+  <BaseLayout title={item.title} description={item.summary}>
+    <nav class="breadcrumbs" aria-label="面包屑">
+      <a href="/">整串</a><span aria-hidden="true">/</span>
+      <a href={`/category/${item.category}`}>{cat.label}</a><span aria-hidden="true">/</span>
+      <span aria-current="page">{item.title}</span>
+    </nav>
 
-  <div class="flex flex-col sm:flex-row gap-6 mb-10">
-    <!-- Cover -->
-    <div class="shrink-0 w-full sm:w-40 h-48 sm:h-52 rounded-xl overflow-hidden">
-      {item.cover ? (
-        <img src={item.cover} alt={item.title} class="w-full h-full object-cover" />
-      ) : (
-        <div class={`w-full h-full flex items-center justify-center text-6xl font-bold ${cat.detailPlaceholder}`}>
-          {item.title.charAt(0)}
+    <article class="detail-hero" style={`--category-accent:${cat.accent};--category-tint:${cat.tint}`}>
+      <figure class="detail-cover">
+      <div class="detail-poster">
+        <CoverImage src={item.cover} title={item.title} category={item.category} eager detail>
+          <div class="detail-poster__art" aria-hidden="true">
+            <span class="detail-poster__label">TANGHULU SELECTS</span>
+            <span class="detail-poster__number">{cat.shortLabel}</span>
+            <span class="detail-poster__skewer"></span>
+            <span class="detail-poster__fruit detail-poster__fruit--one"></span>
+            <span class="detail-poster__fruit detail-poster__fruit--two"></span>
+            <span class="detail-poster__fruit detail-poster__fruit--three"></span>
+            <span class="detail-poster__category">{cat.label}</span>
+          </div>
+        </CoverImage>
+      </div>
+      {coverMetadata && <figcaption class="image-credit">
+        {coverMetadata.edition && <span>{coverMetadata.edition} · </span>}
+        <a href={coverMetadata.sourcePage} target="_blank" rel="noopener noreferrer">图片来源 ↗</a>
+        {coverMetadata.credit && <span> · {coverMetadata.credit} · <a href={coverMetadata.licenseUrl} target="_blank" rel="noopener noreferrer">{coverMetadata.license}</a> · {coverMetadata.transformation}</span>}
+      </figcaption>}
+      </figure>
+
+      <div class="detail-hero__copy">
+        <div class="detail-hero__meta">
+          <a class="category-pill" href={`/category/${item.category}`} style={`--pill-accent:${cat.accent};--pill-tint:${cat.tint}`}>{cat.label}</a>
+          {item.country && <span>{item.country}</span>}
+          <time datetime={item.date}>{item.date}</time>
         </div>
-      )}
+        <p class="section-kicker">一颗认真整理的内容</p>
+        <h1>{item.title}</h1>
+        <p class="detail-hero__summary"><span>一句话</span>{item.summary}</p>
+
+        {item.mood.length > 0 && (
+          <div class="detail-contexts">
+            <span>适合</span>
+            <ul aria-label="适合场景">
+              {item.mood.map((mood) => <li>{mood}</li>)}
+            </ul>
+          </div>
+        )}
+
+        <div class="detail-actions">
+          {item.link && (
+            <a href={item.link} target="_blank" rel="noopener noreferrer" class="button button--primary">
+              {externalLabel} <span aria-hidden="true">↗</span>
+            </a>
+          )}
+          <button id="share-button" class="button button--secondary" type="button">分享这颗 <span aria-hidden="true">↗</span></button>
+        </div>
+
+        <div class="detail-stats" aria-label="社区数据">
+          <div><strong id="community-avg">—</strong><span>社区评分 / 5</span></div>
+          <div><strong id="community-count">—</strong><span>人留下评分</span></div>
+          <div><strong id="view-count">—</strong><span>次被摘下</span></div>
+        </div>
+      </div>
+    </article>
+
+    <div class="detail-layout">
+      <article class="detail-article prose"><p class="reading-meta">约 {readingMinutes} 分钟阅读 · 供你慢慢挑选</p><Fragment set:html={bodyHtml || '<p>这颗内容的详细介绍正在整理中。</p>'} /></article>
+
+      <aside class="detail-sidebar">
+        {headings.length > 0 && <nav class="reading-nav" aria-label="本文目录"><h2>这颗的味道</h2>{headings.map(heading => <a href={`#${heading.id}`}>{heading.title}</a>)}</nav>}
+        <div class="rating-panel">
+          <p class="section-kicker">轮到你了</p>
+          <h2>你会给它几颗糖？</h2>
+          <p>你的评分会和其他读者一起，留在这根签上。</p>
+          <div class="sugar-rating" id="sugar-rating" role="group" aria-label="选择一到五星评分">
+            {[1, 2, 3, 4, 5].map((score) => (
+              <button class="rating-fruit" type="button" data-score={score} aria-label={`${score} 星`} aria-pressed="false">
+                <span aria-hidden="true"></span>
+              </button>
+            ))}
+          </div>
+          <p id="rating-feedback" class="rating-feedback" role="status" aria-live="polite"></p>
+        </div>
+
+        {item.tags.length > 0 && (
+          <div class="detail-tags">
+            <p>这颗的标签</p>
+            <ul>{item.tags.map((tag) => <li><a href={`/search?q=${encodeURIComponent(tag)}`}>#{tag}</a></li>)}</ul>
+          </div>
+        )}
+      </aside>
     </div>
 
-    <!-- Meta -->
-    <div class="flex-1">
-      <div class="flex items-center gap-2 mb-3">
-        <a href={`/category/${item.category}`} class={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${cat.color} ${cat.bg}`}>
-          {cat.label}
-        </a>
-        {item.country && (
-          <span class="text-xs text-stone-400">{item.country}</span>
-        )}
-        <!-- View count -->
-        <span class="text-xs text-stone-300 ml-auto flex items-center gap-1">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-          <span id="view-count">—</span>
-        </span>
-      </div>
-
-      <h1 class="text-2xl sm:text-3xl font-bold text-stone-900 mb-2">{item.title}</h1>
-
-      <!-- 社区评分 -->
-      <div class="flex items-center gap-1.5 mb-3">
-        <span class="text-amber-500 font-semibold" id="community-avg">—</span>
-        <span class="text-stone-300 text-sm">/ 5.0</span>
-        <span class="text-xs text-stone-400 ml-1" id="community-count"></span>
-      </div>
-
-      <p class="text-stone-500 leading-relaxed mb-4">{item.summary}</p>
-
-      {item.tags.length > 0 && (
-        <div class="flex flex-wrap gap-2 mb-4">
-          {item.tags.map(tag => (
-            <span class="text-xs text-stone-400 bg-stone-100 px-2.5 py-1 rounded-full">{tag}</span>
+    {relatedItems.length > 0 && (
+      <section class="related-section" aria-labelledby="related-title">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">同一串上</p>
+            <h2 id="related-title">也许你还会喜欢</h2>
+          </div>
+          <a href={`/category/${item.category}`} class="text-link">逛完{cat.label} <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="collection-grid related-grid">
+          {relatedItems.map((related, index) => (
+            <ItemCard
+              title={related.title}
+              category={related.category}
+              tags={related.tags}
+              summary={related.summary}
+              cover={related.cover}
+              slug={related.id}
+              country={related.country}
+              mood={related.mood}
+              index={index + 1}
+            />
           ))}
         </div>
-      )}
+      </section>
+    )}
 
-      {item.link && (
-        <a
-          href={item.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="inline-flex items-center gap-1.5 text-sm text-stone-600 bg-stone-100 hover:bg-stone-200 px-4 py-2 rounded-full transition-colors"
-        >
-          查看详情 →
-        </a>
-      )}
-    </div>
-  </div>
+    <div id="item-runtime-data" data-item-id={item.id} data-item-title={item.title} hidden></div>
+    <script>
+      import { readStored, writeStored } from '../../lib/dom';
+      const runtimeData = document.getElementById('item-runtime-data');
+      const itemId = runtimeData?.dataset.itemId || '';
+      const itemTitle = runtimeData?.dataset.itemTitle || '';
+      const STORAGE_KEY = `rated:${itemId}`;
+      const ratingButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.rating-fruit'));
+      const feedback = document.getElementById('rating-feedback');
 
-  {bodyHtml && (
-    <article class="prose prose-stone max-w-none prose-headings:font-bold prose-a:text-orange-500" set:html={bodyHtml} />
-  )}
+      function formatCount(value: number) {
+        const count = Number(value) || 0;
+        return count >= 1000 ? `${(count / 1000).toFixed(1)}k` : String(count);
+      }
 
-  <!-- 用户评分 -->
-  <div class="mt-10 pt-8 border-t border-stone-100">
-    <p class="text-sm text-stone-500 mb-3">你觉得怎么样？</p>
-    <div class="flex items-center gap-1" id="star-rating">
-      {[1,2,3,4,5].map(s => (
-        <button
-          data-score={s}
-          class="star-btn text-2xl text-stone-200 hover:text-amber-400 transition-colors leading-none"
-          aria-label={`${s} 星`}
-        >★</button>
-      ))}
-    </div>
-    <p id="rating-feedback" class="text-xs text-stone-400 mt-2 h-4"></p>
-  </div>
-
-  <div class="mt-6 text-sm text-stone-400">
-    记于 {item.date}
-  </div>
-</BaseLayout>
-
-<script define:vars={{ itemId: item.id }}>
-  const KEY = `rated:${itemId}`;
-
-  async function initViews() {
-    fetch(`/api/views/${itemId}`, { method: 'POST' }).catch(() => {});
-    const res = await fetch(`/api/views/${itemId}`).catch(() => null);
-    if (!res?.ok) return;
-    const { count } = await res.json();
-    const el = document.getElementById('view-count');
-    if (el) el.textContent = count >= 1000 ? `${(count/1000).toFixed(1)}k` : count;
-  }
-
-  async function initRatings() {
-    const res = await fetch(`/api/ratings/${itemId}`).catch(() => null);
-    if (!res?.ok) return;
-    const { average, count } = await res.json();
-    const avgEl = document.getElementById('community-avg');
-    const cntEl = document.getElementById('community-count');
-    if (avgEl) avgEl.textContent = average ? average.toFixed(1) : '暂无';
-    if (cntEl) cntEl.textContent = count > 0 ? `(${count})` : '';
-  }
-
-  function initStars() {
-    const stars = document.querySelectorAll('.star-btn');
-    const feedback = document.getElementById('rating-feedback');
-    const saved = localStorage.getItem(KEY);
-
-    if (saved) {
-      highlightStars(parseInt(saved));
-      if (feedback) feedback.textContent = '已评分，可以重新选择';
-    }
-
-    stars.forEach(btn => {
-      btn.addEventListener('mouseenter', () => highlightStars(parseInt(btn.dataset.score)));
-      btn.addEventListener('mouseleave', () => highlightStars(parseInt(localStorage.getItem(KEY) ?? '0')));
-      btn.addEventListener('click', async () => {
-        const score = parseInt(btn.dataset.score);
-        localStorage.setItem(KEY, String(score));
-        highlightStars(score);
-        if (feedback) feedback.textContent = '提交中…';
-
-        const res = await fetch(`/api/ratings/${itemId}`, {
+      async function initViews() {
+        const response = await fetch(`/api/views/${itemId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ score }),
+          body: '{}',
         }).catch(() => null);
+        if (!response?.ok) return;
+        const { count } = await response.json();
+        const element = document.getElementById('view-count');
+        if (element) element.textContent = formatCount(count);
+      }
 
-        if (res?.ok) {
-          const { average, count } = await res.json();
-          const avgEl = document.getElementById('community-avg');
-          const cntEl = document.getElementById('community-count');
-          if (avgEl) avgEl.textContent = average ? average.toFixed(1) : '—';
-          if (cntEl) cntEl.textContent = count > 0 ? `(${count})` : '';
-          if (feedback) feedback.textContent = '感谢评分';
-        } else {
-          if (feedback) feedback.textContent = '提交失败，请稍后再试';
+      async function initRatings() {
+        const response = await fetch(`/api/ratings/${itemId}`).catch(() => null);
+        if (!response?.ok) return;
+        const { average, count } = await response.json();
+        const averageElement = document.getElementById('community-avg');
+        const countElement = document.getElementById('community-count');
+        if (averageElement) averageElement.textContent = average ? average.toFixed(1) : '暂无';
+        if (countElement) countElement.textContent = String(count || 0);
+      }
+
+      function paintRating(score: number) {
+        ratingButtons.forEach((button) => {
+          const active = Number(button.dataset.score) <= score;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-pressed', String(Number(button.dataset.score) === score));
+        });
+      }
+
+      function initRatingInput() {
+        const saved = Number(readStored(STORAGE_KEY) || 0);
+        if (saved) {
+          paintRating(saved);
+          if (feedback) feedback.textContent = '你已经评过了，可以重新选择。';
         }
+
+        ratingButtons.forEach((button) => {
+          button.addEventListener('pointerenter', () => paintRating(Number(button.dataset.score)));
+          button.addEventListener('focus', () => paintRating(Number(button.dataset.score)));
+          button.addEventListener('pointerleave', () => paintRating(Number(readStored(STORAGE_KEY) || 0)));
+          button.addEventListener('blur', () => paintRating(Number(readStored(STORAGE_KEY) || 0)));
+          button.addEventListener('click', async () => {
+            const score = Number(button.dataset.score);
+            ratingButtons.forEach((entry) => { entry.disabled = true; });
+            paintRating(score);
+            if (feedback) feedback.textContent = '正在把这颗糖挂上去…';
+
+            const response = await fetch(`/api/ratings/${itemId}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ score }),
+            }).catch(() => null);
+
+            ratingButtons.forEach((entry) => { entry.disabled = false; });
+            if (!response?.ok) {
+              paintRating(Number(readStored(STORAGE_KEY) || 0));
+              if (feedback) feedback.textContent = '这次没挂上，请稍后再试。';
+              return;
+            }
+
+            writeStored(STORAGE_KEY, String(score));
+            const { average, count } = await response.json();
+            const averageElement = document.getElementById('community-avg');
+            const countElement = document.getElementById('community-count');
+            if (averageElement) averageElement.textContent = average ? average.toFixed(1) : '—';
+            if (countElement) countElement.textContent = String(count || 0);
+            if (feedback) feedback.textContent = `谢谢你留下 ${score} 颗糖。`;
+          });
+        });
+      }
+
+      document.getElementById('share-button')?.addEventListener('click', async () => {
+        const button = document.getElementById('share-button');
+        try {
+          if (navigator.share) {
+            await navigator.share({ title: `${itemTitle} · 糖葫芦`, url: location.href });
+          } else {
+            await navigator.clipboard.writeText(location.href);
+            if (button) button.textContent = '链接已复制 ✓';
+          }
+        } catch (error) { if (button && !(error instanceof DOMException && error.name === 'AbortError')) button.textContent = '复制失败，请复制地址栏链接'; }
       });
-    });
-  }
 
-  function highlightStars(score) {
-    document.querySelectorAll('.star-btn').forEach(btn => {
-      btn.style.color = parseInt(btn.dataset.score) <= score ? '#f59e0b' : '';
-    });
-  }
-
-  initViews();
-  initRatings();
-  initStars();
-</script>
+      if (itemId) {
+        initViews();
+        initRatings();
+        initRatingInput();
+      }
+    </script>
+  </BaseLayout>
+) : (
+  <BaseLayout title="没有找到" description="这根签上还没有这一颗。">
+    <section class="not-found">
+      <p class="not-found__code">404</p>
+      <div class="not-found__fruit" aria-hidden="true">?</div>
+      <p class="section-kicker">这根签上还没有这一颗</p>
+      <h1>可能被吃掉了。</h1>
+      <p>你要找的内容不存在，或者已经被挪到了别处。</p>
+      <div class="not-found__actions">
+        <a class="button button--primary" href="/">回到首页</a>
+        <a class="button button--secondary" href="/search">去搜索</a>
+      </div>
+    </section>
+  </BaseLayout>
+)}

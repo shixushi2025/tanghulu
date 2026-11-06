@@ -1,0 +1,714 @@
+{
+  "reviewed": "2026-11-06",
+  "statusDefinitions": {
+    "verified": "读取了官方正文，支持条目中的产品定位；不表示所有功能均已实际测试",
+    "partial": "仅确认部分官方信息，其余动态信息未核实",
+    "unverified": "官方正文抓取受限，保留基础介绍并移除具体版本、价格及排名",
+    "pending": "缺少足够来源，明确标记待核实",
+    "editorial": "修改编辑摘要或实践建议，原链接本轮未重新核验"
+  },
+  "items": [
+    {
+      "id": "atomic-habits",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "作者书籍页",
+          "url": "https://jamesclear.com/atomic-habits"
+        }
+      ]
+    },
+    {
+      "id": "bilibili",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://bilibili.com"
+        }
+      ]
+    },
+    {
+      "id": "blender",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Blender 官方功能介绍",
+          "url": "https://www.blender.org/features/"
+        }
+      ]
+    },
+    {
+      "id": "bolt",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Bolt 官方入门",
+          "url": "https://support.bolt.new/get-started/intro-bolt"
+        }
+      ]
+    },
+    {
+      "id": "chatgpt",
+      "reviewed": "2026-11-06",
+      "status": "unverified",
+      "sources": [
+        {
+          "title": "ChatGPT 官方入口",
+          "url": "https://chatgpt.com/"
+        },
+        {
+          "title": "官方功能说明",
+          "url": "https://help.openai.com/en/articles/9260256-chatgpt-capabilities-overview"
+        }
+      ]
+    },
+    {
+      "id": "claude-ai",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Claude 产品概览",
+          "url": "https://claude.com/product/overview"
+        }
+      ]
+    },
+    {
+      "id": "claude-code",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Claude Code 官方概览",
+          "url": "https://code.claude.com/docs/en/overview"
+        }
+      ]
+    },
+    {
+      "id": "creator-andrej",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Andrej Karpathy 个人网站",
+          "url": "https://karpathy.ai/"
+        }
+      ]
+    },
+    {
+      "id": "creator-ruanyifeng",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "科技爱好者周刊归档",
+          "url": "https://www.ruanyifeng.com/blog/weekly/"
+        }
+      ]
+    },
+    {
+      "id": "cursor",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Cursor Agent 概览",
+          "url": "https://cursor.com/docs/agent/overview"
+        }
+      ]
+    },
+    {
+      "id": "deepseek",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "DeepSeek API 文档",
+          "url": "https://api-docs.deepseek.com/"
+        }
+      ]
+    },
+    {
+      "id": "discord",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://discord.com"
+        }
+      ]
+    },
+    {
+      "id": "doubao",
+      "reviewed": "2026-11-06",
+      "status": "partial",
+      "sources": [
+        {
+          "title": "豆包官方入口",
+          "url": "https://www.doubao.com/"
+        }
+      ]
+    },
+    {
+      "id": "eight-sleep",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "NHLBI：健康睡眠习惯",
+          "url": "https://www.nhlbi.nih.gov/health/sleep-deprivation/healthy-sleep-habits"
+        }
+      ]
+    },
+    {
+      "id": "elevenlabs",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "ElevenLabs 官方文档",
+          "url": "https://elevenlabs.io/docs/overview/intro"
+        }
+      ]
+    },
+    {
+      "id": "excalidraw",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Excalidraw 官方文档",
+          "url": "https://plus.excalidraw.com/docs/sdk"
+        }
+      ]
+    },
+    {
+      "id": "fight-club",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://movie.douban.com/subject/1292000/"
+        }
+      ]
+    },
+    {
+      "id": "freecodecamp",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "freeCodeCamp 官方仓库与课程说明",
+          "url": "https://github.com/freeCodeCamp/freeCodeCamp"
+        }
+      ]
+    },
+    {
+      "id": "fujifilm-x100vi",
+      "reviewed": "2026-11-06",
+      "status": "partial",
+      "sources": [
+        {
+          "title": "富士 X100VI 官方产品页",
+          "url": "https://www.fujifilm-x.com/global/products/cameras/x100vi/"
+        }
+      ]
+    },
+    {
+      "id": "gemini",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Gemini 官方概览",
+          "url": "https://gemini.google/overview/"
+        }
+      ]
+    },
+    {
+      "id": "github-copilot",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "GitHub Copilot 官方介绍",
+          "url": "https://docs.github.com/en/copilot/get-started/about-github-copilot"
+        }
+      ]
+    },
+    {
+      "id": "godot",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Godot 官方功能介绍",
+          "url": "https://godotengine.org/features/"
+        }
+      ]
+    },
+    {
+      "id": "grok",
+      "reviewed": "2026-11-06",
+      "status": "partial",
+      "sources": [
+        {
+          "title": "Grok 官方入口",
+          "url": "https://grok.com/"
+        }
+      ]
+    },
+    {
+      "id": "headspace",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "潮汐官方介绍",
+          "url": "https://tide.fm/"
+        }
+      ]
+    },
+    {
+      "id": "ideogram",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Ideogram 官方文档",
+          "url": "https://docs.ideogram.ai/"
+        }
+      ]
+    },
+    {
+      "id": "instagram",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://instagram.com"
+        }
+      ]
+    },
+    {
+      "id": "interstellar",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://movie.douban.com/subject/1889243/"
+        }
+      ]
+    },
+    {
+      "id": "keep",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Keep 官方介绍",
+          "url": "https://www.gotokeep.com/"
+        }
+      ]
+    },
+    {
+      "id": "kimi",
+      "reviewed": "2026-11-06",
+      "status": "partial",
+      "sources": [
+        {
+          "title": "Kimi 官方入口",
+          "url": "https://www.kimi.com/"
+        }
+      ]
+    },
+    {
+      "id": "kling",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "可灵官方产品页",
+          "url": "https://kling.ai/"
+        }
+      ]
+    },
+    {
+      "id": "localsend",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "LocalSend 官方介绍",
+          "url": "https://localsend.org/"
+        }
+      ]
+    },
+    {
+      "id": "lovable",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Lovable 快速开始",
+          "url": "https://docs.lovable.dev/introduction/getting-started"
+        }
+      ]
+    },
+    {
+      "id": "midjourney",
+      "reviewed": "2026-11-06",
+      "status": "unverified",
+      "sources": [
+        {
+          "title": "Midjourney 官方入口",
+          "url": "https://www.midjourney.com/"
+        },
+        {
+          "title": "官方入门说明",
+          "url": "https://docs.midjourney.com/hc/en-us/articles/33329261836941-Getting-Started-Guide"
+        }
+      ]
+    },
+    {
+      "id": "notion-ai",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Notion AI 官方指南",
+          "url": "https://www.notion.com/help/guides/category/ai"
+        }
+      ]
+    },
+    {
+      "id": "obsidian",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Obsidian 官方介绍",
+          "url": "https://obsidian.md/"
+        }
+      ]
+    },
+    {
+      "id": "parasite",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://movie.douban.com/subject/27010768/"
+        }
+      ]
+    },
+    {
+      "id": "perplexity",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Perplexity 官方介绍",
+          "url": "https://www.perplexity.ai/help-center/en/articles/10352155-what-is-perplexity"
+        }
+      ]
+    },
+    {
+      "id": "pika",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Pika 官方产品页",
+          "url": "https://pika.art/"
+        }
+      ]
+    },
+    {
+      "id": "podcast-hardwork",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "硬地骇客官网与节目入口",
+          "url": "https://hardhacker.com/"
+        }
+      ]
+    },
+    {
+      "id": "podcast-kuaikedayu",
+      "reviewed": "2026-11-06",
+      "status": "pending",
+      "sources": []
+    },
+    {
+      "id": "podcast-lex",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://lexfridman.com/podcast"
+        }
+      ]
+    },
+    {
+      "id": "podcast-stochastic",
+      "reviewed": "2026-11-06",
+      "status": "pending",
+      "sources": []
+    },
+    {
+      "id": "quiet",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "作者书籍页",
+          "url": "https://susancain.net/book/quiet/"
+        }
+      ]
+    },
+    {
+      "id": "qwen",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Qwen 官方模型文档",
+          "url": "https://qwen.readthedocs.io/en/latest/"
+        },
+        {
+          "title": "Qwen 对话入口",
+          "url": "https://qwen.ai/"
+        }
+      ]
+    },
+    {
+      "id": "runway",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Runway 官方产品页",
+          "url": "https://runway.com/"
+        }
+      ]
+    },
+    {
+      "id": "sapiens",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "作者书籍介绍",
+          "url": "https://www.ynharari.com/book/sapiens/"
+        }
+      ]
+    },
+    {
+      "id": "shawshank",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://movie.douban.com/subject/1292052/"
+        }
+      ]
+    },
+    {
+      "id": "social-network",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://movie.douban.com/subject/3205624/"
+        }
+      ]
+    },
+    {
+      "id": "spirited-away",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://movie.douban.com/subject/1291561/"
+        }
+      ]
+    },
+    {
+      "id": "stable-diffusion",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "ComfyUI 官方文档",
+          "url": "https://docs.comfy.org/"
+        }
+      ]
+    },
+    {
+      "id": "suno",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Suno 官方入口",
+          "url": "https://suno.com/"
+        }
+      ]
+    },
+    {
+      "id": "telegram",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Telegram 官方 FAQ",
+          "url": "https://telegram.org/faq"
+        }
+      ]
+    },
+    {
+      "id": "tesla-model3",
+      "reviewed": "2026-11-06",
+      "status": "partial",
+      "sources": [
+        {
+          "title": "Model 3 官方车型入口",
+          "url": "https://www.tesla.cn/model3"
+        },
+        {
+          "title": "Model 3 官方车主手册",
+          "url": "https://www.tesla.com/ownersmanual/model3/en_us/"
+        }
+      ]
+    },
+    {
+      "id": "the-almanack-of-naval",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "官方免费阅读入口",
+          "url": "https://www.navalmanack.com/"
+        }
+      ]
+    },
+    {
+      "id": "thinking-fast-slow",
+      "reviewed": "2026-11-06",
+      "status": "partial",
+      "sources": [
+        {
+          "title": "出版社书籍页",
+          "url": "https://us.macmillan.com/books/9780374533557/thinkingfastandslow/"
+        }
+      ]
+    },
+    {
+      "id": "v0",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "v0 官方文档",
+          "url": "https://v0.app/docs"
+        }
+      ]
+    },
+    {
+      "id": "visual-studio-code",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Visual Studio Code 官方文档",
+          "url": "https://code.visualstudio.com/docs"
+        }
+      ]
+    },
+    {
+      "id": "why-we-sleep",
+      "reviewed": "2026-11-06",
+      "status": "partial",
+      "sources": [
+        {
+          "title": "出版社书籍页",
+          "url": "https://www.simonandschuster.com/books/Why-We-Sleep/Matthew-Walker/9781501144325"
+        },
+        {
+          "title": "NHLBI：健康睡眠习惯",
+          "url": "https://www.nhlbi.nih.gov/health/sleep-deprivation/healthy-sleep-habits"
+        }
+      ]
+    },
+    {
+      "id": "windsurf",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "当前官网入口",
+          "url": "https://devin.ai/desktop"
+        },
+        {
+          "title": "Cascade 历史说明",
+          "url": "https://docs.devin.ai/desktop/cascade"
+        }
+      ]
+    },
+    {
+      "id": "xiaohongshu",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://www.xiaohongshu.com"
+        }
+      ]
+    },
+    {
+      "id": "youtube",
+      "reviewed": "2026-11-06",
+      "status": "editorial",
+      "sources": [
+        {
+          "title": "原条目链接（本次未重新核验）",
+          "url": "https://youtube.com"
+        }
+      ]
+    },
+    {
+      "id": "zishishinei",
+      "reviewed": "2026-11-06",
+      "status": "pending",
+      "sources": []
+    },
+    {
+      "id": "zotero",
+      "reviewed": "2026-11-06",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "Zotero 官方快速指南",
+          "url": "https://www.zotero.org/support/quick_start_guide"
+        }
+      ]
+    }
+  ]
+}

@@ -1,28 +1,98 @@
 ---
+import { env } from 'cloudflare:workers';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getAllItems } from '../lib/db';
+
+const db = env.TANGHULU_DB;
+const items = await getAllItems(db);
+const categoryCount = new Set(items.map((item) => item.category)).size;
+const latestDate = items.map((item) => item.date).sort().at(-1) ?? '';
 ---
 
-<BaseLayout title="关于" description="关于糖葫芦这个网站">
-  <div class="max-w-2xl mx-auto">
-    <div class="text-center py-10 mb-10">
-      <div class="flex justify-center mb-4">
-        <img src="/favicon.svg" alt="糖葫芦" class="w-16 h-16" />
-      </div>
-      <h1 class="text-3xl font-bold text-stone-900 mb-3">糖葫芦</h1>
-      <p class="text-stone-400">记一些觉得还不错的东西</p>
+<BaseLayout title="关于" description="为什么叫糖葫芦，以及这里如何挑选每一颗内容。">
+  <section class="about-hero" aria-labelledby="about-title">
+    <div class="about-hero__copy">
+      <p class="eyebrow"><span></span>ABOUT THIS STRING</p>
+      <h1 id="about-title">为什么叫<em>糖葫芦？</em></h1>
+      <p>因为真正喜欢的东西，不必属于同一种类型。电影、书、工具和一段声音，只要值得，都可以串在一起。</p>
     </div>
+    <div class="about-hero__object" aria-hidden="true">
+      <span class="about-stick"></span>
+      <span class="about-fruit about-fruit--one">看</span>
+      <span class="about-fruit about-fruit--two">读</span>
+      <span class="about-fruit about-fruit--three">用</span>
+    </div>
+  </section>
 
-    <div class="space-y-5 text-stone-600 leading-relaxed">
-      <p>
-        不是评测，不是导购，只是随手记下来的个人感受。
-        这里写的都是真实用过、看过、读过的东西，没有广告，没有带货。
-      </p>
-      <p>
-        名字叫「糖葫芦」，是因为好东西值得串在一起——不挑类型，电影书籍也好，App 工具也好，觉得不错就记一下。
-      </p>
-      <p class="text-stone-400 text-sm">
-        所有内容只代表个人看法，不构成任何消费建议。
-      </p>
+  <section class="about-intro">
+    <div class="about-intro__number">01</div>
+    <div>
+      <p class="section-kicker">这里是什么</p>
+      <h2>不是评测，不是导购。<br />是一个人的时间筛选器。</h2>
+      <p>这里写的，都是真实看过、读过、用过的东西。没有广告，没有付费排名，也不会为了“全面”而把清单塞满。希望每一颗都能替你省下一点选择的力气。</p>
+      <div class="about-stats">
+        <div><strong>{items.length}</strong><span>颗收录</span></div>
+        <div><strong>{categoryCount}</strong><span>种分类</span></div>
+        <div><strong>0</strong><span>广告</span></div>
+      </div>
     </div>
-  </div>
+  </section>
+
+  <section class="principles-section" aria-labelledby="principles-title">
+    <div class="section-heading">
+      <div>
+        <p class="section-kicker">SELECTION RULES</p>
+        <h2 id="principles-title">三条不复杂的收录原则</h2>
+      </div>
+    </div>
+    <div class="principles-grid">
+      <article>
+        <span>01</span>
+        <div class="principle-fruit" aria-hidden="true">尝</div>
+        <h3>交代依据</h3>
+        <p>区分官方资料、编辑建议与实际体验；来源不足的地方明确标记，不把资料整理写成亲测。</p>
+      </article>
+      <article>
+        <span>02</span>
+        <div class="principle-fruit" aria-hidden="true">真</div>
+        <h3>先说结论</h3>
+        <p>尽量告诉你它适合谁、什么时候用，也不回避缺点和门槛。</p>
+      </article>
+      <article>
+        <span>03</span>
+        <div class="principle-fruit" aria-hidden="true">净</div>
+        <h3>没有广告</h3>
+        <p>不带货，不卖排名。外部链接只是方便你继续了解，不代表商业合作。</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="process-section" aria-labelledby="process-title">
+    <div class="process-section__copy">
+      <p class="section-kicker">HOW IT GETS HERE</p>
+      <h2 id="process-title">一颗内容，怎么被串进来？</h2>
+      <p>不追求更新速度，更在意过一阵子以后，它是不是仍然值得推荐。</p>
+    </div>
+    <ol class="process-list">
+      <li><span>1</span><div><strong>先找依据</strong><p>优先阅读官网、作者或项目资料，记录来源与整理日期。</p></div></li>
+      <li><span>2</span><div><strong>再看场景</strong><p>说明内容适合谁、有什么门槛，并删掉缺乏依据的排名与承诺。</p></div></li>
+      <li><span>3</span><div><strong>认真写下</strong><p>用一句话说清价值，再补上适合谁、为什么和有什么坑。</p></div></li>
+    </ol>
+  </section>
+
+  <aside class="about-note">
+    <span aria-hidden="true">「</span>
+    <blockquote>这不是全网最全的清单，只是我留下来的少量答案。希望它也能替你省下一点选择的力气。</blockquote>
+    <p>社区评分会匿名汇总；浏览量只用于了解哪些内容被更多人看到。所有内容只代表个人看法，不构成消费建议。</p>
+    {latestDate && <p>最近整理：<time datetime={latestDate}>{latestDate}</time></p>}
+  </aside>
+
+  <section class="about-cta">
+    <p class="section-kicker">READY TO PICK ONE?</p>
+    <h2>那就从一颗开始吧。</h2>
+    <div>
+      <a class="button button--primary" href="/">逛逛整串 <span aria-hidden="true">→</span></a>
+      <a class="button button--secondary" href="/search">找一颗值得的</a>
+    </div>
+  </section>
 </BaseLayout>

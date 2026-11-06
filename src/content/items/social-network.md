@@ -1,13 +1,20 @@
 ---
-title: "社交网络"
+title: 社交网络
 category: film
-tags: [传记, 科技, 创业, 大卫芬奇]
+tags:
+  - 传记
+  - 科技
+  - 创业
+  - 大卫芬奇
 rating: 4.7
-summary: "Facebook 创立故事的电影版，台词密度极高，扎克伯格的刻画让人又恨又敬。"
-cover: ""
+summary: 以 Facebook 创立为题材的剧情片，适合讨论创业、关系与叙事视角，而非当作完整史实。
+cover: /images/covers/social-network-33377c909860.webp
 date: 2026-03-02
-link: "https://movie.douban.com/subject/3205624/"
-mood: [工作, 创业, 思考]
+link: https://movie.douban.com/subject/3205624/
+mood:
+  - 工作
+  - 创业
+  - 思考
 ---
 
 ## 为什么推荐
@@ -27,3 +34,7 @@ mood: [工作, 创业, 思考]
 - 对硅谷、科技创业感兴趣的人
 - 喜欢快节奏剧情片的观众
 - 大卫·芬奇的粉丝
+
+## 把电影与历史分开
+
+影片为了叙事会选择视角、压缩过程和强化冲突。讨论创业与合作时可以借它提出问题，但引用真实人物或事件细节前应另外查证。

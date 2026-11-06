@@ -1,29 +1,36 @@
 ---
-title: "Lex Fridman Podcast"
+title: Lex Fridman Podcast
 category: podcast
-tags: [科技, AI, 英文, 深度访谈]
+tags:
+  - 科技
+  - AI
+  - 英文
+  - 深度访谈
 rating: 4.7
-summary: "和全球最聪明的人深度对话，Musk、Altman、Zuckerberg 都来过，每期动辄 3 小时。"
-cover: ""
+summary: 以长篇访谈为主的英文播客，可按嘉宾与主题选择，适合有较长收听时间的人。
+cover: /images/covers/podcast-lex-a0e48bcf509b.webp
 date: 2026-03-15
-link: "https://lexfridman.com/podcast"
-mood: [长途, 健身, 深度]
+link: https://lexfridman.com/podcast
+mood:
+  - 长途
+  - 健身
+  - 深度
 ---
 
-## 为什么推荐
+## 节目定位
 
-Lex 的访谈风格是「真的在听」——他会在对方说了什么有趣的东西之后深挖，而不是照着稿子走。这种风格吸引来的嘉宾都愿意说真心话。
+Lex Fridman Podcast 以长篇访谈为主要形式，话题涉及技术、科学与社会。选择单集时，建议先看嘉宾背景与议题，再判断是否适合自己的知识基础和可用时间。
 
-采访过的人包括：Elon Musk、Sam Altman、Mark Zuckerberg、Yann LeCun、图灵奖得主……如果你想了解这些人真实的思想，这是最好的渠道之一。
+## 怎样听得更有收获
 
-## 推荐几期
+先写下一个希望获得回答的问题。收听时分别记录嘉宾的事实陈述、个人观点和仍待验证的推测；对有争议的结论继续查阅原始资料。
 
-- Elon Musk（任何一期都值得听）
-- Sam Altman 谈 AGI
-- 和 Andrej Karpathy 聊 AI
+## 适合谁
 
-## 适合谁听
+适合愿意花时间了解某个议题及不同立场的听众。英语学习者可以从熟悉的主题开始，分段收听并做简短复述。
 
-- 对 AI、科技、哲学感兴趣的人
-- 英语听力不错，想接触前沿思想
-- 长途通勤、健身时听
+## 推荐方式
+
+本条暂不指定单集，避免把记忆中的主题当作已核实节目。可从节目官方目录选择自己关心的嘉宾与日期，并保留单集链接方便复听。
+
+以上为编辑收听建议，本轮未逐集核验节目目录。

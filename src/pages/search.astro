@@ -1,115 +1,228 @@
 ---
 import { env } from 'cloudflare:workers';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { categoryConfig } from '../lib/categories';
+import { categoryConfig, visibleCategories } from '../lib/categories';
 import { getAllItems } from '../lib/db';
 
 const db = env.TANGHULU_DB;
 const allItems = await getAllItems(db);
-const searchIndex = allItems.map(item => ({
-  id: item.id,
-  title: item.title,
-  summary: item.summary,
-  category: item.category,
-  categoryLabel: categoryConfig[item.category]?.label ?? '其他',
-  tags: item.tags.join(' '),
-  country: item.country ?? '',
-}));
+const searchIndex = allItems.map((item) => {
+  const cat = categoryConfig[item.category] ?? categoryConfig.other;
+  return {
+    id: item.id,
+    title: item.title,
+    summary: item.summary,
+    category: item.category,
+    categoryLabel: cat.label,
+    categoryShortLabel: cat.shortLabel,
+    accent: cat.accent,
+    tint: cat.tint,
+    tags: item.tags,
+    mood: item.mood,
+    country: item.country ?? '',
+
+  };
+});
+const safeSearchData = JSON.stringify(searchIndex)
+  .replace(/</g, '\\u003c')
+  .replace(/\u2028/g, '\\u2028')
+  .replace(/\u2029/g, '\\u2029');
+
+const popularQueries = ['AI 编程', '深夜', '睡眠', '通勤', '科幻', '写作'];
 ---
 
-<BaseLayout title="搜索">
-  <div class="pt-6 pb-4">
-    <div class="relative">
-      <svg class="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+<BaseLayout title="搜索" description="按标题、标签或当下的心情，找到一颗值得的。">
+  <section class="search-page" aria-labelledby="search-title">
+    <header class="search-hero">
+      <p class="eyebrow"><span></span>SEARCH THE STRING</p>
+      <h1 id="search-title">找一颗<em>值得的。</em></h1>
+      <p>搜标题、标签，或者你此刻的心情。</p>
+    </header>
+
+    <form id="search-form" class="search-form" role="search">
+      <label class="sr-only" for="search-input">搜索糖葫芦的内容</label>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path>
       </svg>
       <input
         id="search-input"
-        type="text"
-        placeholder="搜索电影、书籍、工具…"
-        autofocus
-        class="w-full pl-11 pr-4 py-3 rounded-xl border border-stone-200 bg-white text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-300 text-base"
+        type="search"
+        name="q"
+        placeholder="试试「深夜」「通勤」或「AI 编程」"
+        maxlength="100"
+        autocomplete="off"
+        spellcheck="false"
+        aria-controls="search-results"
       />
+      <button id="search-clear" type="button" aria-label="清空搜索" hidden>清空</button>
+      <span class="search-form__key" aria-hidden="true">ESC</span>
+    </form>
+
+    <div id="search-start" class="search-start">
+      <div class="search-suggestions">
+        <p>大家常找</p>
+        <div>
+          {popularQueries.map((query) => <button type="button" class="search-suggestion" data-query={query}>{query}</button>)}
+        </div>
+      </div>
+
+      <div class="search-categories">
+        <p>或者按分类开始</p>
+        <div>
+          {visibleCategories.map((key) => (
+            <a href={`/category/${key}`} style={`--category-accent:${categoryConfig[key].accent};--category-tint:${categoryConfig[key].tint}`}>
+              <span>{categoryConfig[key].shortLabel}</span>
+              <strong>{categoryConfig[key].label}</strong>
+              <i aria-hidden="true">↗</i>
+            </a>
+          ))}
+        </div>
+      </div>
     </div>
-  </div>
 
-  <div id="results" class="mt-4"></div>
-  <div id="empty" class="hidden text-center py-16 text-stone-400"><p>没有找到相关内容</p></div>
-  <div id="hint" class="text-center py-16 text-stone-400 text-sm"><p>输入关键词开始搜索</p></div>
-</BaseLayout>
+    <noscript><p>启用 JavaScript 可以即时搜索，也可以通过上面的分类继续浏览。</p></noscript>
+    <p id="search-status" class="search-status" role="status" aria-live="polite"></p>
+    <div id="search-results" class="search-results" aria-label="搜索结果"></div>
+    <div id="search-empty" class="search-empty" hidden>
+      <div aria-hidden="true">?</div>
+      <h2>这根签上还没有这一颗。</h2>
+      <p>换个短一点的词，或者从上面的分类开始看看。</p>
+    </div>
+  </section>
 
-<script define:vars={{ searchIndex }}>
-  const categoryColors = {
-    film: 'text-orange-600 bg-orange-50', book: 'text-green-600 bg-green-50',
-    tool: 'text-blue-600 bg-blue-50', health: 'text-rose-600 bg-rose-50',
-    podcast: 'text-amber-600 bg-amber-50', social: 'text-pink-600 bg-pink-50',
-    communication: 'text-sky-600 bg-sky-50', car: 'text-slate-600 bg-slate-50',
-    camera: 'text-zinc-600 bg-zinc-50', creator: 'text-violet-600 bg-violet-50',
-    video: 'text-red-600 bg-red-50', other: 'text-purple-600 bg-purple-50',
-  };
+  <script id="search-data" type="application/json" set:html={safeSearchData}></script>
+  <script>
+    import type { FuseResult } from 'fuse.js';
+    import Fuse from 'fuse.js';
 
-  const input = document.getElementById('search-input');
-  const resultsEl = document.getElementById('results');
-  const emptyEl = document.getElementById('empty');
-  const hintEl = document.getElementById('hint');
+    interface SearchItem { id: string; title: string; summary: string; category: string; categoryLabel: string; categoryShortLabel: string; accent: string; tint: string; tags: string[]; mood: string[]; country: string }
+    const dataElement = document.getElementById('search-data');
+    const searchItems: SearchItem[] = JSON.parse(dataElement?.textContent || '[]');
+    const form = document.getElementById('search-form');
+    const input = document.querySelector<HTMLInputElement>('#search-input');
+    const clearButton = document.querySelector<HTMLButtonElement>('#search-clear');
+    const start = document.getElementById('search-start');
+    const status = document.getElementById('search-status');
+    const results = document.getElementById('search-results');
+    const empty = document.getElementById('search-empty');
 
-  function renderResults(results) {
-    if (!results.length) {
-      resultsEl.innerHTML = '';
-      emptyEl.classList.remove('hidden');
-      hintEl.classList.add('hidden');
-      return;
-    }
-    emptyEl.classList.add('hidden');
-    hintEl.classList.add('hidden');
-    resultsEl.innerHTML = `
-      <p class="text-sm text-stone-400 mb-4">${results.length} 个结果</p>
-      <div class="flex flex-col gap-2">
-        ${results.map(({ item }) => {
-          const c = categoryColors[item.category] ?? categoryColors.other;
-          return `<a href="/item/${item.id}" class="flex items-center gap-4 p-4 bg-white rounded-xl border border-stone-200 hover:border-stone-300 hover:shadow-sm transition-all group">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs font-medium px-2 py-0.5 rounded-full ${c}">${item.categoryLabel}</span>
-                ${item.country ? `<span class="text-xs text-stone-400">${item.country}</span>` : ''}
-              </div>
-              <div class="font-medium text-stone-900 group-hover:text-orange-500 transition-colors truncate">${item.title}</div>
-              <div class="text-sm text-stone-400 mt-0.5 line-clamp-1">${item.summary}</div>
-            </div>
-          </a>`;
-        }).join('')}
-      </div>`;
-  }
-
-  async function init() {
-    const { default: Fuse } = await import('https://cdn.jsdelivr.net/npm/fuse.js@7/dist/fuse.mjs');
-    const fuse = new Fuse(searchIndex, {
+    const fuse = new Fuse(searchItems, {
       keys: [
-        { name: 'title', weight: 0.5 },
-        { name: 'summary', weight: 0.3 },
-        { name: 'tags', weight: 0.15 },
-        { name: 'country', weight: 0.05 },
+        { name: 'title', weight: 0.38 },
+        { name: 'summary', weight: 0.22 },
+        { name: 'tags', weight: 0.16 },
+        { name: 'mood', weight: 0.14 },
+        { name: 'categoryLabel', weight: 0.07 },
+        { name: 'country', weight: 0.03 },
       ],
-      threshold: 0.4,
+      threshold: 0.38,
+      ignoreLocation: true,
+      minMatchCharLength: 1,
     });
 
-    input?.addEventListener('input', (e) => {
-      const q = e.target.value.trim();
-      if (!q) {
-        resultsEl.innerHTML = '';
-        emptyEl.classList.add('hidden');
-        hintEl.classList.remove('hidden');
+    function createElement<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, text?: string) {
+      const element = document.createElement(tag);
+      if (className) element.className = className;
+      if (text !== undefined) element.textContent = text;
+      return element;
+    }
+
+    function renderResults(matches: FuseResult<SearchItem>[], query: string) {
+      results?.replaceChildren();
+      if (!query) {
+        start?.removeAttribute('hidden');
+        empty?.setAttribute('hidden', '');
+        if (status) status.textContent = '';
         return;
       }
-      renderResults(fuse.search(q));
+
+      start?.setAttribute('hidden', '');
+      if (!matches.length) {
+        empty?.removeAttribute('hidden');
+        if (status) status.textContent = `没有找到与“${query}”相关的内容`;
+        return;
+      }
+
+      empty?.setAttribute('hidden', '');
+      if (status) status.textContent = `找到 ${matches.length} 颗与“${query}”相关的内容`;
+      const fragment = document.createDocumentFragment();
+
+      matches.forEach(({ item }, index) => {
+        const link = createElement('a', 'search-result');
+        link.href = `/item/${encodeURIComponent(item.id)}`;
+        link.style.setProperty('--result-accent', item.accent);
+        link.style.setProperty('--result-tint', item.tint);
+        link.dataset.resultIndex = String(index);
+
+        const visual = createElement('div', 'search-result__visual');
+        visual.setAttribute('aria-hidden', 'true');
+        visual.append(createElement('span', '', item.categoryShortLabel));
+
+        const body = createElement('div', 'search-result__body');
+        const meta = createElement('div', 'search-result__meta');
+        meta.append(createElement('span', '', item.categoryLabel));
+        if (item.country) meta.append(createElement('i', '', item.country));
+        body.append(meta, createElement('h2', '', item.title), createElement('p', '', item.summary));
+
+        const contexts = [...(item.mood || []), ...(item.tags || [])].slice(0, 3);
+        if (contexts.length) {
+          const list = createElement('ul', 'search-result__contexts');
+          contexts.forEach((context) => list.append(createElement('li', '', context)));
+          body.append(list);
+        }
+
+        link.append(visual, body, createElement('span', 'search-result__arrow', '→'));
+        fragment.append(link);
+      });
+
+      results?.append(fragment);
+    }
+
+    function runSearch(value: string, updateUrl = true) {
+      const query = value.trim().slice(0, 100);
+      if (clearButton) clearButton.hidden = !query;
+      const matches = query ? fuse.search(query.replace(/\s+/g, ''), { limit: 40 }) : [];
+      renderResults(matches, query);
+
+      if (updateUrl) {
+        const url = new URL(location.href);
+        query ? url.searchParams.set('q', query) : url.searchParams.delete('q');
+        history.replaceState({}, '', url);
+      }
+    }
+
+    let timer: ReturnType<typeof setTimeout>;
+    form?.addEventListener('submit', event => { event.preventDefault(); clearTimeout(timer); runSearch(input?.value ?? ''); });
+    input?.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => runSearch(input.value), 150); });
+    input?.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        input.value = '';
+        runSearch('');
+      }
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        document.querySelector<HTMLAnchorElement>('.search-result')?.focus();
+      }
     });
 
-    const urlQ = new URLSearchParams(location.search).get('q');
-    if (urlQ && input) {
-      input.value = urlQ;
-      renderResults(fuse.search(urlQ));
-    }
-  }
+    clearButton?.addEventListener('click', () => {
+      if (!input) return;
+      input.value = '';
+      input.focus();
+      runSearch('');
+    });
 
-  init();
-</script>
+    document.querySelectorAll<HTMLButtonElement>('.search-suggestion').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!input) return;
+        input.value = button.dataset.query || '';
+        input.focus();
+        runSearch(input.value);
+      });
+    });
+
+    const initialQuery = new URLSearchParams(location.search).get('q') || '';
+    if (input && initialQuery) input.value = initialQuery;
+    runSearch(initialQuery, false);
+  </script>
+</BaseLayout>

@@ -8,9 +8,11 @@ export default defineConfig({
   output: 'server',
   adapter: cloudflare({
     imageService: 'passthrough',
-    sessionKVBindingName: undefined,
+    // Reuse the existing namespace; authentication uses signed cookies, not Astro sessions.
+    sessionKVBindingName: 'TANGHULU_VIEWS',
   }),
   vite: {
+    build: { assetsInlineLimit: 0 },
     plugins: [tailwindcss()],
   },
 });

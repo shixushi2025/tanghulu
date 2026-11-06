@@ -1,23 +1,56 @@
 {
-  "name": "tangluhu",
+  "name": "tanghulu",
   "type": "module",
   "version": "0.0.1",
+  "private": true,
+  "description": "糖葫芦：一份持续生长的私人精选",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.19.0"
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && node scripts/fix-deploy.mjs",
-    "preview": "astro preview",
-    "astro": "astro"
+    "build": "astro build",
+    "preview": "wrangler dev --config dist/server/wrangler.json",
+    "astro": "astro",
+    "check": "astro check",
+    "test": "node scripts/test-unit.mjs",
+    "test:e2e": "playwright test",
+    "db:local": "wrangler d1 migrations apply tanghulu-db --config wrangler.toml --local",
+    "content:sql": "node scripts/migrate-content.mjs",
+    "verify": "npm run check && npm test && npm run content:check && npm run images:check && npm run test:release && npm run build && node scripts/check-deploy.mjs && npm run test:e2e",
+    "content:check": "node --test tests/content.test.mjs",
+    "images:check": "node --test tests/images.test.mjs",
+    "images:sync": "node scripts/sync-images.mjs",
+    "images:credits": "node scripts/image-credits.mjs",
+    "deploy": "npm run build && node scripts/check-deploy.mjs && wrangler deploy --config dist/server/wrangler.json",
+    "deploy:check": "npm run build && node scripts/check-deploy.mjs && wrangler deploy --config dist/server/wrangler.json --dry-run --outdir .wrangler/dry-run",
+    "db:status": "node scripts/db-release.mjs status",
+    "db:upgrade": "node scripts/db-release.mjs upgrade",
+    "test:release": "node --test tests/release.test.mjs"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^13.1.1",
+    "@astrojs/cloudflare": "^14.1.7",
     "@tailwindcss/typography": "^0.5.19",
-    "@tailwindcss/vite": "^4.2.1",
-    "astro": "^6.0.4",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.1.6",
     "fuse.js": "^7.1.0",
     "marked": "^17.0.4",
-    "tailwindcss": "^4.2.1"
+    "tailwindcss": "^4.3.3",
+    "xss": "^1.0.15"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@cloudflare/workers-types": "^5.20261106.1",
+    "@playwright/test": "^1.65.0",
+    "esbuild": "^0.28.1",
+    "sharp": "^0.35.5",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.158.0",
+    "yaml": "^2.9.1"
+  },
+  "overrides": {
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "^6.1.5"
+    }
   }
 }

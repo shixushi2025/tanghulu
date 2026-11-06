@@ -16,7 +16,7 @@ function b64url(buf: ArrayBuffer): string {
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
-function fromb64url(s: string): Uint8Array {
+function fromb64url(s: string) {
   return Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
 }
 
@@ -32,7 +32,8 @@ export async function verifyToken(token: string, password: string): Promise<bool
     const dot = token.indexOf('.');
     if (dot === -1) return false;
     const expiry = atob(token.slice(0, dot));
-    if (Date.now() > parseInt(expiry)) return false;
+    const expiresAt = Number(expiry);
+    if (!/^\d+$/.test(expiry) || !Number.isSafeInteger(expiresAt) || Date.now() >= expiresAt || expiresAt > Date.now() + TOKEN_TTL_MS) return false;
     const key = await getKey(password);
     const sig = fromb64url(token.slice(dot + 1));
     return crypto.subtle.verify('HMAC', key, sig, new TextEncoder().encode(expiry));
@@ -44,13 +45,22 @@ export async function verifyToken(token: string, password: string): Promise<bool
 export function getAdminToken(request: Request): string | null {
   const cookie = request.headers.get('Cookie') ?? '';
   const match = cookie.match(/(?:^|;\s*)admin_tok=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : null;
+  try { return match ? decodeURIComponent(match[1]) : null; } catch { return null; }
 }
 
-export function tokenCookie(token: string): string {
-  return `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${7 * 24 * 3600}`;
+export function tokenCookie(token: string, secure = true): string {
+  return `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${7 * 24 * 3600}${secure ? '; Secure' : ''}`;
 }
 
-export function clearCookie(): string {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`;
+export function clearCookie(secure = true): string {
+  return `${COOKIE_NAME}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${secure ? '; Secure' : ''}`;
+}
+
+export async function passwordMatches(submitted: string, expected: string): Promise<boolean> {
+  const encode = (value: string) => new TextEncoder().encode(value);
+  const [a, b] = await Promise.all([crypto.subtle.digest('SHA-256', encode(submitted)), crypto.subtle.digest('SHA-256', encode(expected))]);
+  const left = new Uint8Array(a), right = new Uint8Array(b);
+  let diff = 0;
+  for (let i = 0; i < left.length; i++) diff |= left[i] ^ right[i];
+  return diff === 0;
 }

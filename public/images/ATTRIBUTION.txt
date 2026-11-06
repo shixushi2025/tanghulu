@@ -1,0 +1,470 @@
+糖葫芦 · 图片来源与权利说明
+图片用于对应作品、产品和作者条目的识别与介绍。除明确标注的开放许可外，版权及商标权归原权利人。
+
+atomic-habits
+显示文件: /images/covers/atomic-habits-fac65ccd1dee.webp
+来源: https://jamesclear.com/atomic-habits
+原图: https://jamesclear.com/wp-content/uploads/2026/07/atomic-habits-dots.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+bilibili
+显示文件: /images/covers/bilibili-839b41725a9b.webp
+来源: https://github.com/simple-icons/simple-icons
+原图: https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/bilibili.svg
+说明: Simple Icons 项目采用 CC0；品牌商标及个别图标条款独立适用。
+
+blender
+显示文件: /images/covers/blender-b662d42849bf.webp
+来源: https://www.blender.org/
+原图: https://www.blender.org/wp-content/themes/bthree/assets/icons/apple-touch-icon.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+bolt
+显示文件: /images/covers/bolt-d48c56a4f2ee.webp
+来源: https://bolt.new
+原图: https://bolt.new/static/favicon-192x192.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+chatgpt
+显示文件: /images/covers/chatgpt-e618143eb6d0.webp
+来源: https://github.com/lobehub/lobe-icons
+原图: https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/openai.png
+说明: Lobe Icons 图标库采用 MIT 许可；商标权仍属于相应品牌。
+
+claude-ai
+显示文件: /images/covers/claude-ai-f7898ec59478.webp
+来源: https://claude.com/
+原图: https://claude.com/icon.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+claude-code
+显示文件: /images/covers/claude-code-d249a621d44d.webp
+来源: https://claude.com/
+原图: https://claude.com/icon.svg
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+creator-andrej
+显示文件: /images/covers/creator-andrej-5872fc7f1f08.webp
+来源: https://karpathy.ai/
+原图: https://karpathy.ai/assets/me_new.jpg
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+creator-ruanyifeng
+显示文件: /images/covers/creator-ruanyifeng-584a48c29c59.webp
+来源: https://github.com/ruanyf
+原图: https://avatars.githubusercontent.com/u/905434?v=4
+说明: 作者公开头像，仅用于创作者身份识别。
+
+cursor
+显示文件: /images/covers/cursor-abd2cfb004d0.webp
+来源: https://cursor.com
+原图: https://cursor.com/marketing-static/icon-192x192-light.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+deepseek
+显示文件: /images/covers/deepseek-104a63821597.webp
+来源: https://github.com/lobehub/lobe-icons
+原图: https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/deepseek-color.png
+说明: Lobe Icons 图标库采用 MIT 许可；商标权仍属于相应品牌。
+
+discord
+显示文件: /images/covers/discord-c7d4f313404e.webp
+来源: https://github.com/simple-icons/simple-icons
+原图: https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/discord.svg
+说明: Simple Icons 项目采用 CC0；品牌商标及个别图标条款独立适用。
+
+doubao
+显示文件: /images/covers/doubao-adf9d3c7dc9d.webp
+来源: https://www.doubao.com
+原图: https://lf-flow-web-cdn.doubao.com/obj/flow-doubao/favicon/new-doubao/192x192.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+elevenlabs
+显示文件: /images/covers/elevenlabs-3a155e0bd7ed.webp
+来源: https://elevenlabs.io
+原图: https://elevenlabs.io/apple-icon.png?6592732ab34b1d42
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+excalidraw
+显示文件: /images/covers/excalidraw-4d4c81829325.webp
+来源: https://excalidraw.com/
+原图: https://excalidraw.com/apple-touch-icon.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+fight-club
+显示文件: /images/covers/fight-club-1c4f8359429e.webp
+来源: https://en.wikipedia.org/wiki/File:Fight_Club_poster.jpg
+原图: https://upload.wikimedia.org/wikipedia/en/f/fc/Fight_Club_poster.jpg
+说明: 电影海报版权归发行方；百科中的非自由海报不构成自由版权授权，用于作品介绍。
+
+freecodecamp
+显示文件: /images/covers/freecodecamp-f4aa168ca79d.webp
+来源: https://www.freecodecamp.org/learn/
+原图: https://www.freecodecamp.org/icons/icon-512x512.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+fujifilm-x100vi
+显示文件: /images/covers/fujifilm-x100vi-ccff8c3b6c05.webp
+来源: https://commons.wikimedia.org/wiki/File:Fujifilm_X100VI_25_may_2024a.jpg
+原图: https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Fujifilm_X100VI_25_may_2024a.jpg/330px-Fujifilm_X100VI_25_may_2024a.jpg
+说明: 昼落ち / CC0 1.0；缩小尺寸并转为 WebP。
+作者: 昼落ち
+许可: CC0 1.0 https://creativecommons.org/publicdomain/zero/1.0/
+处理: 缩小尺寸并转为 WebP
+
+gemini
+显示文件: /images/covers/gemini-583a981f4194.webp
+来源: https://gemini.google/overview/
+原图: https://gemini.google/images/spark_4c.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+github-copilot
+显示文件: /images/covers/github-copilot-7702662a7363.webp
+来源: https://github.com/simple-icons/simple-icons
+原图: https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/githubcopilot.svg
+说明: Simple Icons 项目采用 CC0；品牌商标及个别图标条款独立适用。
+
+godot
+显示文件: /images/covers/godot-4fe8dd17416c.webp
+来源: https://godotengine.org/
+原图: https://godotengine.org/assets/favicon.svg
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+grok
+显示文件: /images/covers/grok-aaa03a1df4cb.webp
+来源: https://grok.com
+原图: https://grok.com/images/android-chrome-512x512.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+headspace
+显示文件: /images/covers/headspace-bfd0ab5ed867.webp
+来源: https://tide.fm
+原图: https://pics.tide.moreless.io/site-static/logo.png?imageMogr2/thumbnail/!192x192r
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+ideogram
+显示文件: /images/covers/ideogram-ffab5cb75f8d.webp
+来源: https://ideogram.ai
+原图: https://ideogram.ai/favicon.svg?v=new-brand-20261020
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+instagram
+显示文件: /images/covers/instagram-ba763550de60.webp
+来源: https://github.com/simple-icons/simple-icons
+原图: https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/instagram.svg
+说明: Simple Icons 项目采用 CC0；品牌商标及个别图标条款独立适用。
+
+interstellar
+显示文件: /images/covers/interstellar-a5e4d7256ca2.webp
+来源: https://en.wikipedia.org/wiki/File:Interstellar_film_poster.jpg
+原图: https://upload.wikimedia.org/wikipedia/en/b/bc/Interstellar_film_poster.jpg
+说明: 电影海报版权归发行方；百科中的非自由海报不构成自由版权授权，用于作品介绍。
+
+keep
+显示文件: /images/covers/keep-b40762594d11.webp
+来源: https://www.gotokeep.com/
+原图: https://www.gotokeep.com/icons/favicon-96x96.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+kimi
+显示文件: /images/covers/kimi-84a2b8810c46.webp
+来源: https://www.kimi.com/
+原图: https://www.kimi.com/pwa-192.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+kling
+显示文件: /images/covers/kling-583654106ff5.webp
+来源: https://kling.ai/
+原图: https://s16-kling.klingai.com/kos/s101/nlav112918/kling-homepage-aio/logo-180x180.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+localsend
+显示文件: /images/covers/localsend-09c299198aed.webp
+来源: https://localsend.org/
+原图: https://localsend.org/apple-touch-icon.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+lovable
+显示文件: /images/covers/lovable-7567f6142645.webp
+来源: https://github.com/lobehub/lobe-icons
+原图: https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/lovable-color.png
+说明: Lobe Icons 图标库采用 MIT 许可；商标权仍属于相应品牌。
+
+midjourney
+显示文件: /images/covers/midjourney-66460d7c1049.webp
+来源: https://github.com/lobehub/lobe-icons
+原图: https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/midjourney.png
+说明: Lobe Icons 图标库采用 MIT 许可；商标权仍属于相应品牌。
+
+notion-ai
+显示文件: /images/covers/notion-ai-31f48dd2cced.webp
+来源: https://www.notion.com/product/ai
+原图: https://www.notion.com/front-static/logo-ios.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+obsidian
+显示文件: /images/covers/obsidian-191a999538ee.webp
+来源: https://obsidian.md/
+原图: https://obsidian.md/apple-touch-icon.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+parasite
+显示文件: /images/covers/parasite-a4d6f5123dfb.webp
+来源: https://en.wikipedia.org/wiki/File:Parasite_(2019_film).png
+原图: https://upload.wikimedia.org/wikipedia/en/5/53/Parasite_%282019_film%29.png
+说明: 电影海报版权归发行方；百科中的非自由海报不构成自由版权授权，用于作品介绍。
+
+perplexity
+显示文件: /images/covers/perplexity-e7bd145deecb.webp
+来源: https://github.com/lobehub/lobe-icons
+原图: https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/perplexity-color.png
+说明: Lobe Icons 图标库采用 MIT 许可；商标权仍属于相应品牌。
+
+pika
+显示文件: /images/covers/pika-395f12b48607.webp
+来源: https://pika.art
+原图: https://pika.art/apple-icon.png?apple-icon.1pc-f1mhs57mu.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+podcast-hardwork
+显示文件: /images/covers/podcast-hardwork-1c79ea24606b.webp
+来源: https://hardhacker.com
+原图: https://hardhacker.com/logo.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+podcast-lex
+显示文件: /images/covers/podcast-lex-a0e48bcf509b.webp
+来源: https://lexfridman.com/podcast
+原图: https://lexfridman.com/wordpress/wp-content/uploads/2026/10/lex_fridman_podcast_social_1200x630.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+quiet
+显示文件: /images/covers/quiet-02ee55263c23.webp
+来源: https://susancain.net/book/quiet/
+原图: https://susancain.net/wp-content/uploads/2021/07/Quiet.jpeg
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+qwen
+显示文件: /images/covers/qwen-5d5596725b65.webp
+来源: https://github.com/lobehub/lobe-icons
+原图: https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/qwen-color.png
+说明: Lobe Icons 图标库采用 MIT 许可；商标权仍属于相应品牌。
+
+runway
+显示文件: /images/covers/runway-5b54a30d8af1.webp
+来源: https://runway.com/
+原图: https://runway.com/icon.png?icon.35ps9bmugbe1e.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+sapiens
+显示文件: /images/covers/sapiens-71fdc7290dd3.webp
+来源: https://www.ynharari.com/book/sapiens/
+原图: https://www.ynharari.com/wp-content/uploads/2017/01/sapiens.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+shawshank
+显示文件: /images/covers/shawshank-2a51094c5fb9.webp
+来源: https://en.wikipedia.org/wiki/File:ShawshankRedemptionMoviePoster.jpg
+原图: https://upload.wikimedia.org/wikipedia/en/8/81/ShawshankRedemptionMoviePoster.jpg
+说明: 电影海报版权归发行方；百科中的非自由海报不构成自由版权授权，用于作品介绍。
+
+social-network
+显示文件: /images/covers/social-network-33377c909860.webp
+来源: https://en.wikipedia.org/wiki/File:The_Social_Network_film_poster.png
+原图: https://upload.wikimedia.org/wikipedia/en/8/8c/The_Social_Network_film_poster.png
+说明: 电影海报版权归发行方；百科中的非自由海报不构成自由版权授权，用于作品介绍。
+
+spirited-away
+显示文件: /images/covers/spirited-away-35c0166b2947.webp
+来源: https://www.ghibli.jp/works/chihiro/
+原图: https://www.ghibli.jp/images/chihiro.jpg
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+stable-diffusion
+显示文件: /images/covers/stable-diffusion-8dc0b465b84b.webp
+来源: https://github.com/lobehub/lobe-icons
+原图: https://raw.githubusercontent.com/lobehub/lobe-icons/refs/heads/master/packages/static-png/light/comfyui-color.png
+说明: Lobe Icons 图标库采用 MIT 许可；商标权仍属于相应品牌。
+
+suno
+显示文件: /images/covers/suno-2bfe01a9219c.webp
+来源: https://suno.com
+原图: https://cdn-o.suno.com/favicon-512x512.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+telegram
+显示文件: /images/covers/telegram-89ecb8f96f4c.webp
+来源: https://telegram.org
+原图: https://telegram.org/img/apple-touch-icon.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+tesla-model3
+显示文件: /images/covers/tesla-model3-7383a411838f.webp
+来源: https://commons.wikimedia.org/wiki/File:Tesla_Model_3_(2023)_Autofr%C3%BChling_Ulm_IMG_9282.jpg
+原图: https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Tesla_Model_3_%282023%29_Autofr%C3%BChling_Ulm_IMG_9282.jpg/1280px-Tesla_Model_3_%282023%29_Autofr%C3%BChling_Ulm_IMG_9282.jpg
+说明: Alexander-93 / CC BY-SA 4.0；本地缩略图以同一许可提供，缩小尺寸并转为 WebP。
+作者: Alexander-93
+许可: CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
+处理: 缩小尺寸并转为 WebP
+
+the-almanack-of-naval
+显示文件: /images/covers/the-almanack-of-naval-b7c0acdd67c5.webp
+来源: https://www.navalmanack.com/
+原图: https://navalmanack.s3.amazonaws.com/Eric-Jorgenson_The-Almanack-of-Naval-Ravikant_EBOOK_v103.epub
+封面提取位置: OEBPS/image/cover.jpg
+说明: 封面从书籍官网公开提供的 EPUB 提取；书籍与封面版权归作者及出版方。
+
+thinking-fast-slow
+显示文件: /images/covers/thinking-fast-slow-ad9f5873a361.webp
+来源: https://en.wikipedia.org/wiki/File:Thinking,_Fast_and_Slow.jpg
+原图: https://upload.wikimedia.org/wikipedia/en/c/c1/Thinking%2C_Fast_and_Slow.jpg
+说明: 封面版权归出版方及作者；百科非自由封面不构成自由版权授权，用于作品介绍。
+
+v0
+显示文件: /images/covers/v0-244ef182313b.webp
+来源: https://v0.app/
+原图: https://v0.app/assets/apple-icon.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+visual-studio-code
+显示文件: /images/covers/visual-studio-code-33ab8aa5b942.webp
+来源: https://code.visualstudio.com/
+原图: https://code.visualstudio.com/assets/apple-touch-icon.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+why-we-sleep
+显示文件: /images/covers/why-we-sleep-54f2acb48ab4.webp
+来源: https://www.simonandschuster.com/books/Why-We-Sleep/Matthew-Walker/9781501144325
+原图: https://d28hgpri8am2if.cloudfront.net/book_images/onix/cvr9781501144325/why-we-sleep-9781501144325_hr.jpg
+说明: 封面版权归出版方及作者；对应 ISBN 9781501144325 的发行封面。
+
+windsurf
+显示文件: /images/covers/windsurf-7dc81b4c1102.webp
+来源: https://devin.ai/desktop
+原图: https://devin.ai/icon.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+xiaohongshu
+显示文件: /images/covers/xiaohongshu-ad0f72fd255c.webp
+来源: https://github.com/simple-icons/simple-icons
+原图: https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/xiaohongshu.svg
+说明: Simple Icons 项目采用 CC0；品牌商标及个别图标条款独立适用。
+
+youtube
+显示文件: /images/covers/youtube-d94bc65a1a11.webp
+来源: https://youtube.com
+原图: https://www.youtube.com/s/desktop/92ead095/img/favicon_144x144.png
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+zishishinei
+显示文件: /images/covers/zishishinei-6210221f0bd3.webp
+来源: https://read.douban.com/ebook/327631159/
+原图: https://pic.arkread.com/cover/ebook/f/327631159.1653693974.jpg!cover_default.jpg
+说明: 封面版权归作者及出版方；使用对应电子书作品页的封面作识别介绍。
+
+zotero
+显示文件: /images/covers/zotero-8980445b7153.webp
+来源: https://www.zotero.org/
+原图: https://www.zotero.org/static/images/bs4theme/zotero-logo.1775160902.svg
+说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
+
+=== lobe-icons-MIT.txt ===
+MIT License
+
+Copyright (c) 2023 LobeHub
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+=== primer-octicons-MIT.txt ===
+MIT License
+
+Copyright (c) 2026 GitHub Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+=== simple-icons-DISCLAIMER.md ===
+# Disclaimer
+
+Simple Icons asks that its users read this disclaimer fully before including an icon in their project.
+
+## Licenses, Copyrights & Trademarks
+
+> [!IMPORTANT]\
+> The addition of licenses to Simple Icons is an ongoing project. Hence, the absence of license data for a particular icon does not imply that the icon is not released under a license.
+
+<!-- markdownlint-disable-next-line no-blanks-blockquote -->
+
+> [!NOTE]\
+> Simple Icons is released under CC0 - though that doesn't mean to imply that all icons within the project are also CC0. Please see individual licenses where available.
+
+Simple Icons provides data on the license under which icons are available. We ask users to carefully consider this when using an icon. As licenses are subject to change we also ask our users to regularly check if the license of the icons they use have been changed.
+
+The license under which an icon is available can be found in the icon's entry in the JSON data file in the NPM and Packagist packages, or through the license link on the icon's card on [the Simple Icons website].
+
+As we rely largely on our community to help us keep Simple Icons up-to-date, the license data for an icon may be outdated. If you find that the license data provided is outdated, please [submit an issue][icon-outdated-issues] to [the Simple Icons GitHub repository].
+
+If an icon includes a registered trademark (`®`) or trademark symbol (`™`) the recommendations outlined in [the Simple Icons Contributing Guidelines] are followed to decide whether to include the symbol or not.
+
+Simple Icons cannot be held responsible for any legal activity raised by a brand, or users of the package. We ask that our users seek the correct permissions to use the icons relevant to their project.
+
+## Brand Guidelines
+
+> [!NOTE]\
+> The addition of guidelines to Simple Icons is an ongoing project. In the meantime, users of Simple Icons are instead encouraged to check the `source` URL as, in some cases, the icon will have been sourced from official guidelines. The lack of a `guidelines` entry for a particular brand does not imply that the brand has no guidelines.
+
+Simple Icons provides a link to a brand's _branding guidelines_ (or similar) if the brand provides one. We ask our users read these guidelines and ensure their usage of the brand's icon is in accordance with them. As guidelines are subject to change we also ask our users to regularly check if the brand guidelines of the icons they use have been updated.
+
+The brand guidelines can be found in the icon's entry in the JSON data file in the NPM and Packagist packages, or through the "Brand Guidelines" link on the icon's card on [the Simple Icons website].
+
+As we rely largely on our community to help us keep Simple Icons up-to-date, the guidelines link for a brand may be outdated. If you find that the guidelines are outdated, please [submit an issue][icon-outdated-issues] to [the Simple Icons GitHub repository].
+
+## Update of Brands
+
+Should a brand wish for their icon or data to be updated, please [submit an issue][icon-outdated-issues] to [the Simple Icons GitHub repository]. In the issue, please explain your affiliation with the company and reasons for the update. We generally release updates once a week, but can make exceptions for immediate updates of brands.
+
+## Removal of Brands
+
+Should a brand wish for their icon to be removed from the package, contact `removals at simpleicons dot org` explaining your affiliation with the company, and reasons for removal. Alternatively, it is also possible to [submit an issue][removal-issues] on [the Simple Icons GitHub repository] with the same information. We generally remove icons that no longer [meet our criteria] twice a year in our major releases - but can occasionally make exceptions for immediate removal of brands.
+
+The pull request of icon removal must be submitted by the Simple Icons maintainer.
+
+[meet our criteria]: https://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md#requesting-an-icon
+[icon-outdated-issues]: https://github.com/simple-icons/simple-icons/issues/new?assignees=&labels=update+icon%2Fdata&template=icon_update.yml&title=Update%3A+
+[removal-issues]: https://github.com/simple-icons/simple-icons/issues/new?assignees=&labels=breaking+change&template=icon_removal.yml&title=Remove%3A+
+[the simple icons contributing guidelines]: https://github.com/simple-icons/simple-icons/blob/develop/CONTRIBUTING.md#icon-guidelines
+[the simple icons github repository]: https://github.com/simple-icons/simple-icons
+[the simple icons website]: https://simpleicons.org/

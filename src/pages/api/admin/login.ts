@@ -1,29 +1,15 @@
 import { env } from 'cloudflare:workers';
 import type { APIRoute } from 'astro';
-import { createToken, tokenCookie } from '../../../lib/auth';
+import { createToken, passwordMatches, tokenCookie } from '../../../lib/auth';
+import { HttpError, readJson } from '../../../lib/http';
+import { fingerprint, rateLimit } from '../../../lib/security';
 
-export const POST: APIRoute = async ({ locals, request }) => {
-  const password = env.ADMIN_PASSWORD;
-  if (!password) {
-    return Response.json({ error: 'Admin not configured' }, { status: 503 });
-  }
-
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: 'Invalid request' }, { status: 400 });
-  }
-
-  const submitted = String((body as Record<string, unknown>)?.password ?? '');
-  if (!submitted || submitted !== password) {
-    // Constant-time compare not critical here since it's a string comparison
-    // and brute-force protection is handled by the token TTL + no enumeration
-    return Response.json({ error: 'Incorrect password' }, { status: 401 });
-  }
-
-  const token = await createToken(password);
-  return Response.json({ ok: true }, {
-    headers: { 'Set-Cookie': tokenCookie(token) },
-  });
+export const POST: APIRoute = async ({ request, url }) => {
+  if (!env.ADMIN_PASSWORD) throw new HttpError(503, '管理服务尚未配置');
+  const key = await fingerprint(request, env.ADMIN_PASSWORD, 'login');
+  await rateLimit(env.TANGHULU_DB, `login:${key}`, 10, 900);
+  const body = await readJson(request, 2048);
+  const submitted = body && typeof body === 'object' && 'password' in body ? body.password : null;
+  if (typeof submitted !== 'string' || !submitted || !await passwordMatches(submitted, env.ADMIN_PASSWORD)) throw new HttpError(401, '密码不正确');
+  return Response.json({ ok: true }, { headers: { 'Set-Cookie': tokenCookie(await createToken(env.ADMIN_PASSWORD), url.protocol === 'https:') } });
 };

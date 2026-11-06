@@ -1,40 +1,36 @@
 import { env } from 'cloudflare:workers';
 import type { APIRoute } from 'astro';
+import { isValidId } from '../../../lib/validation';
+import { HttpError } from '../../../lib/http';
+import { fingerprint, rateLimit } from '../../../lib/security';
 
-function isValidId(id: string): boolean {
-  return /^[a-zA-Z0-9_-]{1,100}$/.test(id);
+async function requireItem(id: string) {
+  if (!isValidId(id)) throw new HttpError(400, '无效 ID');
+  if (!await env.TANGHULU_DB.prepare('SELECT id FROM items WHERE id=?').bind(id).first()) throw new HttpError(404, '内容不存在');
 }
-
-export const GET: APIRoute = async ({ params, locals }) => {
-  const id = params.id!;
-  if (!isValidId(id)) return Response.json({ error: 'Invalid id' }, { status: 400 });
-
-  const kv = env.TANGHULU_VIEWS;
-  const count = await kv.get(id);
-  return Response.json({ count: parseInt(count ?? '0') }, {
-    headers: { 'Cache-Control': 'no-store' },
-  });
+async function count(id: string) {
+  const row = await env.TANGHULU_DB.prepare('SELECT count FROM view_totals WHERE item_id=?').bind(id).first<{ count: number }>();
+  if (row) return row.count;
+  const legacy = Number(await env.TANGHULU_VIEWS.get(id));
+  return Number.isSafeInteger(legacy) && legacy > 0 ? legacy : 0;
+}
+export const GET: APIRoute = async ({ params }) => {
+  const id = params.id ?? '';
+  await requireItem(id);
+  return Response.json({ count: await count(id) });
 };
-
-export const POST: APIRoute = async ({ params, locals, request }) => {
-  const id = params.id!;
-  if (!isValidId(id)) return Response.json({ error: 'Invalid id' }, { status: 400 });
-
-  // Simple rate limit: 1 view per IP per item per hour via KV TTL key
-  const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
-  const kv = env.TANGHULU_VIEWS;
-  const throttleKey = `throttle:${id}:${ip}`;
-  const throttled = await kv.get(throttleKey);
-  if (!throttled) {
-    await kv.put(throttleKey, '1', { expirationTtl: 3600 });
-    const current = await kv.get(id);
-    const newCount = parseInt(current ?? '0') + 1;
-    await kv.put(id, String(newCount));
-    return Response.json({ count: newCount });
-  }
-
-  const current = await kv.get(id);
-  return Response.json({ count: parseInt(current ?? '0') });
+export const POST: APIRoute = async ({ params, request }) => {
+  const id = params.id ?? '';
+  await requireItem(id);
+  const fp = await fingerprint(request, env.VISITOR_HASH_SECRET || env.ADMIN_PASSWORD, 'views');
+  const db = env.TANGHULU_DB;
+  await rateLimit(db, `views:${fp}`, 120, 900);
+  const baseline = await count(id);
+  const bucket = Math.floor(Date.now() / 3600000);
+  await db.batch([
+    db.prepare('INSERT OR IGNORE INTO view_totals (item_id, count) SELECT id, ? FROM items WHERE id=?').bind(baseline, id),
+    db.prepare('INSERT OR IGNORE INTO view_events (item_id, fingerprint, bucket) SELECT id, ?, ? FROM items WHERE id=?').bind(fp, bucket, id),
+    db.prepare('DELETE FROM view_events WHERE rowid IN (SELECT rowid FROM view_events WHERE bucket < ? LIMIT 100)').bind(bucket - 1),
+  ]);
+  return Response.json({ count: await count(id) });
 };
-
-export const OPTIONS: APIRoute = async () => new Response(null, { status: 204 });

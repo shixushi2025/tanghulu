@@ -19,7 +19,7 @@ if (!item) return Astro.redirect('/admin/dashboard');
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>编辑 · {item.title}</title>
   </head>
-  <body class="bg-stone-50 text-stone-900 antialiased min-h-screen">
+  <body class="admin-shell bg-stone-50 text-stone-900 antialiased min-h-screen">
     <header class="sticky top-0 z-50 bg-white border-b border-stone-200">
       <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         <div class="flex items-center gap-3 min-w-0">
@@ -32,22 +32,22 @@ if (!item) return Astro.redirect('/admin/dashboard');
     </header>
 
     <main class="max-w-4xl mx-auto px-4 py-8">
-      <form id="item-form" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <form id="item-form" data-item-id={item.id} class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         <!-- Left: main fields -->
         <div class="lg:col-span-2 space-y-5">
           <div class="bg-white border border-stone-200 rounded-xl p-5 space-y-4">
             <div>
-              <label class="block text-sm font-medium text-stone-700 mb-1.5">标题 <span class="text-red-500">*</span></label>
-              <input id="f-title" type="text" required value={item.title} class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" />
+              <label for="f-title" class="block text-sm font-medium text-stone-700 mb-1.5">标题 <span class="text-red-500">*</span></label>
+              <input id="f-title" maxlength="160" type="text" required value={item.title} class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-stone-700 mb-1.5">摘要 <span class="text-red-500">*</span></label>
-              <textarea id="f-summary" rows="3" required class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors resize-none">{item.summary}</textarea>
+              <label for="f-summary" class="block text-sm font-medium text-stone-700 mb-1.5">摘要 <span class="text-red-500">*</span></label>
+              <textarea id="f-summary" maxlength="600" rows="3" required class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors resize-none">{item.summary}</textarea>
             </div>
             <div>
-              <label class="block text-sm font-medium text-stone-700 mb-1.5">正文（Markdown）</label>
-              <textarea id="f-body" rows="10" class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors resize-y font-mono">{item.body}</textarea>
+              <label for="f-body" class="block text-sm font-medium text-stone-700 mb-1.5">正文（Markdown）</label>
+              <textarea id="f-body" maxlength="50000" rows="10" class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors resize-y font-mono">{item.body}</textarea>
             </div>
           </div>
         </div>
@@ -56,7 +56,7 @@ if (!item) return Astro.redirect('/admin/dashboard');
         <div class="space-y-5">
           <div class="bg-white border border-stone-200 rounded-xl p-5 space-y-4">
             <div>
-              <label class="block text-sm font-medium text-stone-700 mb-1.5">ID（slug）</label>
+              <label for="f-category" class="block text-sm font-medium text-stone-700 mb-1.5">ID（slug）</label>
               <input type="text" value={item.id} readonly class="w-full px-3 py-2 border border-stone-100 rounded-lg text-sm font-mono bg-stone-50 text-stone-400 cursor-not-allowed" />
             </div>
             <div>
@@ -68,24 +68,28 @@ if (!item) return Astro.redirect('/admin/dashboard');
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-stone-700 mb-1.5">日期 <span class="text-red-500">*</span></label>
+              <label for="f-date" class="block text-sm font-medium text-stone-700 mb-1.5">日期 <span class="text-red-500">*</span></label>
               <input id="f-date" type="date" value={item.date} required class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-stone-700 mb-1.5">国家/地区</label>
-              <input id="f-country" type="text" value={item.country} class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" placeholder="美国、中国…" />
+              <label for="f-country" class="block text-sm font-medium text-stone-700 mb-1.5">国家/地区</label>
+              <input id="f-country" maxlength="80" type="text" value={item.country} class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" placeholder="美国、中国…" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-stone-700 mb-1.5">标签</label>
+              <label for="f-tags" class="block text-sm font-medium text-stone-700 mb-1.5">标签</label>
               <input id="f-tags" type="text" value={item.tags.join(', ')} class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" placeholder="逗号分隔" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-stone-700 mb-1.5">封面图 URL</label>
-              <input id="f-cover" type="url" value={item.cover} class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" placeholder="https://…" />
+              <label for="f-mood" class="block text-sm font-medium text-stone-700 mb-1.5">适合场景</label>
+              <input id="f-mood" type="text" value={item.mood.join(', ')} class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" placeholder="逗号分隔，如：通勤, 深夜" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-stone-700 mb-1.5">链接</label>
-              <input id="f-link" type="url" value={item.link} class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" placeholder="https://…" />
+              <label for="f-cover" class="block text-sm font-medium text-stone-700 mb-1.5">封面图地址</label>
+              <input id="f-cover" maxlength="2048" type="text" value={item.cover} class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" placeholder="https://…" />
+            </div>
+            <div>
+              <label for="f-link" class="block text-sm font-medium text-stone-700 mb-1.5">链接</label>
+              <input id="f-link" maxlength="2048" type="url" value={item.link} class="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-500 transition-colors" placeholder="https://…" />
             </div>
           </div>
 
@@ -93,54 +97,11 @@ if (!item) return Astro.redirect('/admin/dashboard');
             <a href="/admin/dashboard" class="flex-1 px-4 py-2.5 text-sm text-center border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors">取消</a>
             <button type="submit" id="submit-btn" class="flex-1 px-4 py-2.5 text-sm bg-stone-900 text-white rounded-lg hover:opacity-90 transition-opacity font-medium">保存</button>
           </div>
-          <p id="form-error" class="text-sm text-red-500 hidden"></p>
+          <p id="form-error" role="alert" tabindex="-1" class="text-sm text-red-500 hidden"></p>
         </div>
       </form>
     </main>
 
-    <script define:vars={{ itemId: item.id }}>
-      document.getElementById('item-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('submit-btn');
-        const errEl = document.getElementById('form-error');
-        btn.disabled = true;
-        btn.textContent = '保存中…';
-        errEl.classList.add('hidden');
-
-        const payload = {
-          title: document.getElementById('f-title').value.trim(),
-          summary: document.getElementById('f-summary').value.trim(),
-          body: document.getElementById('f-body').value.trim(),
-          category: document.getElementById('f-category').value,
-          date: document.getElementById('f-date').value,
-          country: document.getElementById('f-country').value.trim(),
-          tags: document.getElementById('f-tags').value.trim(),
-          cover: document.getElementById('f-cover').value.trim(),
-          link: document.getElementById('f-link').value.trim(),
-        };
-
-        try {
-          const res = await fetch(`/api/admin/items/${itemId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json();
-          if (res.ok) {
-            location.href = `/item/${itemId}`;
-          } else {
-            errEl.textContent = data.error ?? '保存失败';
-            errEl.classList.remove('hidden');
-            btn.disabled = false;
-            btn.textContent = '保存';
-          }
-        } catch {
-          errEl.textContent = '网络错误，请重试';
-          errEl.classList.remove('hidden');
-          btn.disabled = false;
-          btn.textContent = '保存';
-        }
-      });
-    </script>
+    <script>import '../../../../scripts/item-form';</script>
   </body>
 </html>

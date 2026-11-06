@@ -25,7 +25,7 @@ const filtered = items.filter(item => {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Dashboard · Admin</title>
   </head>
-  <body class="bg-stone-50 text-stone-900 antialiased min-h-screen">
+  <body class="admin-shell bg-stone-50 text-stone-900 antialiased min-h-screen">
 
     <!-- Admin Header -->
     <header class="sticky top-0 z-50 bg-white border-b border-stone-200">
@@ -71,6 +71,7 @@ const filtered = items.filter(item => {
           {filterCat && <input type="hidden" name="cat" value={filterCat} />}
           <input
             name="q"
+            aria-label="搜索内容标题"
             value={q}
             placeholder="搜索标题…"
             class="flex-1 px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-400"
@@ -103,7 +104,7 @@ const filtered = items.filter(item => {
                 return (
                   <tr class="border-b border-stone-50 hover:bg-stone-50 transition-colors last:border-0">
                     <td class="px-4 py-3">
-                      <a href={`/item/${item.id}`} target="_blank" class="font-medium hover:text-orange-500 transition-colors line-clamp-1">{item.title}</a>
+                      <a href={`/item/${item.id}`} target="_blank" rel="noopener noreferrer" class="font-medium hover:text-orange-500 transition-colors line-clamp-1">{item.title}</a>
                       <div class="text-xs text-stone-400 mt-0.5 font-mono">{item.id}</div>
                     </td>
                     <td class="px-4 py-3 hidden sm:table-cell">
@@ -133,60 +134,48 @@ const filtered = items.filter(item => {
       </div>
     </main>
 
-    <!-- Delete confirm modal -->
-    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div class="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-xl">
-        <h2 class="font-semibold text-lg mb-1">确认删除</h2>
-        <p class="text-stone-500 text-sm mb-5">删除 "<span id="modal-title" class="font-medium text-stone-900"></span>"？此操作不可撤销。</p>
-        <div class="flex gap-3">
-          <button id="modal-cancel" class="flex-1 px-4 py-2 text-sm border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors">取消</button>
-          <button id="modal-confirm" class="flex-1 px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">删除</button>
-        </div>
+    <dialog id="modal" aria-labelledby="modal-heading">
+      <h2 id="modal-heading" class="text-xl mb-3">确认删除</h2>
+      <p class="mb-5">删除「<span id="modal-title"></span>」及其评分、浏览数据？此操作不可撤销。</p>
+      <p id="delete-error" role="alert" hidden class="text-red-700 mb-4"></p>
+      <div class="flex gap-3">
+        <button id="modal-cancel" class="button button--secondary" autofocus>取消</button>
+        <button id="modal-confirm" class="button button--primary">确认删除</button>
       </div>
-    </div>
-
+    </dialog>
     <script>
-      // Logout
-      document.getElementById('logout-btn')?.addEventListener('click', async () => {
-        await fetch('/api/admin/logout', { method: 'POST' });
-        location.href = '/admin';
-      });
-
-      // Delete
-      const modal = document.getElementById('modal');
-      const modalTitle = document.getElementById('modal-title');
-      const modalConfirm = document.getElementById('modal-confirm');
-      const modalCancel = document.getElementById('modal-cancel');
+      import { requiredElement } from '../../lib/dom';
+      const modal = requiredElement('#modal', HTMLDialogElement);
+      const title = requiredElement('#modal-title', HTMLElement);
+      const confirm = requiredElement('#modal-confirm', HTMLButtonElement);
+      const error = requiredElement('#delete-error', HTMLElement);
       let pendingId = '';
-
-      document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          pendingId = btn.dataset.id;
-          modalTitle.textContent = btn.dataset.title;
-          modal.classList.remove('hidden');
-        });
-      });
-
-      modalCancel?.addEventListener('click', () => {
-        modal.classList.add('hidden');
-        pendingId = '';
-      });
-
-      modal?.addEventListener('click', e => {
-        if (e.target === modal) { modal.classList.add('hidden'); pendingId = ''; }
-      });
-
-      modalConfirm?.addEventListener('click', async () => {
-        if (!pendingId) return;
-        modalConfirm.disabled = true;
-        const res = await fetch(`/api/admin/items/${pendingId}`, { method: 'DELETE' });
-        if (res.ok) {
+      document.querySelectorAll<HTMLButtonElement>('.delete-btn').forEach(button => button.addEventListener('click', () => {
+        pendingId = button.dataset.id ?? '';
+        title.textContent = button.dataset.title ?? '';
+        error.hidden = true;
+        modal.showModal();
+      }));
+      requiredElement('#modal-cancel', HTMLButtonElement).addEventListener('click', () => modal.close());
+      confirm.addEventListener('click', async () => {
+        if (!pendingId || confirm.disabled) return;
+        confirm.disabled = true;
+        confirm.textContent = '删除中…';
+        try {
+          const response = await fetch(`/api/admin/items/${encodeURIComponent(pendingId)}`, { method: 'DELETE' });
+          if (!response.ok) throw new Error('删除失败，请检查登录状态后重试。');
           location.reload();
-        } else {
-          const data = await res.json();
-          alert(data.error ?? '删除失败');
-          modalConfirm.disabled = false;
-        }
+        } catch (cause) { error.textContent = cause instanceof Error ? cause.message : '网络错误'; error.hidden = false; }
+        finally { confirm.disabled = false; confirm.textContent = '确认删除'; }
+      });
+      const logout = requiredElement('#logout-btn', HTMLButtonElement);
+      logout.addEventListener('click', async () => {
+        logout.disabled = true;
+        try {
+          const response = await fetch('/api/admin/logout', { method: 'POST' });
+          if (!response.ok) throw new Error();
+          location.href = '/admin';
+        } catch { logout.textContent = '退出失败，点击重试'; logout.disabled = false; }
       });
     </script>
   </body>

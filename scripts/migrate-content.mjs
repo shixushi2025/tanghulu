@@ -1,69 +1,20 @@
-import { readdir, readFile, writeFile } from 'fs/promises';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { parse } from 'yaml';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const itemsDir = join(__dirname, '../src/content/items');
-
-function parseFrontmatter(content) {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
-  if (!match) return null;
-
-  const raw = match[1];
-  const body = match[2].trim();
-  const data = {};
-
-  for (const line of raw.split('\n')) {
-    const colonIdx = line.indexOf(':');
-    if (colonIdx === -1) continue;
-    const key = line.slice(0, colonIdx).trim();
-    let val = line.slice(colonIdx + 1).trim();
-
-    // array: [a, b, c]
-    if (val.startsWith('[')) {
-      try {
-        data[key] = JSON.parse(val.replace(/'/g, '"'));
-      } catch {
-        data[key] = val.slice(1, -1).split(',').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
-      }
-    // quoted string
-    } else if (val.startsWith('"') || val.startsWith("'")) {
-      data[key] = val.replace(/^['"]|['"]$/g, '');
-    // number
-    } else if (!isNaN(val) && val !== '') {
-      data[key] = Number(val);
-    } else {
-      data[key] = val;
-    }
-  }
-
-  return { data, body };
+// Generate a reviewable seed, never rewrite an already applied migration.
+const output = resolve(process.argv[2] || 'content-seed.sql');
+if (output.includes(`${process.platform === 'win32' ? '\\' : '/'}migrations${process.platform === 'win32' ? '\\' : '/'}`)) throw new Error('请输出到 migrations 以外，已应用迁移不可覆盖');
+const escape = value => `'${String(value ?? '').replace(/'/g, "''")}'`;
+const statements = ['-- Adds missing items only. Existing editorial changes are preserved.'];
+for (const file of (await readdir('src/content/items')).filter(file => file.endsWith('.md')).sort()) {
+  const content = await readFile(`src/content/items/${file}`, 'utf8');
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) throw new Error(`缺少 frontmatter: ${file}`);
+  const data = parse(match[1]);
+  if (!data.title || !data.category || !data.summary || !data.date) throw new Error(`缺少必要字段: ${file}`);
+  const values = [file.slice(0, -3), data.title, data.category, JSON.stringify(data.tags || []), data.summary, data.cover || '', data.date, data.link || '', JSON.stringify(data.mood || []), data.country || '', match[2].trim()];
+  statements.push(`INSERT INTO items (id, title, category, tags, summary, cover, date, link, mood, country, body) VALUES (${values.map(escape).join(', ')}) ON CONFLICT(id) DO NOTHING;`);
 }
-
-function escape(str) {
-  return String(str ?? '').replace(/'/g, "''");
-}
-
-const files = (await readdir(itemsDir)).filter(f => f.endsWith('.md'));
-const statements = [];
-
-for (const file of files) {
-  const id = file.replace('.md', '');
-  const content = await readFile(join(itemsDir, file), 'utf8');
-  const parsed = parseFrontmatter(content);
-  if (!parsed) { console.warn(`skip: ${file}`); continue; }
-
-  const { data, body } = parsed;
-
-  const tags = JSON.stringify(Array.isArray(data.tags) ? data.tags : []);
-  const mood = JSON.stringify(Array.isArray(data.mood) ? data.mood : []);
-  const date = data.date ? String(data.date).slice(0, 10) : new Date().toISOString().slice(0, 10);
-
-  statements.push(
-    `INSERT OR REPLACE INTO items (id, title, category, tags, summary, cover, date, link, mood, country, body) VALUES ('${escape(id)}', '${escape(data.title)}', '${escape(data.category)}', '${escape(tags)}', '${escape(data.summary)}', '${escape(data.cover || '')}', '${escape(date)}', '${escape(data.link || '')}', '${escape(mood)}', '${escape(data.country || '')}', '${escape(body)}');`
-  );
-}
-
-const sql = statements.join('\n');
-await writeFile(join(__dirname, '../migrations/0003_seed.sql'), sql);
-console.log(`Generated ${statements.length} INSERT statements → migrations/0003_seed.sql`);
+await writeFile(output, statements.join('\n') + '\n');
+console.log(`Generated ${statements.length - 1} items → ${output}`);

@@ -25,3 +25,13 @@ pnpm-debug.log*
 
 # wrangler
 .wrangler/
+
+.dev.vars
+.dev.vars.*
+playwright-report/
+test-results/
+!.dev.vars.example
+/content-seed.sql
+
+# Local database exports contain private content and interaction data
+.backups/

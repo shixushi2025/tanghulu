@@ -1,4 +1,5 @@
 ---
+import CoverImage from './CoverImage.astro';
 import { categoryConfig } from '../lib/categories';
 
 interface Props {
@@ -9,56 +10,130 @@ interface Props {
   cover?: string;
   slug: string;
   country?: string;
+  mood?: string[];
+  index?: number;
+  variant?: 'default' | 'featured';
 }
 
-const { title, category, tags = [], summary, cover, slug, country } = Astro.props;
+const {
+  title,
+  category,
+  tags = [],
+  summary,
+  cover,
+  slug,
+  country,
+  mood = [],
+  index,
+  variant = 'default',
+} = Astro.props;
+
 const cat = categoryConfig[category] ?? categoryConfig.other;
+const isFeatured = variant === 'featured';
+const hasMood = mood.length > 0;
+const contextLabels = (hasMood ? mood : tags).filter(Boolean).slice(0, 2);
+const sequenceLabel = typeof index === 'number' && Number.isFinite(index)
+  ? String(Math.max(0, Math.trunc(index))).padStart(2, '0')
+  : '糖';
 ---
 
 <a
   href={`/item/${slug}`}
-  class="group block bg-white rounded-2xl border border-stone-200 overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-200"
+  class:list={[
+    'item-card group flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-stone-200 bg-[#fffdf8] shadow-[0_1px_0_rgba(41,35,31,0.04)] transition duration-200 ease-out hover:-translate-y-1 hover:border-red-200 hover:shadow-[0_18px_45px_rgba(66,45,35,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-4 focus-visible:ring-offset-stone-50',
+    { 'is-featured': isFeatured },
+  ]}
 >
-  <!-- Cover -->
-  <div class="aspect-[4/3] overflow-hidden">
-    {cover ? (
-      <img src={cover} alt={title} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-    ) : (
-      <div class={`w-full h-full flex items-center justify-center text-5xl font-bold ${cat.cardPlaceholder}`}>
-        {title.charAt(0)}
+  <div
+    class:list={[
+      'item-card__visual relative isolate aspect-[16/9] overflow-hidden border-b border-stone-200',
+      { 'sm:aspect-[16/8]': isFeatured },
+    ]}
+  >
+    <CoverImage src={cover} title={title} category={category} eager={isFeatured}>
+      <div
+        class={`item-card__poster relative h-full w-full overflow-hidden ${cat.cardPlaceholder}`}
+        aria-hidden="true"
+      >
+        <div class="item-card__number absolute inset-y-0 left-5 flex flex-col justify-center sm:left-6">
+          <span class="text-[0.62rem] font-semibold uppercase tracking-[0.22em] opacity-60">No.</span>
+          <span class:list={[
+            'font-serif text-5xl font-semibold leading-none tracking-[-0.06em] opacity-80',
+            { 'sm:text-6xl': isFeatured },
+          ]}>{sequenceLabel}</span>
+        </div>
+
+        <div class="item-card__skewer absolute -right-1 top-1/2 h-[155%] w-28 -translate-y-1/2 rotate-[16deg] sm:right-3">
+          <span class="absolute left-1/2 top-0 h-full w-[2px] -translate-x-1/2 rounded-full bg-amber-900/45"></span>
+
+          <span class="sugar-dot absolute left-1/2 top-[24%] h-12 w-12 -translate-x-1/2 rounded-full bg-gradient-to-br from-red-400 via-red-500 to-red-800 shadow-[inset_-5px_-7px_10px_rgba(90,18,18,0.22),0_5px_12px_rgba(120,30,25,0.18)]">
+            <span class="absolute left-[25%] top-[20%] h-2.5 w-2.5 rounded-full bg-white/45 blur-[0.5px]"></span>
+          </span>
+          <span class="sugar-dot absolute left-1/2 top-[47%] h-10 w-10 -translate-x-1/2 rounded-full bg-gradient-to-br from-orange-300 via-orange-500 to-red-700 shadow-[inset_-4px_-6px_9px_rgba(90,18,18,0.2),0_5px_12px_rgba(120,30,25,0.16)]">
+            <span class="absolute left-[25%] top-[20%] h-2 w-2 rounded-full bg-white/45 blur-[0.5px]"></span>
+          </span>
+          <span class="sugar-dot absolute left-1/2 top-[67%] h-8 w-8 -translate-x-1/2 rounded-full bg-gradient-to-br from-amber-300 via-orange-500 to-orange-700 shadow-[inset_-3px_-5px_7px_rgba(90,35,15,0.2),0_4px_10px_rgba(120,50,20,0.15)]">
+            <span class="absolute left-[25%] top-[20%] h-1.5 w-1.5 rounded-full bg-white/45"></span>
+          </span>
+        </div>
+
+        <span class="absolute bottom-4 left-5 text-[0.65rem] font-semibold tracking-[0.18em] opacity-55 sm:left-6">
+          TANGHULU SELECTS
+        </span>
       </div>
-    )}
+    </CoverImage>
   </div>
 
-  <!-- Content -->
-  <div class="p-4">
-    <!-- Category + Country -->
-    <div class="flex items-center gap-1.5 mb-2">
-      <span class={`text-xs font-medium px-2 py-0.5 rounded-full ${cat.color} ${cat.bg}`}>
+  <div class:list={[
+    'item-card__body flex flex-1 flex-col p-5',
+    { 'sm:p-6': isFeatured },
+  ]}>
+    <div class="item-card__meta mb-3 flex min-w-0 items-center gap-2">
+      <span class={`category-pill shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${cat.color} ${cat.bg}`}>
         {cat.label}
       </span>
       {country && (
-        <span class="text-xs text-stone-400">{country}</span>
+        <span class="item-card__country truncate text-xs text-stone-400">
+          {country}
+        </span>
       )}
     </div>
 
-    <!-- Title -->
-    <h3 class="font-semibold text-stone-900 leading-tight group-hover:text-orange-500 transition-colors mb-2">
+    <h3 class:list={[
+      'item-card__title text-xl font-semibold leading-snug tracking-tight text-stone-900 transition-colors duration-200 group-hover:text-red-700',
+      { 'sm:text-2xl': isFeatured },
+    ]}>
       {title}
     </h3>
 
-    <!-- Summary -->
-    <p class="text-sm text-stone-500 leading-relaxed line-clamp-2">{summary}</p>
+    <p class:list={[
+      'item-card__summary mt-2 text-sm leading-6 text-stone-500',
+      isFeatured ? 'line-clamp-3' : 'line-clamp-2',
+    ]}>
+      {summary}
+    </p>
 
-    <!-- Tags -->
-    {tags.length > 0 && (
-      <div class="flex flex-wrap gap-1 mt-3">
-        {tags.slice(0, 3).map(tag => (
-          <span class="text-xs text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">
-            {tag}
-          </span>
+    {contextLabels.length > 0 && (
+      <ul
+        class="item-card__contexts mt-4 flex flex-wrap gap-1.5"
+        aria-label={hasMood ? '适合场景' : '标签'}
+      >
+        {contextLabels.map(label => (
+          <li class="context-pill rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs text-stone-500">
+            {label}
+          </li>
         ))}
-      </div>
+      </ul>
     )}
+
+    <div class="item-card__footer mt-auto flex items-center justify-between gap-4 pt-5 text-sm font-medium text-red-700">
+      <span>摘下来看看</span>
+      <span
+        class="item-card__arrow inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 transition duration-200 group-hover:translate-x-0.5 group-hover:bg-red-100"
+        aria-hidden="true"
+      >
+        →
+      </span>
+    </div>
   </div>
 </a>

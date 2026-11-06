@@ -1,28 +1,47 @@
 ---
-title: "Gemini"
+title: Gemini
 category: tool
-tags: [AI对话, 多模态, Google, 搜索]
+tags:
+  - AI对话
+  - 多模态
+  - Google
+  - 搜索
 rating: 4.5
-summary: "Google 出品，和 Google 全家桶深度整合，搜索增强和实时信息是其最大优势。"
-cover: ""
+summary: Google 的 AI 助手，适合围绕学习、写作与信息整理进行多轮协作。
+cover: /images/covers/gemini-583a981f4194.webp
 date: 2026-03-15
-link: "https://gemini.google.com"
-mood: [工作, 搜索, 学习]
+link: https://gemini.google.com
+mood:
+  - 工作
+  - 搜索
+  - 学习
 ---
 
-## 为什么推荐
+## 它能解决什么问题
 
-Gemini 最大的优势是「活在 Google 生态里」——Gmail、Docs、Drive 里直接调用，对已经重度使用 Google 服务的用户来说无缝衔接。
+Gemini 官方概览将它介绍为与 AI 协作的应用，并单列了局限性。可以先用它整理问题、比较方案和生成草稿，再回到原始资料核实；是否连接某项 Google 服务取决于当前账户与设置。
 
-Gemini 2.0 的多模态能力很强，能处理图片、视频、音频，实时联网搜索也比较准确。
+## 适合谁
 
-## 适合谁用
+- 习惯 Google 服务工作流的人
+- 需要从材料中提取结构和问题的人
 
-- Google Workspace 重度用户
-- 需要实时信息和联网搜索的场景
-- Android 用户（系统级集成）
+## 第一次怎么用
 
-## 有什么坑
+1. 提供任务背景与想要的输出格式。
+2. 要求先列出已知信息、缺失信息和假设。
+3. 选择一个可核验的部分进行第二轮细化。
 
-- 创意写作能力不如 Claude 和 GPT-4
-- 需要 Google 账号，部分地区有限制
+## 可以试的任务
+
+「根据这段学习材料生成五道自测题，每道题附简短解析，并指出答案来自哪一段。」
+
+## 选择前要了解
+
+不要默认所有回答都使用实时搜索，也不要默认所有账户都可用同样的连接功能。模型、地区和订阅差异应在实际账户中确认。
+
+## 资料来源
+
+- [Gemini 官方概览](https://gemini.google/overview/)
+
+整理日期：2026-11-06。产品定位依据上述官方资料；上手任务为本站编辑建议。

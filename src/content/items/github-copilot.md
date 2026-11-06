@@ -1,29 +1,47 @@
 ---
-title: "GitHub Copilot"
+title: GitHub Copilot
 category: tool
-tags: [AI编程, IDE插件, 代码补全, 开发者]
+tags:
+  - AI编程
+  - IDE插件
+  - 代码补全
+  - 开发者
 rating: 4.4
-summary: "嵌入 VS Code / JetBrains 的 AI 编程助手，代码补全行云流水，GitHub 生态无缝集成。"
-cover: ""
+summary: 融入 GitHub 与编辑器工作流的 AI 开发助手，覆盖补全、代码问答、审查和任务协作。
+cover: /images/covers/github-copilot-7702662a7363.webp
 date: 2026-03-15
-link: "https://github.com/features/copilot"
-mood: [编程, 工作, 效率]
+link: https://github.com/features/copilot
+mood:
+  - 编程
+  - 工作
+  - 效率
 ---
 
-## 为什么推荐
+## 它能解决什么问题
 
-Copilot 是把 AI 编程助手从「工具」变成「肌肉记忆」的产品。它不需要你主动去调用，而是在你打代码的时候自动出现建议——熟练之后那种流畅感很难戒掉。
+GitHub 的官方介绍已经不限于行内代码补全，还包括理解代码库、审查变更以及处理分配的任务。适合希望让 AI 沿着现有 issue、分支和 pull request 流程工作的团队。
 
-对于在 GitHub 上工作的开发者，Copilot Chat 可以直接理解你的仓库上下文，回答「这段代码是干什么的」「这个 bug 怎么修」。
+## 适合谁
 
-## 适合谁用
+- 已使用 GitHub 管理代码的个人与团队
+- 需要在编辑器内解释和修改代码的人
 
-- 日常在 VS Code / JetBrains 写代码的开发者
-- 需要频繁写重复性代码的场景
-- GitHub 企业用户
+## 第一次怎么用
 
-## 有什么坑
+1. 从一个有明确描述的 issue 开始。
+2. 让助手说明相关代码路径，并准备变更。
+3. 在 pull request 中检查实现、测试与权限影响。
 
-- $10/月，学生和开源贡献者可以免费
-- 补全的代码质量参差不齐，需要 review
-- 在 Cursor 和 Claude Code 的竞争下优势在缩小
+## 可以试的任务
+
+「阅读这个 issue，找出需要改动的模块，并解释为什么。生成修复后列出新增测试和未覆盖的风险。」
+
+## 选择前要了解
+
+代理任务和自动审查不能替代人工评审。不同编辑器、账户与组织策略开放的能力可能不同；不再使用“只是补全”的旧比较。
+
+## 资料来源
+
+- [GitHub Copilot 官方介绍](https://docs.github.com/en/copilot/get-started/about-github-copilot)
+
+整理日期：2026-11-06。产品定位依据上述官方资料；上手任务为本站编辑建议。

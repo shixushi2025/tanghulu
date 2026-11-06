@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="页面未找到"
+  description="这根签上还没有这一颗，回到糖葫芦继续发现值得你时间的东西。"
+>
+  <section class="not-found" aria-labelledby="not-found-title">
+    <p class="not-found__code" aria-hidden="true">404</p>
+    <div class="not-found__fruit" aria-hidden="true">?</div>
+    <p class="section-kicker">404 · 空签</p>
+    <h1 id="not-found-title">这根签上还没有这一颗</h1>
+    <p>
+      可能是链接走丢了，也可能这颗好东西还没被串起来。回去继续逛逛，或者搜一搜你想找的内容。
+    </p>
+    <nav class="not-found__actions" aria-label="页面未找到后的快捷入口">
+      <a href="/" class="button button--primary">回到首页</a>
+      <a href="/search" class="button button--secondary">搜索糖葫芦</a>
+    </nav>
+  </section>
+</BaseLayout>

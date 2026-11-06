@@ -1,13 +1,20 @@
 ---
-title: "人类简史"
+title: 人类简史
 category: book
-tags: [历史, 人类学, 宏观叙事, 必读]
+tags:
+  - 历史
+  - 人类学
+  - 宏观叙事
+  - 必读
 rating: 4.8
-summary: "尤瓦尔·赫拉利用全新视角重述人类历史，颠覆你对「文明」和「进步」的理解。"
-cover: ""
+summary: 从宏观尺度叙述人类历史的非虚构作品，适合把书中的论点与更多历史资料对照阅读。
+cover: /images/covers/sapiens-71fdc7290dd3.webp
 date: 2026-03-11
-link: ""
-mood: [周末, 长途旅行, 宏观视野]
+link: https://www.ynharari.com/book/sapiens/
+mood:
+  - 周末
+  - 长途旅行
+  - 宏观视野
 ---
 
 ## 为什么推荐
@@ -27,3 +34,9 @@ mood: [周末, 长途旅行, 宏观视野]
 - 想建立宏观历史视野的人
 - 对「人类为什么是现在这样」好奇的人
 - 喜欢被颠覆认知的读者
+
+## 资料来源
+
+- [作者书籍介绍](https://www.ynharari.com/book/sapiens/)
+
+整理日期：2026-11-06。事实介绍依据上述资料；阅读与使用方法为编辑建议。
