@@ -2,7 +2,7 @@
 
 一份持续生长的私人精选。把值得看的、读的、用的，串在一起。
 
-Astro 7 SSR + Tailwind CSS 4 + Cloudflare Workers Static Assets / D1 / KV。保留暖白与朱红的杂志式设计，支持桌面与手机浏览。
+Astro 7 SSR + Tailwind CSS 4 + Cloudflare Pages（可选原生 Worker）/ D1 / KV。保留暖白与朱红的杂志式设计，支持桌面与手机浏览。
 
 内容库包含 63 条记录，覆盖书影音、工具、健康、创作者等类别；本轮补全内容、来源与使用建议，详情见 [内容整理记录](docs/CONTENT-AUDIT.md)。
 
@@ -37,7 +37,7 @@ npm run build
 npm run preview
 ```
 
-本地密钥文件不会被 Git 跟踪。构建保留本地数据库，发布使用适配器生成的 Worker 配置。后台地址为 `/admin`。
+本地密钥文件不会被 Git 跟踪。构建保留本地数据库；Pages 发布独立的 `dist/pages`，原生 Worker 使用适配器生成配置。后台地址为 `/admin`。
 
 ## 验证
 

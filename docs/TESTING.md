@@ -9,7 +9,7 @@ npm run verify
 npm audit
 ```
 
-推荐 Node.js 24 LTS。`.github/workflows/ci.yml` 在 push / PR 时执行相同校验，并在失败时保留浏览器 trace；本轮已验证本地命令，尚未在 GitHub 触发远端 CI。单元测试使用 Node 内置 test runner、SQLite 内存库和 esbuild；不依赖在线账户。浏览器测试使用真实 Chromium、编译后的原生 Cloudflare Worker 与 Static Assets、本地 D1/KV，数据在临时目录中隔离并清理，不读写生产。
+推荐 Node.js 24 LTS。`.github/workflows/ci.yml` 在 push / PR 时执行相同校验，并在失败时保留浏览器 trace；本轮已验证本地命令，尚未在 GitHub 触发远端 CI。单元测试使用 Node 内置 test runner、SQLite 内存库和 esbuild；不依赖在线账户。浏览器测试使用真实 Chromium、编译后的 Cloudflare Pages Worker、静态资源和本地 D1/KV，数据在临时目录中隔离并清理，不读写生产。
 
 ## 自动测试矩阵
 
@@ -42,7 +42,7 @@ npm audit
 
 ## 本轮验证记录
 
-2026-11-06，本地 Node 24.22.1，Chromium 158：严格类型检查 0 错误／警告，单元与数据库测试 22/22，内容数据测试 3/3，图片数据测试 2/2，浏览器流程 11/11，原生 Workers 构建、静态资源隔离和发布 dry-run 通过，依赖审计无已知漏洞。新增已有 D1 分阶段升级集成测试，验证备份可恢复、后台编辑与 featured 字段保留、评分匿名化、重复运行无变化；未迁移库被发布前检查阻断，升级后通过。首轮移动菜单失败定位为 Astro 内联脚本与 CSP 冲突，改为独立资源后复测通过。
+2026-11-06，本地 Node 24.22.1，Chromium 158：严格类型检查 0 错误／警告，单元与数据库测试 22/22，内容数据测试 3/3，图片数据测试 2/2，浏览器流程 11/11，Pages / 原生 Worker 双产物构建、静态资源隔离和 Worker 发布 dry-run 通过，依赖审计无已知漏洞。新增已有 D1 分阶段升级集成测试，验证备份可恢复、后台编辑与 featured 字段保留、评分匿名化、重复运行无变化；未迁移库被发布前检查阻断，升级后通过。首轮移动菜单失败定位为 Astro 内联脚本与 CSP 冲突，改为独立资源后复测通过。
 
 ## 发布前仍需的环境验收
 

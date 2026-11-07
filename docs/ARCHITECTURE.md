@@ -53,4 +53,4 @@
 
 ## 发布与内容一致性
 
-使用 Astro Cloudflare 适配器原生生成的 Worker 配置，服务端模块与公开 assets 目录隔离。内容仍以 D1 为准；图片以带哈希文件名的 WebP 随代码发布。已有数据库采用备份后分阶段升级：先安全表结构、再发布 Worker 和资源、最后更新内容与封面路径。升级脚本只处理审核过的增量迁移，不重放历史 REPLACE 种子。远端的 Logo、后台精选和公开 API 已整合为相同 Worker 的 SSR / API 服务。Cloudflare 构建在发布前只读检查 D1 表结构；未迁移时停止新发布。步骤见 DEPLOYMENT.md。
+适配器生成原生 Worker，另生成 dist/pages 供现有 Git 关联的 Pages 发布。两种产物的服务端模块与公开资源目录隔离，Pages 静态图片排除 Worker 路由。内容仍以 D1 为准；图片以带哈希文件名的 WebP 随代码发布。已有数据库采用备份后分阶段升级：先安全表结构、再发布 Worker 和资源、最后更新内容与封面路径。升级脚本只处理审核过的增量迁移，不重放历史 REPLACE 种子。远端的 Logo、后台精选和公开 API 已整合为相同 Worker 的 SSR / API 服务。Cloudflare 构建在发布前只读检查 D1 表结构；未迁移时停止新发布。步骤见 DEPLOYMENT.md。

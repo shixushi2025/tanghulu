@@ -7,6 +7,7 @@ import cloudflare from '@astrojs/cloudflare';
 export default defineConfig({
   output: 'server',
   adapter: cloudflare({
+    configPath: './wrangler.worker.toml',
     imageService: 'passthrough',
     // Reuse the existing namespace; authentication uses signed cookies, not Astro sessions.
     sessionKVBindingName: 'TANGHULU_VIEWS',

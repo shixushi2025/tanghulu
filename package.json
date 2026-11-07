@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "wrangler dev --config dist/server/wrangler.json",
+    "preview": "wrangler pages dev dist/pages",
     "astro": "astro",
     "check": "astro check",
     "test": "node scripts/test-unit.mjs",
@@ -22,12 +22,14 @@
     "images:check": "node --test tests/images.test.mjs",
     "images:sync": "node scripts/sync-images.mjs",
     "images:credits": "node scripts/image-credits.mjs",
-    "deploy": "npm run build && node scripts/check-deploy.mjs && node scripts/check-cloudflare-db.mjs --remote && wrangler deploy --config dist/server/wrangler.json",
+    "deploy": "npm run build && node scripts/check-deploy.mjs && node scripts/check-cloudflare-db.mjs --remote && wrangler pages deploy dist/pages --project-name tanghulu",
     "deploy:check": "npm run build && node scripts/check-deploy.mjs && wrangler deploy --config dist/server/wrangler.json --dry-run --outdir .wrangler/dry-run",
     "db:status": "node scripts/db-release.mjs status",
     "db:upgrade": "node scripts/db-release.mjs upgrade",
     "test:release": "node --test tests/release.test.mjs",
-    "postbuild": "node scripts/check-cloudflare-db.mjs"
+    "postbuild": "node scripts/prepare-pages.mjs && node scripts/check-cloudflare-db.mjs",
+    "preview:worker": "wrangler dev --config dist/server/wrangler.json",
+    "deploy:worker": "npm run build && node scripts/check-deploy.mjs && node scripts/check-cloudflare-db.mjs --remote && wrangler deploy --config dist/server/wrangler.json"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.1.7",

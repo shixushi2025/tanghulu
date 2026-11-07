@@ -1,14 +1,16 @@
-# Cloudflare Workers 部署、图片与 D1
+# Cloudflare Pages / Worker 部署、图片与 D1
 
-本分支使用 **Astro 7 SSR + Cloudflare Workers Static Assets + D1 + KV**。Node.js 22.19+，建议 24 LTS；用 `npm ci` 安装锁定依赖。
+项目使用 **Astro 7 SSR + Cloudflare D1 / KV**，生成 Pages 和原生 Worker 两种产物。现有 Git 自动部署目标是 Cloudflare Pages。Node.js 22.19+，建议 24 LTS；用 `npm ci` 安装锁定依赖。
 
 ## main 自动部署
 
 当前实现将本轮页面、内容和图片与远端 main 的 Logo、后台精选、公开 API、站点地图合并。统一使用 Astro SSR Worker + Static Assets，保留无 JavaScript 浏览能力；旧 CSR 壳和单独 Hono 入口由相同路径的 SSR / API 替代，D1 / KV 绑定保持原目标。
 
-Cloudflare Workers Builds 生产分支设为 `main`，Node.js 24，构建命令 `npm run build`，部署命令 `npx wrangler deploy --config dist/server/wrangler.json`（默认 `npx wrangler deploy` 也会读取适配器生成的部署重定向）。不要再指定旧 `worker/src/index.ts` 或 Pages 输出目录。
+GitHub 检查确认现有集成是 **Cloudflare Pages**。生产分支 `main`，Node.js 24，构建命令 `npm run build`；根目录 `wrangler.toml` 指定发布目录 `dist/pages`、兼容日期和 D1 / KV 绑定。Pages 自动发布此目录，无需添加 Worker deploy 命令。
 
-`postbuild` 在 Cloudflare Builds 的 `WORKERS_CI` 环境下执行只读 D1 检查：必须存在内容、评分、安全限流、浏览计数表以及精选字段。缺少表结构或数据库读取权限时构建失败，禁止发布不兼容代码，现有部署继续运行。构建凭据需要读取目标 D1 的权限；本地构建与普通 GitHub 测试不访问远程库。手动 `npm run deploy` 同样执行检查。
+原生 Worker 配置保留在 `wrangler.worker.toml`，供 Astro 适配器构建使用。确实切换到 Workers 时使用 `npm run deploy:worker`，或将 Workers Builds 部署命令设为 `npx wrangler deploy --config dist/server/wrangler.json`。两份配置的 D1 / KV ID 应保持一致；同一个自定义域应只交给实际使用的发布项目。
+
+`postbuild` 在 `CF_PAGES` / `WORKERS_CI` 环境下执行只读 D1 检查：必须存在内容、评分、安全限流、浏览计数表以及精选字段。缺少表结构或数据库读取权限时构建失败，现有部署继续运行。Pages 构建需要在环境中配置能够读取目标 D1 的 `CLOUDFLARE_API_TOKEN`，不要提交 token。本地构建与普通 GitHub 测试不访问远程库。手动部署命令同样执行检查。
 
 首次升级需要先完成下方 schema 阶段，再让 main 自动部署成功，最后补内容和封面。推送代码不会重放历史种子，也不会自动覆盖线上编辑。当前线上只读检查仍为 55 条，封面尚未补入；本机 Cloudflare 登录过期且浏览器代理阻断授权，尚未核实或修改远程数据库。不要把 Git 推送成功当作 Cloudflare 发布成功。
 
@@ -34,7 +36,7 @@ npm run verify
 npm run deploy:check       # 构建、检查文件隔离、dry-run；不发布、不改 D1
 ```
 
-使用适配器原生输出：`dist/server/entry.mjs` 和同目录的 `wrangler.json` 是 Worker；`dist/client/` 是公开资源。发布命令明确读取生成配置。不要上传整个 dist 作为静态目录，也不要继续使用旧 Pages 的 `_worker.js` 打包脚本。构建保留本地 `.wrangler/state` 数据。
+适配器生成 `dist/server/entry.mjs`、`dist/server/wrangler.json` 和 `dist/client/`。`scripts/prepare-pages.mjs` 另外生成独立的 `dist/pages/`：只复制公开资源、打包 `_worker.js` 并设置静态图片排除路由。Pages 只上传 `dist/pages`，不能上传整个 dist。服务端源目录不会被复制到 Pages。构建只清理自动部署重定向，保留本地 `.wrangler/state` 数据；原生 Worker 命令明确指定生成配置。
 
 | 绑定 / Secret | 用途 |
 | --- | --- |

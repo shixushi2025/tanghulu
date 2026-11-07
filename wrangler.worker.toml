@@ -1,0 +1,18 @@
+# One Cloudflare Worker serves Astro SSR/API; static images and JS are served first.
+# Keep the Worker bundle outside assets.directory so source cannot be served as a file.
+name = "tanghulu"
+compatibility_date = "2026-11-06"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./dist/client"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "TANGHULU_VIEWS"
+id = "303db6ac434149c19c859a3a870497c1"
+
+[[d1_databases]]
+binding = "TANGHULU_DB"
+database_name = "tanghulu-db"
+database_id = "7a164004-e034-4330-ab2e-9b2c56f82046"
