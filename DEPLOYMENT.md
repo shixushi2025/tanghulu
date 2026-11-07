@@ -14,11 +14,11 @@ Cloudflare [Workers Static Assets](https://developers.cloudflare.com/workers/sta
 
 这是静态多页面前端，使用 `404-page`，不把所有未知路径降级成首页。API 导航不会得到 HTML，失效图片和错误链接保持 404。内容需要 JavaScript；搜索引擎及分享抓取器若不执行 JS，只能读取静态模板元信息。当前未实现详情 SEO 预渲染或边缘元信息注入，不能宣称与原 SSR 抓取效果相同。
 
-## main 自动部署：从 Pages 切换到 Workers Builds
+## main 自动部署：Workers Builds
 
-最后核实的线上 Git 集成仍是 **Cloudflare Pages**。仓库配置已经改成 Worker，不代表 Cloudflare 控制台已完成迁移。本机 Cloudflare OAuth 过期，尚未确认生产 Worker、远程迁移和域名切换；原站保留，不能把 Git 推送成功当成上线成功。
+2026-11-06（美国太平洋时间）使用官方 `cf` CLI 核实：`tanghulu.life` 原本已经绑定 `tanghulu` Worker；同名 Pages 项目只使用 `tanghulu-e4r.pages.dev`。此前仅根据 GitHub Pages 检查推断生产使用 Pages 不准确，本次无需迁移生产域名。
 
-按照官方 [Pages 迁移到 Workers](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/) 文档，需要连接 Workers Builds 并关闭旧 Pages 自动部署。设置如下：
+已连接 Workers Builds，并成功完成一次远程构建和发布。旧 Pages 的生产、预览自动部署及 PR 评论已关闭，项目和历史部署保留。main 的 Workers Builds 配置如下：
 
 | 项目 | 值 |
 | --- | --- |
@@ -27,16 +27,19 @@ Cloudflare [Workers Static Assets](https://developers.cloudflare.com/workers/sta
 | 根目录 | 仓库根目录 |
 | 构建命令 | `npm run build` |
 | 部署命令 | `npx wrangler deploy` |
-| Node.js | 24 |
+| 构建环境变量 | `NODE_VERSION=24.22.1` |
 | 静态目录 / 后端入口 | `dist/` / `worker/index.ts`，由 Wrangler 配置管理 |
 
-首次切换顺序：
+构建使用专用 API token：目标账号的 Worker 脚本写入、D1 / KV / 账号信息读取，以及目标 zone 的 Worker 路由读取权限。D1 迁移由维护人员单独执行，CI 不持有 D1 写入权限。运行时 Secret 与构建变量分别配置，密钥不进入 Git 或 `PUBLIC_*`。
 
-1. 恢复 Cloudflare 登录，核实账号与已有 D1 / KV ID；按下文先完成 D1 **schema** 阶段。
-2. 创建或选择目标 Worker，绑定现有 D1 / KV，设置 Worker 的 `ADMIN_PASSWORD`、`VISITOR_HASH_SECRET`。Pages Secret 不会自动复制到 Worker。
-3. 连接仓库 main，按上表配置 Workers Builds。构建身份必须有目标 D1 读取权限；部署身份需要 Worker 发布和绑定资源权限。Worker 运行时 Secret 与构建环境变量分别配置，密钥不能放进 Git 或 `PUBLIC_*`。
-4. 在 Worker 预览域名验证页面、API、管理认证和全部图片后，补 D1 **content** 阶段。线上尚未核实，旧只读检查为 55 条、书封字段为空。
-5. 验证后将 `tanghulu.life` 从 Pages 切换到该 Worker，并关闭 Pages 自动部署。域名只交给一个生产项目；保留旧部署便于回滚。
+本次生产升级已经完成：
+
+1. 导出并保存 D1 备份与原 Worker 配置，先补齐 **schema**，保留既有管理密码，添加独立匿名化密钥。
+2. 发布静态前端、唯一 Worker 和全部图片；首次发布版本为 `eee3b08e-0661-48bb-a58a-6971feb19334`，后续 Workers Builds 会产生新版本。
+3. 执行增量 **content** 升级，现有 63 条内容、60 张站内封面，5 条发布迁移记录齐全。
+4. 在生产域名验证首页、详情、健康检查、统计、管理认证保护、跨来源请求拒绝及真实 404；60 张图片全部可访问且与仓库文件逐字节一致。
+
+cf 与 Wrangler 的 OAuth 会话独立，本次 cf 授权有效；不能把 Wrangler 登录过期理解为所有 Cloudflare 工具均不可用。cf 控制面操作保留现有 Wrangler 构建和发布流程，无需转换项目配置。重新部署到其他账号或项目时，仍须核实 D1 / KV 绑定和域名归属，按 schema → 代码与图片 → content 顺序升级。
 
 `prebuild` 检测到 `CF_PAGES=1` 会明确停止旧 Pages 构建，避免把静态文件发布到没有 API 的项目。旧 Pages 检查失败是迁移保护，不表示已切换。`postbuild` 在 Workers Builds 执行只读 D1 表结构检查：缺表、缺精选字段或无读取权限均阻止发布。普通本地构建和 GitHub 测试不访问生产库。代码发布不自动修改 D1，不重放历史种子。
 

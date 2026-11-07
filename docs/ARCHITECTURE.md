@@ -61,4 +61,4 @@ Astro 在构建阶段输出静态多页面模板，没有服务端适配器或�
 
 ## 发布与内容一致性
 
-静态资源只放在 `dist/`，Worker 入口在 `worker/index.ts`，一次发布；`wrangler.toml` 是唯一配置。内容仍以 D1 为准，图片以哈希 WebP 随代码发布。已有数据库先备份，再按 schema → 发布代码和图片 → content 顺序升级，不重放 REPLACE 种子。Workers Builds 发布前只读检查表结构；旧 Pages 构建被显式阻止。控制台需要将 Git 自动部署和域名从 Pages 迁移到 Worker，详见 DEPLOYMENT.md。
+静态资源只放在 `dist/`，Worker 入口在 `worker/index.ts`，一次发布；`wrangler.toml` 是唯一配置。内容仍以 D1 为准，图片以哈希 WebP 随代码发布。已有数据库先备份，再按 schema → 发布代码和图片 → content 顺序升级，不重放 REPLACE 种子。Workers Builds 发布前只读检查表结构；旧 Pages 构建被显式阻止。生产域名已核实绑定该 Worker；main 已接入 Workers Builds，旧 Pages 自动构建已关闭，详见 DEPLOYMENT.md。

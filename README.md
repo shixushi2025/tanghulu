@@ -40,7 +40,7 @@ npm run preview
 
 本地密钥文件不会被 Git 跟踪。`dist/` 只包含静态前端，`worker/index.ts` 独立作为唯一后端入口；两者由根目录 `wrangler.toml` 一次发布。后台地址为 `/admin`。修改前端后重新构建；只调页面时可同时运行 `npm run dev:ui` 使用 Astro 热更新，API 代理到 8787。
 
-内容从 D1 API 实时加载，需要 JavaScript。后台修改无需重建，构建不嵌入容易过期的内容副本。Git 集成由旧 Pages 迁移到 Workers Builds 的设置见部署说明。
+内容从 D1 API 实时加载，需要 JavaScript。后台修改无需重建，构建不嵌入容易过期的内容副本。main 已连接 Workers Builds，旧 Pages 自动构建已关闭，配置与生产验收记录见部署说明。
 
 ## 验证
 
