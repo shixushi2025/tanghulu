@@ -1,3 +1,4 @@
+import { api, load, adminSession, type Item } from './client';
 import { requiredElement } from '../lib/dom';
 const form = requiredElement('#item-form', HTMLFormElement);
 const button = requiredElement('#submit-btn', HTMLButtonElement);
@@ -12,7 +13,7 @@ const field = (name: string) => {
 let idManual = false;
 id?.addEventListener('input', () => { idManual = true; });
 title.addEventListener('input', () => {
-  if (id && !idManual) id.value = title.value.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 100);
+  if (id && !id.readOnly && !idManual) id.value = title.value.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 100);
 });
 let dirty = false;
 form.addEventListener('input', () => { dirty = true; });
@@ -41,4 +42,24 @@ form.addEventListener('submit', async event => {
     error.hidden = false;
     error.focus();
   } finally { button.disabled = false; button.textContent = itemId ? '保存' : '创建'; }
+});
+
+// Disable every input until the session and original item have loaded, preventing stale overwrites.
+form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLButtonElement>('input, select, textarea, button').forEach(field => { field.disabled = true; });
+load(async () => {
+  await adminSession();
+  if (form.hasAttribute('data-edit-form')) {
+    const itemId = location.pathname.match(/^\/admin\/items\/([^/]+)\/edit\/?$/)?.[1];
+    if (!itemId) throw new Error('无效的编辑地址');
+    const { item } = await api<{ item: Item }>(`/api/items/${encodeURIComponent(itemId)}`);
+    form.dataset.itemId = item.id;
+    for (const name of ['id', 'title', 'summary', 'body', 'category', 'date', 'country', 'tags', 'mood', 'cover', 'link'] as const) {
+      const field = document.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(`#f-${name}`);
+      if (field) field.value = Array.isArray(item[name]) ? (item[name] as string[]).join(', ') : String(item[name]);
+    }
+    requiredElement('#f-featured', HTMLInputElement).checked = item.featured;
+    document.title = `编辑 · ${item.title}`;
+    const preview = document.querySelector<HTMLAnchorElement>('header a[target="_blank"]'); if (preview) preview.href = `/item/${item.id}`;
+  } else requiredElement('#f-date', HTMLInputElement).value = new Date().toISOString().slice(0, 10);
+  form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLButtonElement>('input, select, textarea, button').forEach(field => { field.disabled = false; });
 });

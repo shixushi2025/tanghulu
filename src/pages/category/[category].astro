@@ -1,88 +1,27 @@
 ---
-import { env } from 'cloudflare:workers';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import ItemCard from '../../components/ItemCard.astro';
 import { allCategories, categoryConfig } from '../../lib/categories';
-import { getItemPage } from '../../lib/db';
-
-import Pagination from '../../components/Pagination.astro';
-import { pageNumber } from '../../lib/browse';
-const { category } = Astro.params;
-const isValidCategory = Boolean(category && Object.hasOwn(categoryConfig, category));
-if (!isValidCategory) Astro.response.status = 404;
-
-const cat = isValidCategory ? categoryConfig[category!] : categoryConfig.other;
-const db = env.TANGHULU_DB;
-const collection = isValidCategory ? await getItemPage(db, { category, page: pageNumber(Astro.url.searchParams.get('page')) }) : { items: [], page: 1, pages: 1, total: 0 };
-const items = collection.items;
+import CardTemplate from '../../components/CardTemplate.astro';
+import AsyncState from '../../components/AsyncState.astro';
+export function getStaticPaths() { return allCategories.map(category => ({ params: { category } })); }
+const category = Astro.params.category!;
+const cat = categoryConfig[category];
 ---
-
-{isValidCategory ? (
-  <BaseLayout title={cat.label} description={`${cat.description}。糖葫芦的${cat.label}私人精选。`}>
-    <header class="category-hero" style={`--category-accent:${cat.accent};--category-tint:${cat.tint}`}>
-      <div class="category-hero__copy">
-        <a href="/" class="breadcrumb-link"><span aria-hidden="true">←</span> 回到整串</a>
-        <p class="section-kicker">CATEGORY / {category?.toUpperCase()}</p>
-        <h1>{cat.label}</h1>
-        <p>{cat.description}。</p>
-        <div class="category-hero__count"><strong>{collection.total}</strong><span>颗精选<br />仍在继续收集</span></div>
-      </div>
-      <div class="category-hero__fruit" aria-hidden="true">
-        <span>{cat.shortLabel}</span>
-        <small>{cat.label}</small>
-      </div>
-    </header>
-
-    <nav id="collection" class="category-rail category-rail--page" aria-label="切换分类">
-      <a class="category-filter" href="/">全部</a>
-      {allCategories.map((key) => (
-        <a
-          class:list={["category-filter", { "is-active": key === category }]}
-          href={`/category/${key}`}
-          style={`--filter-accent:${categoryConfig[key].accent}`}
-          aria-current={key === category ? 'page' : undefined}
-        >{categoryConfig[key].label}</a>
-      ))}
-    </nav>
-
-    {items.length === 0 ? (
-      <div class="empty-state">
-        <div class="empty-state__fruit" aria-hidden="true">?</div>
-        <h2>这一串还空着</h2>
-        <p>等遇到真正值得的内容，再认真挂上来。</p>
-        <a href="/" class="button button--secondary">看看其他分类</a>
-      </div>
-    ) : (
-      <div class="collection-grid category-grid">
-        {items.map((item, index) => (
-          <ItemCard
-            title={item.title}
-            category={item.category}
-            tags={item.tags}
-            summary={item.summary}
-            cover={item.cover}
-            slug={item.id}
-            country={item.country}
-            mood={item.mood}
-            index={(collection.page - 1) * 12 + index + 1}
-          />
-        ))}
-      </div>
-    )}
-    <Pagination {...collection} path={`/category/${category}`} />
-  </BaseLayout>
-) : (
-  <BaseLayout title="没有这个分类" description="这根签上还没有这个分类。">
-    <section class="not-found">
-      <p class="not-found__code">404</p>
-      <div class="not-found__fruit" aria-hidden="true">?</div>
-      <p class="section-kicker">这根签上还没有这一类</p>
-      <h1>换个抽屉看看吧。</h1>
-      <p>这里没有你要找的分类，也许它被串在别处了。</p>
-      <div class="not-found__actions">
-        <a class="button button--primary" href="/">回到首页</a>
-        <a class="button button--secondary" href="/search">去搜索</a>
-      </div>
-    </section>
-  </BaseLayout>
-)}
+<BaseLayout title={cat.label} description={`${cat.description}。糖葫芦的${cat.label}私人精选。`}>
+  <header class="category-hero" style={`--category-accent:${cat.accent};--category-tint:${cat.tint}`}>
+    <div class="category-hero__copy">
+      <a href="/" class="breadcrumb-link">← 回到整串</a>
+      <p class="section-kicker">CATEGORY / {category.toUpperCase()}</p><h1>{cat.label}</h1><p>{cat.description}。</p>
+      <div class="category-hero__count"><strong data-collection-total>—</strong><span>颗精选<br />仍在继续收集</span></div>
+    </div><div class="category-hero__fruit" aria-hidden="true"><span>{cat.shortLabel}</span><small>{cat.label}</small></div>
+  </header>
+  <nav id="collection" class="category-rail category-rail--page" aria-label="切换分类">
+    <a class="category-filter" href="/">全部</a>
+    {allCategories.map(key => <a class:list={['category-filter', { 'is-active': key === category }]} href={`/category/${key}`} aria-current={key === category ? 'page' : undefined}>{categoryConfig[key].label}</a>)}
+  </nav>
+  <AsyncState /><CardTemplate />
+  <div id="collection-empty" class="empty-state" hidden><h2>这一串还空着</h2><p>等遇到真正值得的内容，再认真挂上来。</p></div>
+  <div class="collection-grid category-grid"></div>
+  <nav class="pagination" aria-label="内容分页"></nav>
+  <script>import '../../scripts/browse-page';</script>
+</BaseLayout>

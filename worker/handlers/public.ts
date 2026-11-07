@@ -1,15 +1,25 @@
 import { env } from 'cloudflare:workers';
-import type { APIRoute } from 'astro';
-import { getAllItems, getItemById, getItemsByCategory, getFeaturedItems, getRelatedItems, countByCategory } from '../../lib/db';
-import { allCategories, visibleCategories } from '../../lib/categories';
-import { HttpError } from '../../lib/http';
-import { isValidId } from '../../lib/validation';
+import type { WorkerRoute } from '../types';
+import { getItemPage, getAllItems, getItemById, getItemsByCategory, getFeaturedItems, getRelatedItems, countByCategory } from '../../src/lib/db';
+import { allCategories, visibleCategories } from '../../src/lib/categories';
+import { HttpError } from '../../src/lib/http';
+import { isValidId } from '../../src/lib/validation';
 
-// Preserve public API URLs from the previous Worker while SSR and API share services.
-export const GET: APIRoute = async ({ params, url }) => {
+import { renderMarkdown } from '../../src/lib/markdown';
+import { pageNumber } from '../../src/lib/browse';
+export const GET: WorkerRoute = async ({ params, url }) => {
   const path = params.path ?? '';
   const db = env.TANGHULU_DB;
   if (path === 'health' || path === 'admin/session') return Response.json({ ok: true });
+  if (path === 'collection') {
+    const category = url.searchParams.get('cat') ?? '';
+    if (category && !allCategories.includes(category as typeof allCategories[number])) throw new HttpError(400, '无效分类');
+    return Response.json(await getItemPage(db, { category, sort: url.searchParams.get('sort') ?? 'newest', page: pageNumber(url.searchParams.get('page')) }));
+  }
+  if (path === 'featured') {
+    const [featured, counts] = await Promise.all([getFeaturedItems(db), countByCategory(db)]);
+    return Response.json({ featured, counts });
+  }
   if (path === 'home') {
     const [items, featured, counts] = await Promise.all([getAllItems(db), getFeaturedItems(db), countByCategory(db)]);
     return Response.json({ items, featured, counts });
@@ -33,7 +43,7 @@ export const GET: APIRoute = async ({ params, url }) => {
     if (!isValidId(id)) throw new HttpError(400, '无效 ID');
     const item = await getItemById(db, id);
     if (!item) throw new HttpError(404, '内容不存在');
-    return Response.json(match[2] ? { items: await getRelatedItems(db, item.category, id) } : { item });
+    return Response.json(match[2] ? { items: await getRelatedItems(db, item.category, id) } : { item, ...await renderMarkdown(item.body) });
   }
   if (path === 'sitemap.xml') {
     const items = await getAllItems(db);

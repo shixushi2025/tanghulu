@@ -5,6 +5,7 @@ declare global {
   type KVNamespace = Namespace;
   namespace Cloudflare {
     interface Env {
+      ASSETS: { fetch(request: Request): Promise<Response> };
       TANGHULU_DB: Database;
       TANGHULU_VIEWS: Namespace;
       ADMIN_PASSWORD: string;

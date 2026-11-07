@@ -1,10 +1,10 @@
 import { env } from 'cloudflare:workers';
-import type { APIRoute } from 'astro';
-import { createItem, getItemById } from '../../../../lib/db';
-import { isValidId, parseItemInput } from '../../../../lib/validation';
-import { HttpError, readJson } from '../../../../lib/http';
+import type { WorkerRoute } from '../types';
+import { createItem, getItemById } from '../../src/lib/db';
+import { isValidId, parseItemInput } from '../../src/lib/validation';
+import { HttpError, readJson } from '../../src/lib/http';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: WorkerRoute = async ({ request }) => {
   const body = await readJson(request, 200000);
   const id = body && typeof body === 'object' && 'id' in body ? body.id : null;
   if (typeof id !== 'string' || !isValidId(id)) throw new HttpError(400, '无效 ID');

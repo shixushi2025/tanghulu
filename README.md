@@ -2,7 +2,7 @@
 
 一份持续生长的私人精选。把值得看的、读的、用的，串在一起。
 
-Astro 7 SSR + Tailwind CSS 4 + Cloudflare Pages（可选原生 Worker）/ D1 / KV。保留暖白与朱红的杂志式设计，支持桌面与手机浏览。
+Astro 7 静态前端 + Tailwind CSS 4 + 单个 Cloudflare Worker（Static Assets + API）/ D1 / KV。保留暖白与朱红的杂志式设计，支持桌面与手机浏览。
 
 内容库包含 63 条记录，覆盖书影音、工具、健康、创作者等类别；本轮补全内容、来源与使用建议，详情见 [内容整理记录](docs/CONTENT-AUDIT.md)。
 
@@ -27,7 +27,8 @@ npm ci
 npm run db:local         # 首次创建全新本地库；已有手工初始化的库请先看部署说明
 cp .dev.vars.example .dev.vars
 # 编辑 .dev.vars，设置仅用于本地的密码和指纹密钥
-npm run dev
+npm run build
+npm run dev              # Wrangler 本地完整应用，默认 http://localhost:8787
 ```
 
 运行打包后的 Worker 环境：
@@ -37,7 +38,9 @@ npm run build
 npm run preview
 ```
 
-本地密钥文件不会被 Git 跟踪。构建保留本地数据库；Pages 发布独立的 `dist/pages`，原生 Worker 使用适配器生成配置。后台地址为 `/admin`。
+本地密钥文件不会被 Git 跟踪。`dist/` 只包含静态前端，`worker/index.ts` 独立作为唯一后端入口；两者由根目录 `wrangler.toml` 一次发布。后台地址为 `/admin`。修改前端后重新构建；只调页面时可同时运行 `npm run dev:ui` 使用 Astro 热更新，API 代理到 8787。
+
+内容从 D1 API 实时加载，需要 JavaScript。后台修改无需重建，构建不嵌入容易过期的内容副本。Git 集成由旧 Pages 迁移到 Workers Builds 的设置见部署说明。
 
 ## 验证
 

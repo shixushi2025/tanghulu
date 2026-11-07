@@ -1,15 +1,5 @@
 ---
-import { env } from 'cloudflare:workers';
-import { getAdminToken, verifyToken } from '../../lib/auth';
 import '../../styles/global.css';
-
-const password = env.ADMIN_PASSWORD;
-if (password) {
-  const token = getAdminToken(Astro.request);
-  if (token && await verifyToken(token, password)) {
-    return Astro.redirect('/admin/dashboard');
-  }
-}
 ---
 
 <!doctype html>

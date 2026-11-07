@@ -2,9 +2,12 @@
 
 ## 数据流与职责
 
-浏览器 → Cloudflare Static Assets（图片、CSS、JS）或 Worker → Astro SSR 路由 → middleware → lib 服务 → Cloudflare D1 / KV。
+浏览器 → Cloudflare Static Assets（静态 HTML、图片、CSS、JS）；浏览器脚本 → 同源 /api/* → 唯一 Worker → lib 服务 → Cloudflare D1 / KV。
 
-- `middleware.ts`：同源写入检查、管理访问控制、统一错误与安全头。
+- `worker/index.ts`：请求路由、同源写入检查、管理访问控制、统一错误与安全头；深链接只转发静态模板，不运行 Astro SSR。
+- `worker/handlers/*`：公开内容、后台 CRUD、评分和浏览接口。
+- `src/scripts/client.ts`：有超时的 API 请求、重试状态、安全模板替换和图片渲染。
+- `src/lib/markdown.ts`：只在 Worker 执行 Markdown 解析和白名单清洗，浏览器不下载解析器。
 - `lib/http.ts`：流式请求体限额（拒绝伪造／缺失长度头的大包）、JSON 解析和 HTTP 错误。
 - `lib/validation.ts`：创建／更新共用的类型、长度、日期、类别及 URL 验证。
 - `lib/auth.ts`：HMAC-SHA256 管理令牌、过期验证、Cookie 与密码摘要比较。
@@ -13,7 +16,7 @@
 - `scripts/item-form.ts`：共用编辑交互，处理加载、错误、重试、未保存离开提示。
 - `lib/dom.ts`：类型安全的 DOM 获取，以及存储被禁用时的降级处理。
 
-页面不使用前端应用框架水合。菜单、搜索、评分和后台表单仅加载自身的小脚本；布局、分类与分页为服务端 HTML，关闭 JavaScript 仍可浏览。
+Astro 在构建阶段输出静态多页面模板，没有服务端适配器或前端框架水合。页面脚本从 D1 API 加载内容，后台改动立即体现在下一次查询；普通文本使用 textContent 或转义后替换模板，Markdown HTML 只来自服务端清洗结果。查询失败显示错误与重试按钮，相关推荐失败不影响正文。关闭 JavaScript 时保留导航与关于说明，提示启用 JS 加载内容；非 JS 抓取器无法读取动态正文。
 
 ## 数据模型
 
@@ -33,6 +36,11 @@
 
 | 路径 | 方法 | 验证与行为 |
 | --- | --- | --- |
+| /api/collection | GET | D1 分页、分类、排序，默认 12 条 |
+| /api/featured | GET | 6 条精选和分类计数，避免首页全量列表传输 |
+| /api/items、/api/items/:id、/related | GET | 摘要列表、正文及已清洗 HTML、相关推荐 |
+| /api/home、/api/stats、/api/sitemap.xml | GET | 兼容公开接口、统计、站点地图 |
+| /api/admin/session | GET | 校验当前管理会话 |
 | /api/admin/login | POST | 同源 JSON，2KB，10 次 / 15 分钟 |
 | /api/admin/logout | POST | 同源、已登录，清除 Cookie |
 | /api/admin/items | POST | 已登录，200KB 上限，共用内容校验，冲突 409 |
@@ -47,10 +55,10 @@
 
 首页只读取 12 条列表、最多 6 条精选和分类计数；分类页同样分页。列表 SELECT 不包含 body；相关推荐在数据库内 LIMIT 3。列表排序附带 id，日期相同仍有稳定顺序。搜索页面载入全部元数据而非完整正文，150ms 防抖、最多 40 个渲染结果，使用 DocumentFragment，避免 HTML 字符串拼接。
 
-静态 `_astro` 资源不可变缓存。SSR/API 使用 no-store，保证后台更新和访问控制不被共享缓存污染。没有上线未经失效设计的全局内容缓存；未来条目量较大时应改为 D1 FTS / 服务端搜索、游标分页，并基于实测流量加缓存失效。
+静态 `_astro` 资源不可变缓存。API、后台和详情深链接响应使用 no-store，保证后台更新和访问控制不被共享缓存污染。静态 HTML 使用平台默认重新验证，哈希 CSS/JS/图片一年不可变缓存。没有上线未经失效设计的全局内容缓存；未来条目量较大时应改为 D1 FTS / 服务端搜索、游标分页，并基于实测流量加缓存失效。
 
 当前搜索和管理列表仍按全量元数据处理，适合本仓库的小型精选站；不宣称万级内容或全球高并发 SLA。随机查询 ORDER BY RANDOM() 也适合小集合。
 
 ## 发布与内容一致性
 
-适配器生成原生 Worker，另生成 dist/pages 供现有 Git 关联的 Pages 发布。两种产物的服务端模块与公开资源目录隔离，Pages 静态图片排除 Worker 路由。内容仍以 D1 为准；图片以带哈希文件名的 WebP 随代码发布。已有数据库采用备份后分阶段升级：先安全表结构、再发布 Worker 和资源、最后更新内容与封面路径。升级脚本只处理审核过的增量迁移，不重放历史 REPLACE 种子。远端的 Logo、后台精选和公开 API 已整合为相同 Worker 的 SSR / API 服务。Cloudflare 构建在发布前只读检查 D1 表结构；未迁移时停止新发布。步骤见 DEPLOYMENT.md。
+静态资源只放在 `dist/`，Worker 入口在 `worker/index.ts`，一次发布；`wrangler.toml` 是唯一配置。内容仍以 D1 为准，图片以哈希 WebP 随代码发布。已有数据库先备份，再按 schema → 发布代码和图片 → content 顺序升级，不重放 REPLACE 种子。Workers Builds 发布前只读检查表结构；旧 Pages 构建被显式阻止。控制台需要将 Git 自动部署和域名从 Pages 迁移到 Worker，详见 DEPLOYMENT.md。

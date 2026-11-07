@@ -1,10 +1,10 @@
 import { env } from 'cloudflare:workers';
-import type { APIRoute } from 'astro';
-import { createToken, passwordMatches, tokenCookie } from '../../../lib/auth';
-import { HttpError, readJson } from '../../../lib/http';
-import { fingerprint, rateLimit } from '../../../lib/security';
+import type { WorkerRoute } from '../types';
+import { createToken, passwordMatches, tokenCookie } from '../../src/lib/auth';
+import { HttpError, readJson } from '../../src/lib/http';
+import { fingerprint, rateLimit } from '../../src/lib/security';
 
-export const POST: APIRoute = async ({ request, url }) => {
+export const POST: WorkerRoute = async ({ request, url }) => {
   if (!env.ADMIN_PASSWORD) throw new HttpError(503, '管理服务尚未配置');
   const key = await fingerprint(request, env.ADMIN_PASSWORD, 'login');
   await rateLimit(env.TANGHULU_DB, `login:${key}`, 10, 900);

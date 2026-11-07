@@ -1,12 +1,5 @@
 ---
-import { env } from 'cloudflare:workers';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getAllItems } from '../lib/db';
-
-const db = env.TANGHULU_DB;
-const items = await getAllItems(db);
-const categoryCount = new Set(items.map((item) => item.category)).size;
-const latestDate = items.map((item) => item.date).sort().at(-1) ?? '';
 ---
 
 <BaseLayout title="关于" description="为什么叫糖葫芦，以及这里如何挑选每一颗内容。">
@@ -29,10 +22,10 @@ const latestDate = items.map((item) => item.date).sort().at(-1) ?? '';
     <div>
       <p class="section-kicker">这里是什么</p>
       <h2>不是评测，不是导购。<br />是一个人的时间筛选器。</h2>
-      <p>这里写的，都是真实看过、读过、用过的东西。没有广告，没有付费排名，也不会为了“全面”而把清单塞满。希望每一颗都能替你省下一点选择的力气。</p>
+      <p>这里把官方资料、编辑建议与实际体验分开整理。没有广告，没有付费排名，也不会为了“全面”而把清单塞满。希望每一颗都能替你省下一点选择的力气。</p>
       <div class="about-stats">
-        <div><strong>{items.length}</strong><span>颗收录</span></div>
-        <div><strong>{categoryCount}</strong><span>种分类</span></div>
+        <div><strong id="about-total">—</strong><span>颗收录</span></div>
+        <div><strong id="about-categories">—</strong><span>种分类</span></div>
         <div><strong>0</strong><span>广告</span></div>
       </div>
     </div>
@@ -84,7 +77,7 @@ const latestDate = items.map((item) => item.date).sort().at(-1) ?? '';
     <span aria-hidden="true">「</span>
     <blockquote>这不是全网最全的清单，只是我留下来的少量答案。希望它也能替你省下一点选择的力气。</blockquote>
     <p>社区评分会匿名汇总；浏览量只用于了解哪些内容被更多人看到。所有内容只代表个人看法，不构成消费建议。</p>
-    {latestDate && <p>最近整理：<time datetime={latestDate}>{latestDate}</time></p>}
+
   </aside>
 
   <section class="about-cta">
@@ -95,4 +88,11 @@ const latestDate = items.map((item) => item.date).sort().at(-1) ?? '';
       <a class="button button--secondary" href="/search">找一颗值得的</a>
     </div>
   </section>
+  <script>
+    import { api } from '../scripts/client';
+    void api<{ total: number; counts: Record<string, number> }>('/api/stats').then(data => {
+      document.querySelector('#about-total')!.textContent = String(data.total);
+      document.querySelector('#about-categories')!.textContent = String(Object.keys(data.counts).length);
+    }).catch(() => {});
+  </script>
 </BaseLayout>

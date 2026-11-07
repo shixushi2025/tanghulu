@@ -9,7 +9,7 @@ npm run verify
 npm audit
 ```
 
-推荐 Node.js 24 LTS。`.github/workflows/ci.yml` 在 push / PR 时执行相同校验，并在失败时保留浏览器 trace；本轮已验证本地命令，尚未在 GitHub 触发远端 CI。单元测试使用 Node 内置 test runner、SQLite 内存库和 esbuild；不依赖在线账户。浏览器测试使用真实 Chromium、编译后的 Cloudflare Pages Worker、静态资源和本地 D1/KV，数据在临时目录中隔离并清理，不读写生产。
+推荐 Node.js 24 LTS。`.github/workflows/ci.yml` 在 push / PR 时执行相同校验，并在失败时保留浏览器 trace；远端结果以对应提交的 GitHub 检查为准。单元测试使用 Node 内置 test runner、SQLite 内存库和 esbuild；不依赖在线账户。浏览器测试使用真实 Chromium、独立的 Cloudflare Worker 与 Astro 静态页面、静态资源和本地 D1/KV，数据在临时目录中隔离并清理，不读写生产。
 
 ## 自动测试矩阵
 
@@ -31,18 +31,19 @@ npm audit
 | 搜索 | 关键词、无结果、清空、ArrowDown | 结果与空状态互斥，键盘焦点正确 |
 | 详情 | 目录、评分、重载 | 目录链接有效，评分保存并恢复 |
 | 手机 | 390px 导航、Escape、5 个路由 | 菜单可用、焦点回到触发按钮、无横向溢出 |
-| 降级 | 禁用 JS 浏览与翻页 | SSR 链接仍可用 |
+| 降级 | 禁用 JS | 静态首页、关于和启用 JS 提示可见；HTML 不嵌入过期 D1 内容 |
+| 路由 | API 失败重试、未知 API/图片、详情 HEAD | 重试恢复；404 不回退首页；后台仍鉴权 |
 | 接口 | 未认证、未知条目、原型属性分类、跨站提交 | 401 / 404 / 403，不新增孤立数据 |
 | 后台 | 登录 → 新增 → 编辑 → 删除 → 退出 | 完整真实浏览器闭环 |
 | 内容安全 | Markdown script / onerror、重复 ID、非法日期、大包 | 清洗可执行内容；409 / 400 / 413 |
 | 并发 | 同一访客 12 个并发浏览请求 | 只增加 1；接口均成功 |
 | 生产 CSP | 菜单、搜索与后台脚本 | 无内联执行脚本，无 CSP 控制台错误 |
 
-对应文件：`tests/unit.test.mjs`（22 个测试）、`tests/content.test.mjs`（3 个数据测试）、`tests/images.test.mjs`（2 个图片测试）、`tests/browser/site.spec.mjs`（11 个流程）、`tests/release.test.mjs`（已有库分阶段升级集成测试）。浏览器控制台 pageerror 和 CSP 错误会直接使测试失败。失败时保存 Playwright trace；成功时保存桌面与手机截图至 `test-results/`。
+对应文件：`tests/unit.test.mjs`（22 个测试）、`tests/content.test.mjs`（3 个数据测试）、`tests/images.test.mjs`（2 个图片测试）、`tests/browser/site.spec.mjs`（12 个流程）、`tests/release.test.mjs`（已有库分阶段升级集成测试）。浏览器控制台 pageerror 和 CSP 错误会直接使测试失败。失败时保存 Playwright trace；成功时保存桌面与手机截图至 `test-results/`。
 
 ## 本轮验证记录
 
-2026-11-06，本地 Node 24.22.1，Chromium 158：严格类型检查 0 错误／警告，单元与数据库测试 22/22，内容数据测试 3/3，图片数据测试 2/2，浏览器流程 11/11，Pages / 原生 Worker 双产物构建、静态资源隔离和 Worker 发布 dry-run 通过，依赖审计无已知漏洞。新增已有 D1 分阶段升级集成测试，验证备份可恢复、后台编辑与 featured 字段保留、评分匿名化、重复运行无变化；未迁移库被发布前检查阻断，升级后通过。首轮移动菜单失败定位为 Astro 内联脚本与 CSP 冲突，改为独立资源后复测通过。
+2026-11-06，本地 Node 24.22.1 / Chromium：迁移后的静态构建生成 21 个页面，Worker dry-run 约 132 KiB（gzip 约 32 KiB），60 个图片记录和静态源文件隔离检查通过。自动测试仍覆盖原有安全、内容、图片和备份后分阶段升级；新增静态路由、API 故障重试和无 JS 提示验收。本次分项执行全部验证：类型检查 0 错误／警告，22 单元 + 3 内容 + 2 图片 + 1 发布升级 + 12 浏览器测试，共 40 项通过；依赖审计 0 已知漏洞。浏览器测试发现并修复排序选项被异步数据加载重置的问题。生产切换仍需恢复 Cloudflare 授权。
 
 ## 发布前仍需的环境验收
 

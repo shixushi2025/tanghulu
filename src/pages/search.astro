@@ -1,33 +1,7 @@
 ---
-import { env } from 'cloudflare:workers';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import AsyncState from '../components/AsyncState.astro';
 import { categoryConfig, visibleCategories } from '../lib/categories';
-import { getAllItems } from '../lib/db';
-
-const db = env.TANGHULU_DB;
-const allItems = await getAllItems(db);
-const searchIndex = allItems.map((item) => {
-  const cat = categoryConfig[item.category] ?? categoryConfig.other;
-  return {
-    id: item.id,
-    title: item.title,
-    summary: item.summary,
-    category: item.category,
-    categoryLabel: cat.label,
-    categoryShortLabel: cat.shortLabel,
-    accent: cat.accent,
-    tint: cat.tint,
-    tags: item.tags,
-    mood: item.mood,
-    country: item.country ?? '',
-
-  };
-});
-const safeSearchData = JSON.stringify(searchIndex)
-  .replace(/</g, '\\u003c')
-  .replace(/\u2028/g, '\\u2028')
-  .replace(/\u2029/g, '\\u2029');
-
 const popularQueries = ['AI 编程', '深夜', '睡眠', '通勤', '科幻', '写作'];
 ---
 
@@ -90,14 +64,15 @@ const popularQueries = ['AI 编程', '深夜', '睡眠', '通勤', '科幻', '�
     </div>
   </section>
 
-  <script id="search-data" type="application/json" set:html={safeSearchData}></script>
+  <AsyncState />
   <script>
     import type { FuseResult } from 'fuse.js';
     import Fuse from 'fuse.js';
 
     interface SearchItem { id: string; title: string; summary: string; category: string; categoryLabel: string; categoryShortLabel: string; accent: string; tint: string; tags: string[]; mood: string[]; country: string }
-    const dataElement = document.getElementById('search-data');
-    const searchItems: SearchItem[] = JSON.parse(dataElement?.textContent || '[]');
+    import { api, load, type Item } from '../scripts/client';
+    import { categoryConfig } from '../lib/categories';
+    const searchItems: SearchItem[] = [];
     const form = document.getElementById('search-form');
     const input = document.querySelector<HTMLInputElement>('#search-input');
     const clearButton = document.querySelector<HTMLButtonElement>('#search-clear');
@@ -223,6 +198,10 @@ const popularQueries = ['AI 编程', '深夜', '睡眠', '通勤', '科幻', '�
 
     const initialQuery = new URLSearchParams(location.search).get('q') || '';
     if (input && initialQuery) input.value = initialQuery;
-    runSearch(initialQuery, false);
+    load(async () => {
+      const { items } = await api<{ items: Item[] }>('/api/items');
+      fuse.setCollection(items.map(item => { const cat = categoryConfig[item.category] ?? categoryConfig.other; return { ...item, categoryLabel: cat.label, categoryShortLabel: cat.shortLabel, accent: cat.accent, tint: cat.tint }; }));
+      runSearch(input?.value ?? initialQuery, false);
+    });
   </script>
 </BaseLayout>

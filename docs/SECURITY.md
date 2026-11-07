@@ -10,7 +10,7 @@
 - 内容字段验证长度、类型、枚举、真实日历日期；URL 仅 HTTP(S)，不含凭据。
 - 参数化 SQL、JSON 安全序列化、搜索 DOM textContent、Markdown 白名单清洗；请求体分块读取并限额。
 - CSP 禁止第三方及内联可执行脚本，禁 iframe 嵌入和 object；安全头、敏感路由 noindex、动态响应 no-store。
-- `.dev.vars` 忽略提交，打包 server 源目录不随静态目录公开。
+- `.dev.vars` 忽略提交，worker 源目录不随 dist 静态目录公开。
 
 密码比较先做 SHA-256 摘要，再遍历固定长度字节；这不是多用户密码数据库方案。ADMIN_PASSWORD 是运行环境 Secret，不能保存在数据库或前端。多人运营时应迁移到具备 MFA、会话撤销和审计能力的身份服务。
 
@@ -23,7 +23,7 @@
 - 浏览记录过期后惰性分批删除，无访问时不会即时物理清除；有严格隐私保留要求时增加定时清理。
 - 使用 Cloudflare 提供的 CF-Connecting-IP；不要把相同服务直接部署到允许客户端伪造该头的代理后方。
 - 本次检查涵盖源代码、依赖审计和本地回归，不等于生产渗透测试。
-- 仅本地开发模式允许 Vite 所需的内联脚本和 WebSocket；生产构建通过 assetsInlineLimit=0 强制独立脚本文件，保持严格 script-src。
+- Wrangler 本地测试与生产使用相同 CSP；可选 Astro 开发服务器仅用于本地页面热更新。生产构建通过 assetsInlineLimit=0 强制独立脚本文件，保持严格 script-src。
 
 ## 依赖管理
 

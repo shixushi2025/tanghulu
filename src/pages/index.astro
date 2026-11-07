@@ -1,24 +1,9 @@
 ---
-import { env } from 'cloudflare:workers';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import ItemCard from '../components/ItemCard.astro';
 import { allCategories, categoryConfig } from '../lib/categories';
-import { getItemPage, getFeaturedItems, countByCategory } from '../lib/db';
-import Pagination from '../components/Pagination.astro';
-import { pageNumber, browseUrl } from '../lib/browse';
-
-const db = env.TANGHULU_DB;
-const requestedCategory = Astro.url.searchParams.get('cat') ?? '';
-const category = allCategories.includes(requestedCategory as typeof allCategories[number]) ? requestedCategory : '';
-const sort = ['newest', 'oldest', 'title'].includes(Astro.url.searchParams.get('sort') ?? '') ? Astro.url.searchParams.get('sort')! : 'newest';
-const [collection, featuredItems, counts] = await Promise.all([
-  getItemPage(db, { category, sort, page: pageNumber(Astro.url.searchParams.get('page')) }),
-  getFeaturedItems(db), countByCategory(db),
-]);
-const total = Object.values(counts).reduce((sum, count) => sum + Number(count), 0);
-const populatedCategories = allCategories.filter((key) => Number(counts[key] ?? 0) > 0);
-const collectionItems = collection.items;
-
+import CardTemplate from '../components/CardTemplate.astro';
+import AsyncState from '../components/AsyncState.astro';
+import { browseUrl } from '../lib/browse';
 const moodEntrances = [
   { label: '通勤路上', query: '通勤', glyph: '听' },
   { label: '深夜独处', query: '深夜', glyph: '夜' },
@@ -30,18 +15,19 @@ const moodEntrances = [
 ---
 
 <BaseLayout>
+  <AsyncState /><CardTemplate /><script>import "../scripts/browse-page";</script>
   <section class="home-hero" aria-labelledby="home-title">
     <div class="home-hero__copy">
       <p class="eyebrow"><span></span>一份持续生长的私人精选</p>
       <h1 id="home-title">把真正值得的，<em>串在一起。</em></h1>
       <p class="home-hero__lead">不追热点，不做排名。把值得了解的内容、适合的场景和上手的方法，认真整理在一起。</p>
       <div class="home-hero__actions">
-        {total > 0 && <a class="button button--primary" href="/random">随便摘一颗 <span aria-hidden="true">↗</span></a>}
+        <a class="button button--primary" href="/random">随便摘一颗 <span aria-hidden="true">↗</span></a>
         <a class="button button--secondary" href="#collection">从头逛逛 <span aria-hidden="true">↓</span></a>
       </div>
       <p class="home-hero__facts">
-        <span>已串 <strong>{total}</strong> 颗</span>
-        <span>共 <strong>{populatedCategories.length}</strong> 类</span>
+        <span>已串 <strong data-total>—</strong> 颗</span>
+        <span>共 <strong data-category-count>—</strong> 类</span>
         <span><strong>0</strong> 广告</span>
       </p>
     </div>
@@ -78,27 +64,12 @@ const moodEntrances = [
   <section class="featured-section" aria-labelledby="featured-title">
     <div class="section-heading">
       <div>
-        <p class="section-kicker">主理人精选 · {featuredItems.length}</p>
+        <p class="section-kicker">主理人精选 · <span data-featured-count>—</span></p>
         <h2 id="featured-title">这次想递给你的几颗</h2>
       </div>
       <p>如果第一次来，从这里开始。</p>
     </div>
-    <div class="featured-grid">
-      {featuredItems.map((item) => (
-        <ItemCard
-          title={item.title}
-          category={item.category}
-          tags={item.tags}
-          summary={item.summary}
-          cover={item.cover}
-          slug={item.id}
-          country={item.country}
-          mood={item.mood}
-          index={featuredItems.findIndex((entry) => entry.id === item.id) + 1}
-          variant="featured"
-        />
-      ))}
-    </div>
+    <div class="featured-grid"></div>
   </section>
 
   <section class="editorial-section" aria-labelledby="editorial-title">
@@ -113,47 +84,32 @@ const moodEntrances = [
   <section id="collection" class="collection-section" aria-labelledby="collection-title">
     <div class="section-heading section-heading--collection">
       <div>
-        <p class="section-kicker">完整收藏 · {total}</p>
+        <p class="section-kicker">完整收藏 · <span data-total>—</span></p>
         <h2 id="collection-title">整串慢慢逛</h2>
       </div>
       <p>电影、书、工具和声音，不必属于同一类，只要值得。</p>
     </div>
 
     <nav class="category-rail" aria-label="按分类浏览">
-      <a class:list={["category-filter", {"is-active": !category}]} aria-current={!category ? "page" : undefined} href={browseUrl("/", "", sort, 1)}>全部 <span>{total}</span></a>
-      {populatedCategories.map((key) => (
-        <a class:list={["category-filter", {"is-active": category === key}]} aria-current={category === key ? "page" : undefined} href={browseUrl("/", key, sort, 1)} style={`--filter-accent:${categoryConfig[key].accent}`}>
-          {categoryConfig[key].label} <span>{counts[key] ?? 0}</span>
+      <a class="category-filter is-active" aria-current="page" href="/#collection">全部 <span data-count="">—</span></a>
+      {allCategories.map((key) => (
+        <a class="category-filter" href={browseUrl("/", key, "newest", 1)} style={`--filter-accent:${categoryConfig[key].accent}`}>
+          {categoryConfig[key].label} <span data-count={key}>—</span>
         </a>
       ))}
     </nav>
 
     <form class="collection-toolbar" action="/#collection" method="get">
-      {category && <input type="hidden" name="cat" value={category} />}
-      <p>{category ? categoryConfig[category].label : '全部精选'} · {collection.total} 颗，慢慢挑</p>
-      <div><label for="sort">排列方式</label><select id="sort" name="sort">
-        <option value="newest" selected={sort === 'newest'}>最近收录</option>
-        <option value="oldest" selected={sort === 'oldest'}>最早收录</option>
-        <option value="title" selected={sort === 'title'}>按标题</option>
-      </select><button class="text-link" type="submit">应用</button></div>
+      <p id="collection-count"></p>
+      <div><label for="sort">排列方式</label><select id="sort" name="sort" disabled>
+        <option value="newest" selected>最近收录</option>
+        <option value="oldest">最早收录</option>
+        <option value="title">按标题</option>
+      </select><button class="text-link" type="submit" disabled>应用</button></div>
     </form>
-    {collection.total === 0 && <div class="empty-state"><h3>第一颗，留给下一次发现。</h3><p>内容收录后会出现在这里。</p></div>}
-    <div class="collection-grid">
-      {collectionItems.map((item) => (
-        <ItemCard
-          title={item.title}
-          category={item.category}
-          tags={item.tags}
-          summary={item.summary}
-          cover={item.cover}
-          slug={item.id}
-          country={item.country}
-          mood={item.mood}
-          index={(collection.page - 1) * 12 + collectionItems.indexOf(item) + 1}
-        />
-      ))}
-    </div>
-    <Pagination {...collection} {category} {sort} />
+    <div class="empty-state" id="collection-empty" hidden><h3>第一颗，留给下一次发现。</h3><p>内容收录后会出现在这里。</p></div>
+    <div class="collection-grid"></div>
+    <nav class="pagination" aria-label="内容分页"></nav>
   </section>
 
   <aside class="home-manifesto">

@@ -60,20 +60,27 @@ test('移动端导航、焦点恢复及无横向溢出', async ({ page }) => {
   await expect(page.getByRole('button', { name: '打开菜单' })).toBeFocused();
   for (const route of ['/', '/search', '/item/interstellar', '/category/tool', '/about']) {
     await page.goto(route);
+    if (route === '/item/interstellar') await expect(page.locator('.detail-article')).toBeVisible();
+    if (route === '/category/tool') await expect(page.locator('.category-grid .item-card')).toHaveCount(12);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   }
-  await page.goto('/'); await page.screenshot({ path: 'test-results/mobile-home.png', fullPage: true, animations: 'disabled' });
+  await page.goto('/'); await expect(page.locator('#collection .item-card')).toHaveCount(12); await page.screenshot({ path: 'test-results/mobile-home.png', fullPage: true, animations: 'disabled' });
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({ path: 'test-results/desktop-home.png', fullPage: true, animations: 'disabled' });
   await page.screenshot({ path: 'test-results/desktop-hero.png', animations: 'disabled' });
 });
-test('无 JavaScript 仍可分页及浏览详情', async ({ browser }) => {
+test('静态页面无需 API 即可打开，无 JS 时给出明确提示', async ({ browser, request }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
-  await page.goto(origin); await page.getByRole('link', { name: '下一页 →' }).click();
-  await expect(page.locator('#collection .item-card')).toHaveCount(12);
-  await page.locator('#collection .item-card').first().click();
-  await expect(page.locator('.detail-article')).toBeVisible(); await context.close();
+  await page.goto(origin);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('串在一起');
+  await expect(page.locator('noscript p')).toBeVisible();
+  expect(await page.locator('noscript p').textContent()).toContain('请启用 JavaScript');
+  await page.goto(`${origin}/about`);
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('糖葫芦');
+  const html = await (await request.get('/')).text();
+  expect(html).not.toContain('atomic-habits'); // D1 content is not baked into stale HTML.
+  await context.close();
 });
 test('认证、CSRF、损坏 Cookie、未知条目和安全头', async ({ request }) => {
   expect((await request.post('/api/admin/items', { headers, data: {} })).status()).toBe(401);
@@ -85,7 +92,8 @@ test('认证、CSRF、损坏 Cookie、未知条目和安全头', async ({ reques
   for (const route of ['/item/not-real', '/category/__proto__', '/no-such-page']) expect((await request.get(route)).status()).toBe(404);
   const response = await request.get('/');
   expect(response.headers()['content-security-policy']).toContain("script-src 'self'");
-  expect(response.headers()['cache-control']).toBe('no-store');
+  expect(response.headers()['cache-control']).toContain('must-revalidate');
+  expect((await request.get('/api/items')).headers()['cache-control']).toBe('no-store');
 });
 test('后台创建、编辑、删除完整流程', async ({ page }) => {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -118,7 +126,7 @@ test('后台创建、编辑、删除完整流程', async ({ page }) => {
   await page.getByRole('button', { name: '确认删除', exact: true }).click();
   await expect(page.getByRole('dialog')).not.toBeVisible();
   expect((await page.request.get('/item/e2e-created')).status()).toBe(404);
-  await page.getByRole('button', { name: /退出/ }).click(); await expect(page).toHaveURL(/\/admin$/);
+  await page.getByRole('button', { name: /退出/ }).click(); await expect(page).toHaveURL(/\/admin\/?$/);
   expect(errors).toEqual([]);
 });
 test('并发浏览去重与评分类型边界', async ({ request }) => {
@@ -174,4 +182,21 @@ test('保留公开 API、站点地图和精选选择，管理会话仍受保护'
   expect((await request.get('/api/items?category=__proto__')).status()).toBe(400);
   expect((await request.get('/api/admin/session')).status()).toBe(401);
   expect(await (await request.get('/api/sitemap.xml')).text()).toContain('https://tanghulu.life/item/atomic-habits');
+});
+
+test('API 失败可重试，未知 API 和静态资源不会退回首页', async ({ page, request }) => {
+  await page.route('**/api/collection?*', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"temporary"}' }));
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('串在一起');
+  await expect(page.getByRole('button', { name: '重新加载' })).toBeVisible();
+  await page.unroute('**/api/collection?*');
+  await page.getByRole('button', { name: '重新加载' }).click();
+  await expect(page.locator('#collection .item-card')).toHaveCount(12);
+  for (const path of ['/api/not-real', '/api/items/not-real']) {
+    const response = await request.get(path, { headers: { Accept: 'text/html', 'Sec-Fetch-Mode': 'navigate' } });
+    expect(response.status()).toBe(404); expect(response.headers()['content-type']).toContain('application/json');
+  }
+  expect((await request.get('/images/covers/missing.webp')).status()).toBe(404);
+  expect((await request.get('/admin/dashboard', { maxRedirects: 0 })).status()).toBe(302);
+  const head = await request.head('/item/atomic-habits'); expect(head.status()).toBe(200); expect(await head.text()).toBe('');
 });

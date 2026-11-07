@@ -1,8 +1,8 @@
 import { env } from 'cloudflare:workers';
-import type { APIRoute } from 'astro';
-import { isValidId } from '../../../lib/validation';
-import { HttpError } from '../../../lib/http';
-import { fingerprint, rateLimit } from '../../../lib/security';
+import type { WorkerRoute } from '../types';
+import { isValidId } from '../../src/lib/validation';
+import { HttpError } from '../../src/lib/http';
+import { fingerprint, rateLimit } from '../../src/lib/security';
 
 async function requireItem(id: string) {
   if (!isValidId(id)) throw new HttpError(400, '无效 ID');
@@ -14,12 +14,12 @@ async function count(id: string) {
   const legacy = Number(await env.TANGHULU_VIEWS.get(id));
   return Number.isSafeInteger(legacy) && legacy > 0 ? legacy : 0;
 }
-export const GET: APIRoute = async ({ params }) => {
+export const GET: WorkerRoute = async ({ params }) => {
   const id = params.id ?? '';
   await requireItem(id);
   return Response.json({ count: await count(id) });
 };
-export const POST: APIRoute = async ({ params, request }) => {
+export const POST: WorkerRoute = async ({ params, request }) => {
   const id = params.id ?? '';
   await requireItem(id);
   const fp = await fingerprint(request, env.VISITOR_HASH_SECRET || env.ADMIN_PASSWORD, 'views');

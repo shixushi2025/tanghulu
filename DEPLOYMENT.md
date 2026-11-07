@@ -1,24 +1,52 @@
-# Cloudflare Pages / Worker 部署、图片与 D1
+# 单个 Cloudflare Worker：静态前端、API、图片与 D1
 
-项目使用 **Astro 7 SSR + Cloudflare D1 / KV**，生成 Pages 和原生 Worker 两种产物。现有 Git 自动部署目标是 Cloudflare Pages。Node.js 22.19+，建议 24 LTS；用 `npm ci` 安装锁定依赖。
+项目使用 **Astro 7 静态输出 + 一个独立 Worker + D1 / KV**。Node.js 22.19+，建议 24 LTS；使用 `npm ci` 安装锁定依赖。没有 Astro 服务端适配器，不生成 Pages 或 SSR 产物。
 
-## main 自动部署
+## 官方方案与路由
 
-当前实现将本轮页面、内容和图片与远端 main 的 Logo、后台精选、公开 API、站点地图合并。统一使用 Astro SSR Worker + Static Assets，保留无 JavaScript 浏览能力；旧 CSR 壳和单独 Hono 入口由相同路径的 SSR / API 替代，D1 / KV 绑定保持原目标。
+Cloudflare [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/) 支持在一次部署中发布 Worker 代码与静态资源；默认命中静态资源时不调用 Worker。这里使用 `assets.run_worker_first` 精确指定 API、后台、随机入口和详情深链接。
 
-GitHub 检查确认现有集成是 **Cloudflare Pages**。生产分支 `main`，Node.js 24，构建命令 `npm run build`；根目录 `wrangler.toml` 指定发布目录 `dist/pages`、兼容日期和 D1 / KV 绑定。Pages 自动发布此目录，无需添加 Worker deploy 命令。
+- `/`、`/category/*`、`/search`、`/about`、CSS、JS、图片：直接提供 Astro 构建的静态文件。
+- `/api/*`：唯一 Worker 内的 JSON API，查询 D1、验证管理权限、处理评分和统计。
+- `/item/:id`：Worker 检查条目存在后返回静态详情模板；浏览器获取最新正文。未知条目返回真实 404。
+- `/admin/*`：Worker 验证登录后返回静态后台模板；API 再独立验证权限。静态页面没有内嵌私有数据。
+- `/random`：查询当前 D1 后 302 跳转。
 
-原生 Worker 配置保留在 `wrangler.worker.toml`，供 Astro 适配器构建使用。确实切换到 Workers 时使用 `npm run deploy:worker`，或将 Workers Builds 部署命令设为 `npx wrangler deploy --config dist/server/wrangler.json`。两份配置的 D1 / KV ID 应保持一致；同一个自定义域应只交给实际使用的发布项目。
+这是静态多页面前端，使用 `404-page`，不把所有未知路径降级成首页。API 导航不会得到 HTML，失效图片和错误链接保持 404。内容需要 JavaScript；搜索引擎及分享抓取器若不执行 JS，只能读取静态模板元信息。当前未实现详情 SEO 预渲染或边缘元信息注入，不能宣称与原 SSR 抓取效果相同。
 
-`postbuild` 在 `CF_PAGES` / `WORKERS_CI` 环境下执行只读 D1 检查：必须存在内容、评分、安全限流、浏览计数表以及精选字段。缺少表结构或数据库读取权限时构建失败，现有部署继续运行。Pages 构建需要在环境中配置能够读取目标 D1 的 `CLOUDFLARE_API_TOKEN`，不要提交 token。本地构建与普通 GitHub 测试不访问远程库。手动部署命令同样执行检查。
+## main 自动部署：从 Pages 切换到 Workers Builds
 
-首次升级需要先完成下方 schema 阶段，再让 main 自动部署成功，最后补内容和封面。推送代码不会重放历史种子，也不会自动覆盖线上编辑。当前线上只读检查仍为 55 条，封面尚未补入；本机 Cloudflare 登录过期且浏览器代理阻断授权，尚未核实或修改远程数据库。不要把 Git 推送成功当作 Cloudflare 发布成功。
+最后核实的线上 Git 集成仍是 **Cloudflare Pages**。仓库配置已经改成 Worker，不代表 Cloudflare 控制台已完成迁移。本机 Cloudflare OAuth 过期，尚未确认生产 Worker、远程迁移和域名切换；原站保留，不能把 Git 推送成功当成上线成功。
+
+按照官方 [Pages 迁移到 Workers](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/) 文档，需要连接 Workers Builds 并关闭旧 Pages 自动部署。设置如下：
+
+| 项目 | 值 |
+| --- | --- |
+| Worker 名称 | `tanghulu`（与 `wrangler.toml` 一致） |
+| Git 仓库 / 生产分支 | `shixushi2025/tanghulu` / `main` |
+| 根目录 | 仓库根目录 |
+| 构建命令 | `npm run build` |
+| 部署命令 | `npx wrangler deploy` |
+| Node.js | 24 |
+| 静态目录 / 后端入口 | `dist/` / `worker/index.ts`，由 Wrangler 配置管理 |
+
+首次切换顺序：
+
+1. 恢复 Cloudflare 登录，核实账号与已有 D1 / KV ID；按下文先完成 D1 **schema** 阶段。
+2. 创建或选择目标 Worker，绑定现有 D1 / KV，设置 Worker 的 `ADMIN_PASSWORD`、`VISITOR_HASH_SECRET`。Pages Secret 不会自动复制到 Worker。
+3. 连接仓库 main，按上表配置 Workers Builds。构建身份必须有目标 D1 读取权限；部署身份需要 Worker 发布和绑定资源权限。Worker 运行时 Secret 与构建环境变量分别配置，密钥不能放进 Git 或 `PUBLIC_*`。
+4. 在 Worker 预览域名验证页面、API、管理认证和全部图片后，补 D1 **content** 阶段。线上尚未核实，旧只读检查为 55 条、书封字段为空。
+5. 验证后将 `tanghulu.life` 从 Pages 切换到该 Worker，并关闭 Pages 自动部署。域名只交给一个生产项目；保留旧部署便于回滚。
+
+`prebuild` 检测到 `CF_PAGES=1` 会明确停止旧 Pages 构建，避免把静态文件发布到没有 API 的项目。旧 Pages 检查失败是迁移保护，不表示已切换。`postbuild` 在 Workers Builds 执行只读 D1 表结构检查：缺表、缺精选字段或无读取权限均阻止发布。普通本地构建和 GitHub 测试不访问生产库。代码发布不自动修改 D1，不重放历史种子。
+
+默认不要启用绑定生产 D1 的分支预览部署。需要预览时使用独立 Worker、D1、KV 配置与独立 Secret，再启用对应分支构建。
 
 ## 图片与数据放在哪里
 
 | 内容 | 存放和发布方式 | 更新策略 |
 | --- | --- | --- |
-| 60 张 Logo、书封、海报等 | Git 中的 `public/images/covers/` → `dist/client/` → Workers Static Assets | 已压缩 WebP，合计约 845 KiB；哈希文件名，一年 immutable 缓存 |
+| 60 张 Logo、书封、海报等 | Git 中的 `public/images/covers/` → `dist/` → Workers Static Assets | 已压缩 WebP，合计约 845 KiB；哈希文件名，一年 immutable 缓存 |
 | 63 条内容、评分、浏览数 | D1；封面字段只存路径 / URL，不存图片二进制 | 后台编辑立即生效；批量补充通过增量 SQL |
 | 历史浏览量 | 现有 `TANGHULU_VIEWS` KV namespace | 保留绑定，首次读取旧基线；新计数写 D1 |
 | 图片出处、版本与许可 | `docs/image-sources.json`、`src/data/images.json`、公开署名文件 | 随图片一起提交，详情显示来源与必要署名 |
@@ -36,12 +64,12 @@ npm run verify
 npm run deploy:check       # 构建、检查文件隔离、dry-run；不发布、不改 D1
 ```
 
-适配器生成 `dist/server/entry.mjs`、`dist/server/wrangler.json` 和 `dist/client/`。`scripts/prepare-pages.mjs` 另外生成独立的 `dist/pages/`：只复制公开资源、打包 `_worker.js` 并设置静态图片排除路由。Pages 只上传 `dist/pages`，不能上传整个 dist。服务端源目录不会被复制到 Pages。构建只清理自动部署重定向，保留本地 `.wrangler/state` 数据；原生 Worker 命令明确指定生成配置。
+Astro 生成 `dist/` 内的 21 个静态页面与资源。Wrangler 单独打包 `worker/index.ts`，后端源文件不进入静态目录；只运行一次 `wrangler deploy`，同时发布资源与 Worker。`check-deploy.mjs` 检查静态文件、图片字节数及源文件隔离。没有生成配置重定向，所有命令使用根目录 `wrangler.toml`，本地 `.wrangler/state` 在构建后保留。
 
 | 绑定 / Secret | 用途 |
 | --- | --- |
 | TANGHULU_DB | D1 内容、评分、浏览量、限流 |
-| TANGHULU_VIEWS | KV 历史浏览数；适配器复用此绑定避免创建多余的 SESSION namespace |
+| TANGHULU_VIEWS | KV 历史浏览数；没有额外 session namespace |
 | ASSETS | 自动发布的静态资源目录 |
 | ADMIN_PASSWORD | 长随机后台密码，同时用于管理令牌签名 |
 | VISITOR_HASH_SECRET | 独立长随机 HMAC 密钥，用于匿名指纹 |
@@ -68,8 +96,9 @@ npm ci
 npm run db:local
 cp .dev.vars.example .dev.vars
 # 修改本地密码和密钥
+npm run build
 npm run dev
-# 或：npm run build && npm run preview
+# 修改前端后重新构建；也可另外运行 npm run dev:ui 使用热更新
 ```
 
 `db:local` 只适用于新库或迁移历史完整的本地库。端到端测试会创建、迁移并销毁独立临时库，不读写开发库和生产库。
@@ -117,6 +146,6 @@ Worker 代码回滚和 D1 数据恢复是两件事。记录发布前的 Worker �
 
 图片更换先发布新文件，再更新 D1 路径。保留仍被数据库引用的旧哈希文件，至少覆盖回滚窗口；同步脚本不会自动删除它们。若回滚到不含新图片的旧部署，须同步回退对应封面路径或保留资源兼容版本。
 
-503 优先检查绑定、迁移和 Secret；429 表示限流，不应绕过；图片 404 检查当前部署是否包含对应哈希文件。响应安全头由 SSR middleware 设置，静态图片缓存由 `public/_headers` 设置。
+503 优先检查绑定、迁移和 Secret；429 表示限流，不应绕过；图片 404 检查当前部署是否包含对应哈希文件。动态响应安全头由 Worker 设置，静态页面安全头与图片缓存由 `public/_headers` 设置。
 
 参考：[Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/)、[静态资源响应头](https://developers.cloudflare.com/workers/static-assets/headers/)、[D1 迁移](https://developers.cloudflare.com/d1/reference/migrations/)、[D1 数据恢复](https://developers.cloudflare.com/d1/reference/time-travel/)。
