@@ -1,4 +1,5 @@
 ---
+featured: true
 title: 掌控习惯
 category: health
 tags:

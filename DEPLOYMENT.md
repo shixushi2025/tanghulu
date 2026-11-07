@@ -2,11 +2,15 @@
 
 本分支使用 **Astro 7 SSR + Cloudflare Workers Static Assets + D1 + KV**。Node.js 22.19+，建议 24 LTS；用 `npm ci` 安装锁定依赖。
 
-## 分支与现网的边界
+## main 自动部署
 
-2026-11-06 检查时，远端 `main` 已有三个新提交，最新为 `d94f69e`，采用静态页面 / CSR + 独立 Worker API。当前成果保存在 `codex/content-images-cloudflare`，仍保留服务端渲染和无 JavaScript 浏览能力，已适配同一个 Worker 提供静态资源的发布方式。**本分支尚未合并远端的 CSR 重构**，不能把它当成可以直接快进 main 的提交；合并前需要选定架构并整合后台精选等远端功能。
+当前实现将本轮页面、内容和图片与远端 main 的 Logo、后台精选、公开 API、站点地图合并。统一使用 Astro SSR Worker + Static Assets，保留无 JavaScript 浏览能力；旧 CSR 壳和单独 Hono 入口由相同路径的 SSR / API 替代，D1 / KV 绑定保持原目标。
 
-本轮只做本地验证和发布 dry-run，没有发布生产 Worker，也没有执行远程 D1 升级。当前本机 Cloudflare 登录已过期，现网数据库状态尚未核实。若 main 关联自动发布，合并前必须安排下面的分阶段迁移。
+Cloudflare Workers Builds 生产分支设为 `main`，Node.js 24，构建命令 `npm run build`，部署命令 `npx wrangler deploy --config dist/server/wrangler.json`（默认 `npx wrangler deploy` 也会读取适配器生成的部署重定向）。不要再指定旧 `worker/src/index.ts` 或 Pages 输出目录。
+
+`postbuild` 在 Cloudflare Builds 的 `WORKERS_CI` 环境下执行只读 D1 检查：必须存在内容、评分、安全限流、浏览计数表以及精选字段。缺少表结构或数据库读取权限时构建失败，禁止发布不兼容代码，现有部署继续运行。构建凭据需要读取目标 D1 的权限；本地构建与普通 GitHub 测试不访问远程库。手动 `npm run deploy` 同样执行检查。
+
+首次升级需要先完成下方 schema 阶段，再让 main 自动部署成功，最后补内容和封面。推送代码不会重放历史种子，也不会自动覆盖线上编辑。当前线上只读检查仍为 55 条，封面尚未补入；本机 Cloudflare 登录过期且浏览器代理阻断授权，尚未核实或修改远程数据库。不要把 Git 推送成功当作 Cloudflare 发布成功。
 
 ## 图片与数据放在哪里
 
@@ -84,9 +88,9 @@ npm run db:status -- --remote
 
 升级脚本执行前检查表结构，每个实际升级阶段先导出数据库到 `.backups/`，导出失败即停止。备份目录被 Git 忽略，文件权限设为 0600，包含私有数据，需妥善保存。用 `--local` 替换 `--remote` 可演练；可附加 `--config <独立 wrangler.toml>` 指向隔离配置；本地数据库保存在该配置所在目录的 `.wrangler/state`。
 
-脚本只运行明确列出的 `0004_security_metrics.sql` 至 `0007_content_images.sql`，用独立的 `tanghulu_release_migrations` 记录文件名及 SHA-256。已记录的迁移不重放；已执行文件被改动时拒绝升级。未来新增迁移需要显式加入脚本和测试，不能修改已发布的 SQL。
+脚本只运行明确列出的 `0004_featured.sql`、`0004_security_metrics.sql` 至 `0007_content_images.sql`，用独立的 `tanghulu_release_migrations` 记录文件名及 SHA-256。已记录的迁移不重放；已执行文件被改动时拒绝升级。未来新增迁移需要显式加入脚本和测试，不能修改已发布的 SQL。
 
-- schema：添加安全、限流、浏览计数结构；清除孤立评分，将历史原始 IP 标识匿名化，保留有效评分值。原始身份不能通过代码回滚恢复。
+- schema：已有 featured 字段只登记迁移，不重跑 ALTER / 初始精选覆盖；缺字段时添加并初始化。添加安全、限流、浏览计数结构；清除孤立评分，将历史原始 IP 标识匿名化，保留有效评分值。原始身份不能通过代码回滚恢复。
 - content：补齐原有 55 条、新增 8 条；按旧字段精确匹配保护后台编辑；给标题 / 分类相符的空封面配图，保留自定义封面、评分、浏览量以及已有 `featured` 字段。
 - 重复执行安全；迁移记录最后写入，中途中断后可重试这些幂等迁移。执行期间应暂停后台编辑，避免与人工修改竞争。
 

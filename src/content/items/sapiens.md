@@ -1,4 +1,5 @@
 ---
+featured: true
 title: 人类简史
 category: book
 tags:

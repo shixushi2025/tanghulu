@@ -10,7 +10,7 @@ export function isHttpUrl(value: string): boolean {
   } catch { return false; }
 }
 export const isCoverUrl = (value: string): boolean => /^\/images\/covers\/[a-z0-9-]+\.webp$/.test(value) || isHttpUrl(value);
-export function parseItemInput(value: unknown, existingMood: string[] = []):
+export function parseItemInput(value: unknown, existingMood: string[] = [], existingFeatured = false):
   { data: Omit<Item, 'id'> } | { error: string } {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return { error: '内容必须是 JSON 对象' };
   const b = value as Record<string, unknown>;
@@ -33,8 +33,10 @@ export function parseItemInput(value: unknown, existingMood: string[] = []):
     const result = [...new Set(values.flatMap(v => v.split(/[,，]/)).map(v => v.trim()).filter(Boolean))];
     return result.length <= 20 && result.every(v => v.length <= 40) ? result : null;
   }
+  if (b.featured !== undefined && typeof b.featured !== 'boolean') return { error: '精选必须为布尔值' };
+  const featured = b.featured ?? existingFeatured;
   const tags = list(b.tags);
   const mood = list(Object.hasOwn(b, 'mood') ? b.mood : existingMood);
   if (!tags || !mood) return { error: '标签和场景各限 20 个，每个最多 40 字' };
-  return { data: { title, summary, date, cover, link, country, body, category, tags, mood } };
+  return { data: { title, summary, date, cover, link, country, body, category, tags, mood, featured } };
 }

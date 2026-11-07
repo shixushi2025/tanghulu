@@ -1,4 +1,5 @@
 ---
+featured: true
 title: Claude
 category: tool
 tags:

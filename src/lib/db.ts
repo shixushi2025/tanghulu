@@ -11,6 +11,7 @@ export interface Item {
   mood: string[];
   country: string;
   body: string;
+  featured: boolean;
 }
 
 function parseList(value: unknown): string[] {
@@ -34,10 +35,11 @@ function parseItem(row: Record<string, unknown>): Item {
     mood: parseList(row.mood),
     country: (row.country as string) || '',
     body: (row.body as string) || '',
+    featured: Number(row.featured) === 1,
   };
 }
 
-const SUMMARY_COLUMNS = 'id, title, category, tags, summary, cover, date, link, mood, country';
+const SUMMARY_COLUMNS = 'id, title, category, tags, summary, cover, date, link, mood, country, featured';
 
 export async function getAllItems(db: D1Database): Promise<Item[]> {
   const { results } = await db
@@ -76,7 +78,7 @@ export type ItemInput = Omit<Item, 'id'> & { id?: string };
 export async function createItem(db: D1Database, id: string, data: Omit<Item, 'id'>): Promise<void> {
   await db
     .prepare(
-      'INSERT INTO items (id, title, category, tags, summary, cover, date, link, mood, country, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO items (id, title, category, tags, summary, cover, date, link, mood, country, body, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     )
     .bind(
       id,
@@ -90,6 +92,7 @@ export async function createItem(db: D1Database, id: string, data: Omit<Item, 'i
       JSON.stringify(data.mood),
       data.country,
       data.body,
+      data.featured ? 1 : 0,
     )
     .run();
 }
@@ -97,7 +100,7 @@ export async function createItem(db: D1Database, id: string, data: Omit<Item, 'i
 export async function updateItem(db: D1Database, id: string, data: Omit<Item, 'id'>): Promise<void> {
   await db
     .prepare(
-      'UPDATE items SET title=?, category=?, tags=?, summary=?, cover=?, date=?, link=?, mood=?, country=?, body=?, updated_at=unixepoch() WHERE id=?',
+      'UPDATE items SET title=?, category=?, tags=?, summary=?, cover=?, date=?, link=?, mood=?, country=?, body=?, featured=?, updated_at=unixepoch() WHERE id=?',
     )
     .bind(
       data.title,
@@ -110,6 +113,7 @@ export async function updateItem(db: D1Database, id: string, data: Omit<Item, 'i
       JSON.stringify(data.mood),
       data.country,
       data.body,
+      data.featured ? 1 : 0,
       id,
     )
     .run();
@@ -144,6 +148,6 @@ export async function getItemPage(db: D1Database, options: { category?: string; 
 }
 
 export async function getFeaturedItems(db: D1Database): Promise<Item[]> {
-  const { results } = await db.prepare(`SELECT ${SUMMARY_COLUMNS} FROM items ORDER BY CASE id WHEN 'interstellar' THEN 0 WHEN 'thinking-fast-slow' THEN 1 WHEN 'chatgpt' THEN 2 ELSE 3 END, date DESC, id LIMIT 3`).all();
+  const { results } = await db.prepare(`SELECT ${SUMMARY_COLUMNS} FROM items ORDER BY featured DESC, CASE WHEN featured=0 THEN CASE id WHEN 'chatgpt' THEN 0 WHEN 'claude-ai' THEN 1 WHEN 'atomic-habits' THEN 2 ELSE 3 END ELSE 0 END, date DESC, id LIMIT 6`).all();
   return results.map(parseItem);
 }

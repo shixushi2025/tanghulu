@@ -1,4 +1,5 @@
 ---
+featured: true
 title: Lex Fridman Podcast
 category: podcast
 tags:

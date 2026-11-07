@@ -38,11 +38,11 @@ npm audit
 | 并发 | 同一访客 12 个并发浏览请求 | 只增加 1；接口均成功 |
 | 生产 CSP | 菜单、搜索与后台脚本 | 无内联执行脚本，无 CSP 控制台错误 |
 
-对应文件：`tests/unit.test.mjs`（22 个测试）、`tests/content.test.mjs`（3 个数据测试）、`tests/images.test.mjs`（2 个图片测试）、`tests/browser/site.spec.mjs`（10 个流程）、`tests/release.test.mjs`（已有库分阶段升级集成测试）。浏览器控制台 pageerror 和 CSP 错误会直接使测试失败。失败时保存 Playwright trace；成功时保存桌面与手机截图至 `test-results/`。
+对应文件：`tests/unit.test.mjs`（22 个测试）、`tests/content.test.mjs`（3 个数据测试）、`tests/images.test.mjs`（2 个图片测试）、`tests/browser/site.spec.mjs`（11 个流程）、`tests/release.test.mjs`（已有库分阶段升级集成测试）。浏览器控制台 pageerror 和 CSP 错误会直接使测试失败。失败时保存 Playwright trace；成功时保存桌面与手机截图至 `test-results/`。
 
 ## 本轮验证记录
 
-2026-11-06，本地 Node 24.22.1，Chromium 158：严格类型检查 0 错误／警告，单元与数据库测试 22/22，内容数据测试 3/3，图片数据测试 2/2，浏览器流程 10/10，原生 Workers 构建、静态资源隔离和发布 dry-run 通过，依赖审计无已知漏洞。新增已有 D1 分阶段升级集成测试，验证备份可恢复、后台编辑与 featured 字段保留、评分匿名化、重复运行无变化。首轮移动菜单失败定位为 Astro 内联脚本与 CSP 冲突，改为独立资源后复测通过。
+2026-11-06，本地 Node 24.22.1，Chromium 158：严格类型检查 0 错误／警告，单元与数据库测试 22/22，内容数据测试 3/3，图片数据测试 2/2，浏览器流程 11/11，原生 Workers 构建、静态资源隔离和发布 dry-run 通过，依赖审计无已知漏洞。新增已有 D1 分阶段升级集成测试，验证备份可恢复、后台编辑与 featured 字段保留、评分匿名化、重复运行无变化；未迁移库被发布前检查阻断，升级后通过。首轮移动菜单失败定位为 Astro 内联脚本与 CSP 冲突，改为独立资源后复测通过。
 
 ## 发布前仍需的环境验收
 

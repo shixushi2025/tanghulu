@@ -10,7 +10,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
   const body = await readJson(request, 200000);
   const existing = await getItemById(env.TANGHULU_DB, id);
   if (!existing) throw new HttpError(404, '内容不存在');
-  const parsed = parseItemInput(body, existing.mood);
+  const parsed = parseItemInput(body, existing.mood, existing.featured);
   if ('error' in parsed) throw new HttpError(400, parsed.error);
   await updateItem(env.TANGHULU_DB, id, parsed.data);
   return Response.json({ ok: true });

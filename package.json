@@ -22,11 +22,12 @@
     "images:check": "node --test tests/images.test.mjs",
     "images:sync": "node scripts/sync-images.mjs",
     "images:credits": "node scripts/image-credits.mjs",
-    "deploy": "npm run build && node scripts/check-deploy.mjs && wrangler deploy --config dist/server/wrangler.json",
+    "deploy": "npm run build && node scripts/check-deploy.mjs && node scripts/check-cloudflare-db.mjs --remote && wrangler deploy --config dist/server/wrangler.json",
     "deploy:check": "npm run build && node scripts/check-deploy.mjs && wrangler deploy --config dist/server/wrangler.json --dry-run --outdir .wrangler/dry-run",
     "db:status": "node scripts/db-release.mjs status",
     "db:upgrade": "node scripts/db-release.mjs upgrade",
-    "test:release": "node --test tests/release.test.mjs"
+    "test:release": "node --test tests/release.test.mjs",
+    "postbuild": "node scripts/check-cloudflare-db.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.1.7",

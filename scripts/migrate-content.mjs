@@ -13,8 +13,8 @@ for (const file of (await readdir('src/content/items')).filter(file => file.ends
   if (!match) throw new Error(`缺少 frontmatter: ${file}`);
   const data = parse(match[1]);
   if (!data.title || !data.category || !data.summary || !data.date) throw new Error(`缺少必要字段: ${file}`);
-  const values = [file.slice(0, -3), data.title, data.category, JSON.stringify(data.tags || []), data.summary, data.cover || '', data.date, data.link || '', JSON.stringify(data.mood || []), data.country || '', match[2].trim()];
-  statements.push(`INSERT INTO items (id, title, category, tags, summary, cover, date, link, mood, country, body) VALUES (${values.map(escape).join(', ')}) ON CONFLICT(id) DO NOTHING;`);
+  const values = [file.slice(0, -3), data.title, data.category, JSON.stringify(data.tags || []), data.summary, data.cover || '', data.date, data.link || '', JSON.stringify(data.mood || []), data.country || '', match[2].trim(), data.featured ? 1 : 0];
+  statements.push(`INSERT INTO items (id, title, category, tags, summary, cover, date, link, mood, country, body, featured) VALUES (${values.map(escape).join(', ')}) ON CONFLICT(id) DO NOTHING;`);
 }
 await writeFile(output, statements.join('\n') + '\n');
 console.log(`Generated ${statements.length - 1} items → ${output}`);

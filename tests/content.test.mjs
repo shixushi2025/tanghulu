@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
 import { parse } from 'yaml';
 
-const columns = ['title', 'category', 'tags', 'summary', 'cover', 'date', 'link', 'mood', 'country', 'body'];
+const columns = ['title', 'category', 'tags', 'summary', 'cover', 'date', 'link', 'mood', 'country', 'body', 'featured'];
 const registry = JSON.parse(readFileSync('docs/content-sources.json', 'utf8'));
 const content = readdirSync('src/content/items').filter(file => file.endsWith('.md')).sort().map(file => {
   const source = readFileSync(`src/content/items/${file}`, 'utf8');
@@ -12,7 +12,7 @@ const content = readdirSync('src/content/items').filter(file => file.endsWith('.
   assert.ok(match, `缺少 frontmatter: ${file}`);
   const data = parse(match[1]);
   return { id: file.slice(0, -3), ...Object.fromEntries(columns.map(key => [key,
-    key === 'body' ? match[2].trim() : ['tags', 'mood'].includes(key) ? JSON.stringify(data[key] || []) : data[key] ?? '',
+    key === 'featured' ? (data.featured ? 1 : 0) : key === 'body' ? match[2].trim() : ['tags', 'mood'].includes(key) ? JSON.stringify(data[key] || []) : data[key] ?? '',
   ])) };
 });
 const migrations = readdirSync('migrations').filter(file => file.endsWith('.sql')).sort();
@@ -52,7 +52,7 @@ test('所有内容源与全新数据库逐字段一致，每条都有来源状�
 });
 
 test('内容升级保留任一字段被后台修改的条目，以及新增 ID 冲突', () => {
-  for (const column of columns) {
+  for (const column of columns.filter(column => column !== 'featured')) {
     const db = database(true);
     try {
       db.prepare(`UPDATE items SET ${column}=? WHERE id='quiet'`).run(['tags', 'mood'].includes(column) ? '["后台保留"]' : '后台修改');

@@ -20,7 +20,7 @@ const accepted = new Set(['--remote', '--local', '--config', configPath, '--phas
 if (args.some(arg => !accepted.has(arg))) throw new Error('Unknown argument');
 const target = [remote ? '--remote' : '--local'];
 const wrangler = resolve('node_modules/wrangler/bin/wrangler.js');
-const upgrades = ['0004_security_metrics.sql', '0005_editorial_content.sql', '0006_content_refresh.sql', '0007_content_images.sql'];
+const upgrades = ['0004_featured.sql', '0004_security_metrics.sql', '0005_editorial_content.sql', '0006_content_refresh.sql', '0007_content_images.sql'];
 function cli(command, json = false) {
   const result = spawnSync(process.execPath, [wrangler, 'd1', ...command, '--config', resolve(configPath), ...target, ...(json ? ['--json'] : [])], { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, env: { ...process.env, CI: '1' } });
   if (result.status !== 0) throw new Error(result.stderr || result.stdout || 'Wrangler failed');
@@ -42,10 +42,13 @@ const unapplied = upgrades.flatMap(name => {
   const sql = readFileSync(`migrations/${name}`, 'utf8');
   const sha256 = createHash('sha256').update(sql).digest('hex');
   if (completed.has(name) && completed.get(name) !== sha256) throw new Error(`Previously applied migration changed: ${name}`);
-  return completed.has(name) ? [] : [{ name, sql, sha256 }];
+  // Existing main installations may already have this non-idempotent ALTER.
+  // Adopt it without resetting any manually selected featured items.
+  const appliedSql = name === '0004_featured.sql' && itemColumns.has('featured') ? '' : sql;
+  return completed.has(name) ? [] : [{ name, sql: appliedSql, sha256 }];
 });
 const pending = unapplied.filter(entry => phase === 'all' || (phase === 'schema' ? entry.name.startsWith('0004_') : !entry.name.startsWith('0004_')));
-if (action === 'upgrade' && phase === 'content' && !['rate_limits', 'view_totals', 'view_events'].every(name => tableNames.has(name))) throw new Error('Apply the schema phase before upgrading content.');
+if (action === 'upgrade' && phase === 'content' && !(['rate_limits', 'view_totals', 'view_events'].every(name => tableNames.has(name)) && itemColumns.has('featured'))) throw new Error('Apply the schema phase before upgrading content.');
 console.log(JSON.stringify({ phase, target: remote ? 'remote' : 'local', ...status(), hasFeaturedColumn: itemColumns.has('featured'), pending: pending.map(entry => entry.name) }, null, 2));
 if (action === 'upgrade' && pending.length) {
   mkdirSync('.backups', { recursive: true, mode: 0o700 });

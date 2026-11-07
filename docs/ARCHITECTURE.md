@@ -19,7 +19,7 @@
 
 | 表 | 关键约束 | 用途 |
 | --- | --- | --- |
-| items | id 主键；category/date 复合索引 | 内容与 Markdown 正文 |
+| items | id 主键；category/date 复合索引；featured 精选标记 | 内容与 Markdown 正文 |
 | ratings | UNIQUE(item_id, fingerprint)；score 1–5 | 每匿名身份一个评分，可覆盖 |
 | view_totals | item_id 主键、外键级联删除 | 浏览总数，首次读取旧 KV 基线 |
 | view_events | PRIMARY KEY(item_id, fingerprint, bucket) | 整点小时去重；插入触发器递增总数 |
@@ -45,7 +45,7 @@
 
 ## 性能选择
 
-首页只读取 12 条列表、3 条精选和分类计数；分类页同样分页。列表 SELECT 不包含 body；相关推荐在数据库内 LIMIT 3。列表排序附带 id，日期相同仍有稳定顺序。搜索页面载入全部元数据而非完整正文，150ms 防抖、最多 40 个渲染结果，使用 DocumentFragment，避免 HTML 字符串拼接。
+首页只读取 12 条列表、最多 6 条精选和分类计数；分类页同样分页。列表 SELECT 不包含 body；相关推荐在数据库内 LIMIT 3。列表排序附带 id，日期相同仍有稳定顺序。搜索页面载入全部元数据而非完整正文，150ms 防抖、最多 40 个渲染结果，使用 DocumentFragment，避免 HTML 字符串拼接。
 
 静态 `_astro` 资源不可变缓存。SSR/API 使用 no-store，保证后台更新和访问控制不被共享缓存污染。没有上线未经失效设计的全局内容缓存；未来条目量较大时应改为 D1 FTS / 服务端搜索、游标分页，并基于实测流量加缓存失效。
 
@@ -53,4 +53,4 @@
 
 ## 发布与内容一致性
 
-使用 Astro Cloudflare 适配器原生生成的 Worker 配置，服务端模块与公开 assets 目录隔离。内容仍以 D1 为准；图片以带哈希文件名的 WebP 随代码发布。已有数据库采用备份后分阶段升级：先安全表结构、再发布 Worker 和资源、最后更新内容与封面路径。升级脚本只处理审核过的增量迁移，不重放历史 REPLACE 种子。远端 main 的 CSR 架构尚未合并进本分支，边界与发布步骤见 DEPLOYMENT.md。
+使用 Astro Cloudflare 适配器原生生成的 Worker 配置，服务端模块与公开 assets 目录隔离。内容仍以 D1 为准；图片以带哈希文件名的 WebP 随代码发布。已有数据库采用备份后分阶段升级：先安全表结构、再发布 Worker 和资源、最后更新内容与封面路径。升级脚本只处理审核过的增量迁移，不重放历史 REPLACE 种子。远端的 Logo、后台精选和公开 API 已整合为相同 Worker 的 SSR / API 服务。Cloudflare 构建在发布前只读检查 D1 表结构；未迁移时停止新发布。步骤见 DEPLOYMENT.md。

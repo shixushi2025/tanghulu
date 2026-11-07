@@ -93,6 +93,9 @@ if (!item) return Astro.redirect('/admin/dashboard');
             </div>
           </div>
 
+          <label for="f-featured" class="flex items-center gap-2 text-sm text-stone-700">
+            <input id="f-featured" type="checkbox" checked={item.featured} /> 首页精选
+          </label>
           <div class="flex gap-3">
             <a href="/admin/dashboard" class="flex-1 px-4 py-2.5 text-sm text-center border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors">取消</a>
             <button type="submit" id="submit-btn" class="flex-1 px-4 py-2.5 text-sm bg-stone-900 text-white rounded-lg hover:opacity-90 transition-opacity font-medium">保存</button>

@@ -25,8 +25,11 @@ test('已有 D1 分阶段升级：备份、保留后台编辑与 featured、匿�
     `);
     run([wrangler, 'd1', 'execute', 'tanghulu-db', '--config', config, '--local', '--file', seed]);
     assert.equal(JSON.parse(release('status')).items, 55);
+    const gate = () => run(['scripts/check-cloudflare-db.mjs', '--local', '--config', config]);
+    assert.throws(gate, /D1 schema is not ready/);
     assert.throws(() => release('upgrade', '--phase', 'content'), /Apply the schema phase/);
     release('upgrade', '--phase', 'schema');
+    assert.match(gate(), /Read-only release check passed/);
     assert.equal(query('SELECT COUNT(*) AS n FROM items')[0].n, 55);
     assert.equal(query("SELECT cover FROM items WHERE id='atomic-habits'")[0].cover, '');
     query("INSERT INTO view_totals(item_id,count) VALUES ('quiet',23)");
@@ -37,7 +40,7 @@ test('已有 D1 分阶段升级：备份、保留后台编辑与 featured、匿�
     assert.match(query("SELECT cover FROM items WHERE id='atomic-habits'")[0].cover, /^\/images\/covers\/atomic-habits-/);
     assert.deepEqual(query("SELECT score,fingerprint FROM ratings WHERE item_id='quiet'")[0], { score: 4, fingerprint: 'legacy:1' });
     assert.equal(query("SELECT count FROM view_totals WHERE item_id='quiet'")[0].count, 23);
-    assert.equal(query('SELECT COUNT(*) AS n FROM tanghulu_release_migrations')[0].n, 4);
+    assert.equal(query('SELECT COUNT(*) AS n FROM tanghulu_release_migrations')[0].n, 5);
     const snapshot = query('SELECT * FROM items ORDER BY id');
     release('upgrade');
     assert.deepEqual(query('SELECT * FROM items ORDER BY id'), snapshot);

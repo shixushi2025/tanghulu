@@ -21,6 +21,9 @@ function database() {
   return { sqlite, db };
 }
 test('内容校验：去重、中文分隔和缺省场景保留', () => {
+  assert.equal(parseItemInput(sample, [], true).data.featured, true);
+  assert.equal(parseItemInput({ ...sample, featured: false }, [], true).data.featured, false);
+  assert.ok('error' in parseItemInput({ ...sample, featured: 'true' }));
   assert.deepEqual(parseItemInput(sample).data.tags, ['读书', '学习']);
   assert.deepEqual(parseItemInput({ ...sample, mood: undefined }).data.mood, []);
   const { mood, ...without } = sample;

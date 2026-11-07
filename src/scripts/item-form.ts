@@ -25,7 +25,8 @@ form.addEventListener('submit', async event => {
   error.hidden = true;
   error.classList.remove('hidden');
   const itemId = form.dataset.itemId;
-  const payload = Object.fromEntries(['title', 'summary', 'body', 'category', 'date', 'country', 'tags', 'mood', 'cover', 'link'].map(name => [name, field(name)]));
+  const payload: Record<string, string | boolean> = Object.fromEntries(['title', 'summary', 'body', 'category', 'date', 'country', 'tags', 'mood', 'cover', 'link'].map(name => [name, field(name)]));
+  payload.featured = requiredElement('#f-featured', HTMLInputElement).checked;
   if (!itemId) payload.id = field('id');
   try {
     const response = await fetch(itemId ? `/api/admin/items/${encodeURIComponent(itemId)}` : '/api/admin/items', {
@@ -34,7 +35,7 @@ form.addEventListener('submit', async event => {
     const result: unknown = await response.json();
     if (!response.ok) throw new Error(result && typeof result === 'object' && 'error' in result ? String(result.error) : '保存失败');
     dirty = false;
-    location.href = `/item/${encodeURIComponent(itemId || payload.id)}`;
+    location.href = `/item/${encodeURIComponent(itemId || String(payload.id))}`;
   } catch (cause) {
     error.textContent = cause instanceof Error ? cause.message : '网络错误，请重试';
     error.hidden = false;

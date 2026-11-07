@@ -95,6 +95,7 @@ test('后台创建、编辑、删除完整流程', async ({ page }) => {
   await page.locator('#f-title').fill('端到端测试内容'); await page.locator('#f-id').fill('e2e-created');
   await page.locator('#f-summary').fill('一条可编辑和删除的内容');
   await page.locator('#f-cover').fill(imageFixtures.obsidian.src);
+  await page.getByLabel('首页精选', { exact: true }).check();
   await page.locator('#f-body').fill('## 测试正文\n\n可以阅读。<script>globalThis.injected=true</script><img src="x" onerror="globalThis.injected=true">');
   await page.getByRole('button', { name: '创建', exact: true }).click();
   await expect(page).toHaveURL(/item\/e2e-created/);
@@ -106,6 +107,8 @@ test('后台创建、编辑、删除完整流程', async ({ page }) => {
   expect(invalid.status()).toBe(400);
   expect((await page.request.put('/api/admin/items/e2e-created', { headers, data: { body: 'x'.repeat(200001) } })).status()).toBe(413);
   await page.goto('/admin/items/e2e-created/edit');
+  await expect(page.getByLabel('首页精选', { exact: true })).toBeChecked();
+  expect((await (await page.request.get('/api/items/e2e-created')).json()).item.featured).toBe(true);
   await page.locator('#f-title').fill('已更新的测试内容');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('已更新的测试内容');
@@ -155,4 +158,20 @@ test('书封、海报、Logo 完整加载，图片失效自动回退', async ({ 
   await expect(page.locator('.detail-poster [data-image-error="true"]')).toHaveCount(1);
   await expect(page.locator('.detail-poster__art')).toBeVisible();
   await expect(page.locator('.detail-poster img')).not.toBeVisible();
+});
+
+
+test('保留公开 API、站点地图和精选选择，管理会话仍受保护', async ({ request }) => {
+  expect((await request.get('/api/health')).ok()).toBeTruthy();
+  const home = await (await request.get('/api/home')).json();
+  expect(home.items.length).toBe(63);
+  expect(home.featured.every(item => item.featured)).toBeTruthy();
+  const selected = await (await request.get('/api/items?featured=1')).json();
+  expect(selected.items.every(item => item.featured)).toBeTruthy();
+  expect((await (await request.get('/api/stats')).json()).total).toBe(63);
+  expect((await (await request.get('/api/items/atomic-habits')).json()).item.featured).toBe(true);
+  expect((await (await request.get('/api/items/atomic-habits/related')).json()).items.length).toBeGreaterThan(0);
+  expect((await request.get('/api/items?category=__proto__')).status()).toBe(400);
+  expect((await request.get('/api/admin/session')).status()).toBe(401);
+  expect(await (await request.get('/api/sitemap.xml')).text()).toContain('https://tanghulu.life/item/atomic-habits');
 });

@@ -1,4 +1,5 @@
 ---
+featured: true
 title: ChatGPT
 category: tool
 tags:
