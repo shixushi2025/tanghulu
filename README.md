@@ -68,3 +68,4 @@ npm audit
 - [内容维护](docs/CONTENT.md)：新条目、增量导入与编辑规范
 - [部署说明](DEPLOYMENT.md)：环境配置、迁移、备份与回滚
 - [本轮范围](specs/project-refresh/requirements.md)、[页面设计](specs/project-refresh/design.md)
+- [收尾核对](specs/completeness-review/audit.md)：逐项验收证据、发布记录与仍需补充的信息
