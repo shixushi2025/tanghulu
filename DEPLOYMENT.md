@@ -41,6 +41,8 @@ Cloudflare [Workers Static Assets](https://developers.cloudflare.com/workers/sta
 
 cf 与 Wrangler 的 OAuth 会话独立，本次 cf 授权有效；不能把 Wrangler 登录过期理解为所有 Cloudflare 工具均不可用。cf 控制面操作保留现有 Wrangler 构建和发布流程，无需转换项目配置。重新部署到其他账号或项目时，仍须核实 D1 / KV 绑定和域名归属，按 schema → 代码与图片 → content 顺序升级。
 
+后续内容与异常流程发布：`6098a20` 的 Workers Build `7b4c4759-4ff7-40fb-86a4-b46deeebff5b` 成功，Worker 版本 `1f55bb23-fd05-4403-882a-45d30da2ac9d`。新节目封面在线逐字节校验后，导出 D1 备份并应用 0008；现有 63 条内容、61 张封面、6 条发布迁移。GitHub Verify [44107749808](https://github.com/shixushi2025/tanghulu/actions/runs/44107749808) 全部通过。HTTP 验收通过不能替代用户设备访问验收；此前报告的浏览器打不开仍待实际错误信息定位。
+
 `prebuild` 检测到 `CF_PAGES=1` 会明确停止旧 Pages 构建，避免把静态文件发布到没有 API 的项目。旧 Pages 检查失败是迁移保护，不表示已切换。`postbuild` 在 Workers Builds 执行只读 D1 表结构检查：缺表、缺精选字段或无读取权限均阻止发布。普通本地构建和 GitHub 测试不访问生产库。代码发布不自动修改 D1，不重放历史种子。
 
 默认不要启用绑定生产 D1 的分支预览部署。需要预览时使用独立 Worker、D1、KV 配置与独立 Secret，再启用对应分支构建。
