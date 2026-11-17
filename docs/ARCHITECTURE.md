@@ -62,3 +62,12 @@ Astro 在构建阶段输出静态多页面模板，没有服务端适配器或�
 ## 发布与内容一致性
 
 静态资源只放在 `dist/`，Worker 入口在 `worker/index.ts`，一次发布；`wrangler.toml` 是唯一配置。内容仍以 D1 为准，图片以哈希 WebP 随代码发布。已有数据库先备份，再按 schema → 发布代码和图片 → content 顺序升级，不重放 REPLACE 种子。Workers Builds 发布前只读检查表结构；旧 Pages 构建被显式阻止。生产域名已核实绑定该 Worker；main 已接入 Workers Builds，旧 Pages 自动构建已关闭，详见 DEPLOYMENT.md。
+
+
+## 管理工作台与编辑框架
+
+`AdminLayout` 统一导航、主要内容区域和后台样式；`ItemForm` 在新建与编辑路由共用，保留同一字段校验和加载锁。表单获得会话及原始数据后才开放保存，读取失败时不能提交空白内容。`ImagePicker` 只选择已随站点发布的图片，不从浏览器上传到 Worker 文件系统；封面预览的来源标签按当前图片地址匹配。Markdown 预览与详情均调用 `renderMarkdown` 白名单清洗。
+
+受认证的 `GET /api/admin/collection` 接收 `q`（标题、ID、摘要，100 字上限）、`cat`、`coverage=missing|present`、`featured=1|0`、`sort=newest|oldest|title`、`page`。查询参数化、搜索通配符按字面转义，每页 12 条；正文不进入列表，最后一页越界会规范化，空结果保持第 1/1 页。`GET /api/admin/overview` 通过聚合查询返回分类计数、总数、已填写封面数和精选数，不下载全部条目做统计。两者沿用统一鉴权和 no-store 响应。
+
+图表展示当前内容数量，封面覆盖率仅表示存在地址，不冒充图片实时可用率或流量趋势。每条图表和统计卡链接至具体筛选列表。搜索页保持本地 Fuse 的现有规模策略；内容显著增长后应单独评估服务端搜索，后台已不依赖全量下载。

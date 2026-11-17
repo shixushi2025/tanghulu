@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:workers';
 import type { WorkerRoute } from '../types';
-import { getItemPage, getAllItems, getItemById, getItemsByCategory, getFeaturedItems, getRelatedItems, countByCategory } from '../../src/lib/db';
+import { getItemPage, getContentOverview, getAllItems, getItemById, getItemsByCategory, getFeaturedItems, getRelatedItems, countByCategory } from '../../src/lib/db';
 import { allCategories, visibleCategories } from '../../src/lib/categories';
 import { HttpError } from '../../src/lib/http';
 import { isValidId } from '../../src/lib/validation';
@@ -11,6 +11,16 @@ export const GET: WorkerRoute = async ({ params, url }) => {
   const path = params.path ?? '';
   const db = env.TANGHULU_DB;
   if (path === 'health' || path === 'admin/session') return Response.json({ ok: true });
+  if (path === 'admin/overview') return Response.json(await getContentOverview(db));
+  if (path === 'admin/collection') {
+    const category = url.searchParams.get('cat') ?? '';
+    const coverage = url.searchParams.get('coverage') ?? '';
+    const featured = url.searchParams.get('featured') ?? '';
+    const sort = url.searchParams.get('sort') ?? 'newest';
+    const query = (url.searchParams.get('q') ?? '').trim();
+    if ((category && !allCategories.includes(category as typeof allCategories[number])) || !['', 'missing', 'present'].includes(coverage) || !['', '1', '0'].includes(featured) || !['newest', 'oldest', 'title'].includes(sort) || query.length > 100) throw new HttpError(400, '无效筛选条件');
+    return Response.json(await getItemPage(db, { category, coverage, featured: featured ? featured === '1' : undefined, query, sort, page: pageNumber(url.searchParams.get('page')) }));
+  }
   if (path === 'collection') {
     const category = url.searchParams.get('cat') ?? '';
     if (category && !allCategories.includes(category as typeof allCategories[number])) throw new HttpError(400, '无效分类');

@@ -1,10 +1,62 @@
 import { api, load, adminSession, type Item } from './client';
 import { requiredElement } from '../lib/dom';
+import { isCoverUrl } from '../lib/validation';
+import { imageMetadata } from '../lib/images';
+import { renderMarkdown } from '../lib/markdown';
 const form = requiredElement('#item-form', HTMLFormElement);
 const button = requiredElement('#submit-btn', HTMLButtonElement);
 const error = requiredElement('#form-error', HTMLElement);
 const title = requiredElement('#f-title', HTMLInputElement);
 const id = document.querySelector<HTMLInputElement>('#f-id');
+const coverInput = requiredElement('#f-cover', HTMLInputElement);
+const coverPreview = requiredElement('#cover-preview', HTMLElement);
+const coverStatus = requiredElement('#cover-preview-status', HTMLElement);
+const library = requiredElement('#cover-library', HTMLSelectElement);
+let coverRevision = 0;
+function previewCover() {
+  const revision = ++coverRevision;
+  coverPreview.replaceChildren();
+  const source = coverInput.value.trim();
+  library.value = source;
+  if (!source) { coverStatus.textContent = '尚未填写封面，将显示分类占位图。'; return; }
+  if (!isCoverUrl(source)) { coverStatus.textContent = '请使用站内封面路径或有效的 HTTP(S) 图片地址。'; return; }
+  coverStatus.textContent = '正在加载封面…';
+  const image = new Image(); image.alt = '当前封面预览'; image.referrerPolicy = 'no-referrer';
+  image.addEventListener('load', () => {
+    if (revision !== coverRevision) return;
+    const metadata = imageMetadata(source);
+    coverStatus.textContent = `${image.naturalWidth} × ${image.naturalHeight}${metadata ? ` · ${metadata.provider}` : ' · 请确认图片来源与使用许可'}`;
+  }, { once: true });
+  image.addEventListener('error', () => {
+    if (revision !== coverRevision) return;
+    image.remove(); coverStatus.textContent = '图片无法加载，请检查地址。读者将看到分类占位图。';
+  }, { once: true });
+  image.src = source; coverPreview.append(image);
+}
+let coverTimer: ReturnType<typeof setTimeout>;
+coverInput.addEventListener('input', () => { clearTimeout(coverTimer); coverTimer = setTimeout(previewCover, 300); });
+library.addEventListener('change', () => {
+  if (!library.value) return;
+  clearTimeout(coverTimer); coverInput.value = library.value;
+  coverInput.dispatchEvent(new Event('input', { bubbles: true }));
+});
+const body = requiredElement('#f-body', HTMLTextAreaElement);
+const bodyPreview = requiredElement('#body-preview', HTMLElement);
+const previewToggle = requiredElement('#body-preview-toggle', HTMLButtonElement);
+let bodyRevision = 0;
+async function previewBody() {
+  const revision = ++bodyRevision;
+  const { html } = await renderMarkdown(body.value);
+  if (revision === bodyRevision) bodyPreview.innerHTML = html || '<p>正文还是空的，写点推荐理由吧。</p>';
+}
+previewToggle.addEventListener('click', () => {
+  const expanded = previewToggle.getAttribute('aria-expanded') !== 'true';
+  previewToggle.setAttribute('aria-expanded', String(expanded)); bodyPreview.hidden = !expanded;
+  previewToggle.textContent = expanded ? '收起预览' : '预览正文';
+  if (expanded) void previewBody();
+});
+let bodyTimer: ReturnType<typeof setTimeout>;
+body.addEventListener('input', () => { clearTimeout(bodyTimer); if (!bodyPreview.hidden) bodyTimer = setTimeout(() => { void previewBody(); }, 200); });
 const field = (name: string) => {
   const element = document.querySelector(`#f-${name}`);
   if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement)) throw new Error(`Missing field: ${name}`);
@@ -59,7 +111,9 @@ load(async () => {
     }
     requiredElement('#f-featured', HTMLInputElement).checked = item.featured;
     document.title = `编辑 · ${item.title}`;
-    const preview = document.querySelector<HTMLAnchorElement>('header a[target="_blank"]'); if (preview) preview.href = `/item/${item.id}`;
+    requiredElement('#editing-title', HTMLElement).textContent = item.title;
+    const preview = document.querySelector<HTMLAnchorElement>('#published-preview'); if (preview) { preview.href = `/item/${encodeURIComponent(item.id)}`; preview.hidden = false; }
   } else requiredElement('#f-date', HTMLInputElement).value = new Date().toISOString().slice(0, 10);
+  previewCover();
   form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLButtonElement>('input, select, textarea, button').forEach(field => { field.disabled = false; });
 });

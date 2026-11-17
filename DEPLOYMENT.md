@@ -1,6 +1,6 @@
 # 单个 Cloudflare Worker：静态前端、API、图片与 D1
 
-项目使用 **Astro 7 静态输出 + 一个独立 Worker + D1 / KV**。Node.js 22.19+，建议 24 LTS；使用 `npm ci` 安装锁定依赖。没有 Astro 服务端适配器，不生成 Pages 或 SSR 产物。
+项目使用 **Astro 7 静态输出 + 一个独立 Worker + D1 / KV**。Node.js 22.23.4+，建议 24 LTS；使用 `npm ci` 安装锁定依赖。没有 Astro 服务端适配器，不生成 Pages 或 SSR 产物。
 
 ## 官方方案与路由
 

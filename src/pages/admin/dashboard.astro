@@ -1,155 +1,38 @@
 ---
-import { categoryConfig } from '../../lib/categories';
-import '../../styles/global.css';
-
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { allCategories, categoryConfig } from '../../lib/categories';
 ---
-
-<!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Dashboard · Admin</title>
-  </head>
-  <body class="admin-shell bg-stone-50 text-stone-900 antialiased min-h-screen">
-
-    <!-- Admin Header -->
-    <header class="sticky top-0 z-50 bg-white border-b border-stone-200">
-      <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <a href="/" class="flex items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors text-sm">
-            <img src="/favicon.svg" alt="" class="w-5 h-5" />
-            <span>糖葫芦</span>
-          </a>
-          <span class="text-stone-300">/</span>
-          <span class="font-semibold text-sm">Admin</span>
-        </div>
-        <div class="flex items-center gap-3">
-          <a href="/admin/items/new" class="px-3 py-1.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity">
-            + 新增
-          </a>
-          <button id="logout-btn" class="px-3 py-1.5 text-sm text-stone-500 hover:text-stone-900 transition-colors">
-            退出
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <p id="load-status" role="status">正在加载内容…</p><button id="load-retry" hidden>重新加载</button>
-    <main class="max-w-6xl mx-auto px-4 py-8">
-
-      <!-- Stats -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        {(['film','book','tool','health','podcast'] as const).map(key => (
-          <a href={`/admin/dashboard?cat=${key}`} class={`bg-white border rounded-xl p-4 hover:border-stone-300 transition-colors border-stone-200`}>
-            <div data-admin-count={key} class="text-2xl font-bold text-stone-900">—</div>
-            <div class="text-sm text-stone-400 mt-0.5">{categoryConfig[key].label}</div>
-          </a>
-        ))}
-        <a href="/admin/dashboard" class={`bg-white border rounded-xl p-4 hover:border-stone-300 transition-colors border-stone-200`}>
-          <div data-admin-count="" class="text-2xl font-bold text-stone-900">—</div>
-          <div class="text-sm text-stone-400 mt-0.5">全部</div>
-        </a>
-      </div>
-
-      <!-- Search filter -->
-      <div class="flex gap-3 mb-6">
-        <form action="/admin/dashboard" method="get" class="flex gap-2 flex-1">
-
-          <input
-            name="q"
-            aria-label="搜索内容标题"
-
-            placeholder="搜索标题…"
-            class="flex-1 px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-stone-400"
-          />
-          <button type="submit" class="px-4 py-2 bg-stone-100 text-stone-700 text-sm rounded-lg hover:bg-stone-200 transition-colors">搜索</button>
-          {<a href="/admin/dashboard" class="px-4 py-2 text-stone-500 text-sm rounded-lg hover:bg-stone-100 transition-colors self-center">清空</a>}
-        </form>
-      </div>
-
-      <!-- Table -->
-      <div class="bg-white border border-stone-200 rounded-xl overflow-hidden">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="border-b border-stone-100 text-left">
-              <th class="px-4 py-3 font-medium text-stone-500 w-2/5">标题</th>
-              <th class="px-4 py-3 font-medium text-stone-500 hidden sm:table-cell">分类</th>
-              <th class="px-4 py-3 font-medium text-stone-500 hidden md:table-cell">日期</th>
-              <th class="px-4 py-3 font-medium text-stone-500 hidden lg:table-cell">国家/地区</th>
-              <th class="px-4 py-3 font-medium text-stone-500 text-right">操作</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-
-      </div>
-    </main>
-
-    <dialog id="modal" aria-labelledby="modal-heading">
-      <h2 id="modal-heading" class="text-xl mb-3">确认删除</h2>
-      <p class="mb-5">删除「<span id="modal-title"></span>」及其评分、浏览数据？此操作不可撤销。</p>
-      <p id="delete-error" role="alert" hidden class="text-red-700 mb-4"></p>
-      <div class="flex gap-3">
-        <button id="modal-cancel" class="button button--secondary" autofocus>取消</button>
-        <button id="modal-confirm" class="button button--primary">确认删除</button>
-      </div>
-    </dialog>
-    <script>
-      import { api, load, adminSession, escapeHtml, type Item } from '../../scripts/client';
-      import { categoryConfig } from '../../lib/categories';
-      import { requiredElement } from '../../lib/dom';
-      const modal = requiredElement('#modal', HTMLDialogElement);
-      const title = requiredElement('#modal-title', HTMLElement);
-      const confirm = requiredElement('#modal-confirm', HTMLButtonElement);
-      const error = requiredElement('#delete-error', HTMLElement);
-      let pendingId = '';
-      document.querySelector('tbody')!.addEventListener('click', event => {
-        const button = (event.target as Element).closest<HTMLButtonElement>('.delete-btn');
-        if (!button) return;
-        pendingId = button.dataset.id ?? '';
-        title.textContent = button.dataset.title ?? '';
-        error.hidden = true; modal.showModal();
-      });
-      load(async () => {
-        await adminSession();
-        const { items } = await api<{ items: Item[] }>('/api/items');
-        const query = new URLSearchParams(location.search);
-        const q = query.get('q') ?? ''; const category = query.get('cat') ?? '';
-        const search = document.querySelector<HTMLInputElement>('input[name="q"]')!; search.value = q;
-        if (category && !document.querySelector('input[name="cat"]')) { const hidden = document.createElement('input'); hidden.type = 'hidden'; hidden.name = 'cat'; hidden.value = category; search.form!.append(hidden); }
-        document.querySelectorAll<HTMLElement>('[data-admin-count]').forEach(element => { element.textContent = String(items.filter(item => !element.dataset.adminCount || item.category === element.dataset.adminCount).length); });
-        const filtered = items.filter(item => (!q || item.title.toLowerCase().includes(q.toLowerCase())) && (!category || item.category === category));
-        document.querySelector('tbody')!.innerHTML = filtered.length ? filtered.map(item => `<tr class="border-b border-stone-100">
-          <td class="px-4 py-3"><a href="/item/${encodeURIComponent(item.id)}" class="font-medium">${escapeHtml(item.title)}</a><div class="text-xs text-stone-400">${escapeHtml(item.id)}</div></td>
-          <td class="px-4 py-3 hidden sm:table-cell">${escapeHtml(categoryConfig[item.category]?.label ?? item.category)}</td>
-          <td class="px-4 py-3 hidden md:table-cell">${escapeHtml(item.date)}</td>
-          <td class="px-4 py-3 hidden lg:table-cell">${escapeHtml(item.country || '—')}</td>
-          <td class="px-4 py-3 text-right"><a class="px-2.5 py-1 text-xs bg-stone-100 rounded-md" href="/admin/items/${encodeURIComponent(item.id)}/edit">编辑</a> <button class="delete-btn px-2.5 py-1 text-xs text-red-600 bg-red-50 rounded-md" data-id="${escapeHtml(item.id)}" data-title="${escapeHtml(item.title)}">删除</button></td>
-        </tr>`).join('') : '<tr><td colspan="5" class="px-4 py-12 text-center">没有内容</td></tr>';
-      });
-      requiredElement('#modal-cancel', HTMLButtonElement).addEventListener('click', () => modal.close());
-      confirm.addEventListener('click', async () => {
-        if (!pendingId || confirm.disabled) return;
-        confirm.disabled = true;
-        confirm.textContent = '删除中…';
-        try {
-          const response = await fetch(`/api/admin/items/${encodeURIComponent(pendingId)}`, { method: 'DELETE' });
-          if (!response.ok) throw new Error('删除失败，请检查登录状态后重试。');
-          location.reload();
-        } catch (cause) { error.textContent = cause instanceof Error ? cause.message : '网络错误'; error.hidden = false; }
-        finally { confirm.disabled = false; confirm.textContent = '确认删除'; }
-      });
-      const logout = requiredElement('#logout-btn', HTMLButtonElement);
-      logout.addEventListener('click', async () => {
-        logout.disabled = true;
-        try {
-          const response = await fetch('/api/admin/logout', { method: 'POST' });
-          if (!response.ok) throw new Error();
-          location.href = '/admin';
-        } catch { logout.textContent = '退出失败，点击重试'; logout.disabled = false; }
-      });
-    </script>
-  </body>
-</html>
+<AdminLayout title="内容工作台">
+  <button slot="actions" id="logout-btn" type="button">退出</button>
+  <section class="admin-heading"><div><p class="section-kicker">CONTENT STUDIO</p><h1>把每一颗，整理好。</h1><p>浏览内容、补齐封面，再把值得的放到首页。</p></div><a class="button button--primary" href="/admin/items/new"><Icon name="plus" />新增内容</a></section>
+  <p id="load-status" class="admin-status" role="status">正在加载内容…</p><button id="load-retry" class="button button--secondary" hidden>重新加载</button>
+  <noscript><p>管理内容需要 JavaScript，请启用后重试。</p></noscript>
+  <section class="admin-metrics" aria-label="内容概况">
+    <a href="/admin/dashboard"><Icon name="grid" /><span>全部内容</span><strong data-metric="total">—</strong><small>查看完整内容库 →</small></a>
+    <a href="/admin/dashboard?featured=1"><Icon name="star" /><span>标记为精选</span><strong data-metric="featured">—</strong><small>首页最多展示 6 条 →</small></a>
+    <a href="/admin/dashboard?coverage=present"><Icon name="image" /><span>已配封面</span><strong data-metric="withCover">—</strong><small>检查图片与 Logo →</small></a>
+    <a href="/admin/dashboard?coverage=missing"><Icon name="image" /><span>待补封面</span><strong data-metric="missing">—</strong><small>打开待整理清单 →</small></a>
+  </section>
+  <section class="admin-overview" aria-labelledby="overview-title">
+    <div><p class="section-kicker">LIBRARY AT A GLANCE</p><h2 id="overview-title"><Icon name="chart" />内容分布</h2><p>按当前内容数量统计。点选分类，继续整理。</p><p id="coverage-summary" role="status"></p><progress id="coverage-progress" max="100" value="0" aria-label="封面地址覆盖率"></progress><small>统计已填写的封面地址，不代表图片实时可用性。</small></div>
+    <ul id="category-chart" class="admin-chart" aria-label="各分类内容数量">
+      {allCategories.map(key => <li><a href={`/admin/dashboard?cat=${key}`} style={`--bar-color:${categoryConfig[key].accent}`}><span>{categoryConfig[key].label}</span><span class="admin-chart__track" aria-hidden="true"><i data-bar={key}></i></span><strong data-admin-count={key}>—</strong></a></li>)}
+    </ul>
+  </section>
+  <section class="admin-library" aria-labelledby="library-title">
+    <div class="admin-library__heading"><h2 id="library-title">内容库</h2><span id="result-count" role="status"></span></div>
+    <form action="/admin/dashboard" method="get" class="admin-filters">
+      <label class="admin-filter-query">搜索内容<input type="search" name="q" maxlength="100" placeholder="标题、ID 或摘要" /></label>
+      <label>分类<select aria-label="分类" name="cat"><option value="">全部分类</option>{allCategories.map(key => <option value={key}>{categoryConfig[key].label}</option>)}</select></label>
+      <label>封面<select aria-label="封面" name="coverage"><option value="">全部封面</option><option value="missing">待补封面</option><option value="present">已配封面</option></select></label>
+      <label>精选<select aria-label="精选" name="featured"><option value="">全部内容</option><option value="1">已标记精选</option><option value="0">未标记精选</option></select></label>
+      <label>排序<select aria-label="排序" name="sort"><option value="newest">最新收录</option><option value="oldest">最早收录</option><option value="title">标题排序</option></select></label>
+      <button class="button button--primary" type="submit">筛选</button><a class="admin-reset" href="/admin/dashboard">清空</a>
+    </form>
+    <div class="admin-table-wrap"><table class="admin-table"><caption class="sr-only">内容条目与编辑操作</caption><thead><tr><th scope="col">内容</th><th scope="col">分类 / 状态</th><th scope="col" class="admin-date">收录日期</th><th scope="col">操作</th></tr></thead><tbody></tbody></table></div>
+    <nav id="admin-pagination" class="pagination" aria-label="内容分页"></nav>
+  </section>
+  <dialog id="modal" aria-labelledby="modal-heading"><h2 id="modal-heading">确认删除</h2><p>删除「<span id="modal-title"></span>」及其评分、浏览数据？此操作不可撤销。</p><p id="delete-error" role="alert" hidden></p><div class="admin-dialog-actions"><button id="modal-cancel" class="button button--secondary" autofocus>取消</button><button id="modal-confirm" class="button button--primary">确认删除</button></div></dialog>
+  <script>import '../../scripts/dashboard';</script>
+</AdminLayout>

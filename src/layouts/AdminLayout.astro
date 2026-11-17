@@ -1,0 +1,20 @@
+---
+import '../styles/global.css';
+import '../styles/admin.css';
+interface Props { title: string; editor?: boolean }
+const { title, editor = false } = Astro.props;
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="robots" content="noindex,nofollow" /><link rel="icon" type="image/svg+xml" href="/favicon.svg" /><title>{title} · 糖葫芦</title></head>
+  <body class="admin-shell antialiased min-h-screen">
+    <a class="skip-link" href="#admin-main">跳到主要内容</a>
+    <header class="admin-header"><div class="admin-header__inner">
+      <a href="/admin/dashboard" class="admin-brand"><img src="/favicon.svg" alt="" width="28" height="28" /><strong>糖葫芦</strong><span>内容工作台</span></a>
+      <nav aria-label="管理导航"><a href={editor ? '/admin/dashboard' : '/'}>{editor ? '返回工作台' : '查看网站'} <span aria-hidden="true">↗</span></a><slot name="actions" /></nav>
+    </div></header>
+    <main id="admin-main" class:list={['admin-main', { 'admin-main--editor': editor }]}>
+      <slot />
+    </main>
+  </body>
+</html>

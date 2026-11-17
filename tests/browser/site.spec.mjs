@@ -140,6 +140,76 @@ test('并发浏览去重与评分类型边界', async ({ request }) => {
   expect((await request.delete('/api/admin/items/e2e-concurrent', { headers })).ok()).toBeTruthy();
   for (const score of ['5', true, 0, 6, 1.5]) expect((await request.post('/api/ratings/quiet', { headers, data: { score } })).status()).toBe(400);
 });
+test('管理工作台分页、全部分类、组合筛选、图表与手机布局', async ({ page, request }) => {
+  for (const route of ['/api/admin/collection', '/api/admin/overview']) expect((await request.get(route)).status()).toBe(401);
+  await page.goto('/admin'); await page.getByLabel('密码').fill(password); await page.getByRole('button', { name: '登录', exact: true }).click();
+  await expect(page.locator('tbody tr')).toHaveCount(12);
+  await expect(page.locator('[data-metric="total"]')).toHaveText('63');
+  await expect(page.locator('[data-metric="withCover"]')).toHaveText('60');
+  await expect(page.locator('#category-chart li')).toHaveCount(12);
+  await page.getByRole('link', { name: '下一页 →', exact: true }).click();
+  await expect(page).toHaveURL(/page=2/); await expect(page.locator('tbody tr')).toHaveCount(12);
+  await page.getByLabel('分类', { exact: true }).selectOption('camera');
+  await page.getByRole('button', { name: '筛选', exact: true }).click();
+  await expect(page.locator('tbody tr')).toHaveCount(1); await expect(page.locator('tbody')).toContainText('富士 X100VI');
+  await page.getByLabel('分类', { exact: true }).selectOption('');
+  await page.getByLabel('封面', { exact: true }).selectOption('missing');
+  await page.getByRole('button', { name: '筛选', exact: true }).click();
+  await expect(page.locator('tbody tr')).toHaveCount(3); await expect(page.locator('.admin-tag--missing')).toHaveCount(3);
+  await page.getByLabel('搜索内容', { exact: true }).fill('no-such-content');
+  await page.getByRole('button', { name: '筛选', exact: true }).click();
+  await expect(page.locator('.admin-empty')).toContainText('没有符合筛选条件');
+  for (const query of ['cat=__proto__', 'coverage=invalid', 'featured=yes', 'sort=invalid', `q=${'x'.repeat(101)}`]) expect((await page.request.get(`/api/admin/collection?${query}`)).status()).toBe(400);
+  expect((await page.request.get('/api/admin/overview')).headers()['cache-control']).toBe('no-store');
+  await page.goto('/admin/dashboard'); await expect(page.locator('tbody tr')).toHaveCount(12);
+  await page.setViewportSize({ width: 1440, height: 1000 }); await page.screenshot({ path: 'test-results/admin-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: 'test-results/admin-mobile.png', fullPage: true });
+});
+
+test('共用编辑器图库、封面回退、正文安全预览与会话加载保护', async ({ page }) => {
+  expect((await page.request.post('/api/admin/login', { headers, data: { password } })).ok()).toBe(true);
+  await page.goto('/admin/items/atomic-habits/edit');
+  await expect(page.getByLabel('标题', { exact: false })).toHaveValue('掌控习惯');
+  await expect(page.locator('#cover-preview img')).toBeVisible();
+  await page.locator('.editor-gallery summary').click();
+  await page.getByLabel('站内图库', { exact: true }).selectOption(imageFixtures.obsidian.src);
+  await expect(page.locator('#f-cover')).toHaveValue(imageFixtures.obsidian.src);
+  await expect(page.locator('#cover-preview-status')).toContainText('×');
+  await page.locator('#f-cover').fill('/images/covers/not-real.webp');
+  await expect(page.locator('#cover-preview-status')).toContainText('无法加载');
+  await page.locator('#f-body').fill('## 预览标题\n\n正文 <script>window.previewInjected=1</script><img src="x" onerror="window.previewInjected=1">');
+  await page.getByRole('button', { name: '预览正文', exact: true }).click();
+  await expect(page.locator('#body-preview h2')).toHaveText('预览标题');
+  await expect(page.locator('#body-preview script, #body-preview [onerror]')).toHaveCount(0);
+  expect(await page.evaluate(() => window.previewInjected)).toBeUndefined();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await page.screenshot({ path: 'test-results/editor-mobile.png', fullPage: true });
+  page.on('dialog', dialog => dialog.accept());
+  await page.route('**/api/items/atomic-habits', route => route.fulfill({ status: 503, body: '{}' }));
+  await page.reload();
+  await expect(page.getByRole('button', { name: '重新加载' })).toBeVisible();
+  await expect(page.locator('#submit-btn')).toBeDisabled();
+  await page.unroute('**/api/items/atomic-habits');
+  await page.getByRole('button', { name: '重新加载' }).click();
+  await expect(page.locator('#submit-btn')).toBeEnabled();
+});
+
+test('搜索结果显示真实封面，失败仍可使用结果链接', async ({ page }) => {
+  await page.goto('/search?q=obsidian');
+  const result = page.locator('.search-result').filter({ hasText: 'Obsidian' }).first();
+  await expect(result.locator('img')).toBeVisible();
+  await expect.poll(() => result.locator('img').evaluate(img => img.complete && img.naturalWidth > 0)).toBe(true);
+  await page.route('**/images/covers/obsidian-*.webp', route => route.abort());
+  await page.reload();
+  await expect(result.locator('.search-result__visual')).not.toHaveClass(/has-image/);
+  await expect(result.locator('.search-result__visual span')).toBeVisible();
+  await result.click(); await expect(page).toHaveURL(/item\/obsidian/);
+});
+
 test('登录限流最终返回 429', async ({ request }) => {
   let status = 0;
   for (let i = 0; i < 11; i++) status = (await request.post('/api/admin/login', { headers, data: { password: 'wrong' } })).status();
@@ -199,4 +269,27 @@ test('API 失败可重试，未知 API 和静态资源不会退回首页', async
   expect((await request.get('/images/covers/missing.webp')).status()).toBe(404);
   expect((await request.get('/admin/dashboard', { maxRedirects: 0 })).status()).toBe(302);
   const head = await request.head('/item/atomic-habits'); expect(head.status()).toBe(200); expect(await head.text()).toBe('');
+});
+
+test('只读列表并发与响应体积预算', async ({ request }, testInfo) => {
+  const timings = [];
+  let maximumBytes = 0;
+  const started = performance.now();
+  for (let batch = 0; batch < 10; batch++) {
+    await Promise.all(Array.from({ length: 4 }, async (_, index) => {
+      const start = performance.now();
+      const response = await request.get(`/api/collection?cat=tool&page=${index % 3 + 1}`);
+      expect(response.ok()).toBe(true);
+      const body = await response.body(); maximumBytes = Math.max(maximumBytes, body.byteLength);
+      const value = JSON.parse(body.toString());
+      expect(value.items.length).toBeLessThanOrEqual(12);
+      expect(value.items.every(item => item.body === '')).toBe(true);
+      expect(body.byteLength).toBeLessThan(32000);
+      timings.push(performance.now() - start);
+    }));
+  }
+  timings.sort((a, b) => a - b);
+  const report = { environment: 'isolated local Worker / D1; not production capacity', requests: timings.length, concurrency: 4, durationMs: Math.round(performance.now() - started), p50Ms: Math.round(timings[Math.floor(timings.length * 0.5)]), p95Ms: Math.round(timings[Math.ceil(timings.length * 0.95) - 1]), maximumBytes };
+  await testInfo.attach('read-only-performance', { body: JSON.stringify(report, null, 2), contentType: 'application/json' });
+  console.log('Read-only performance:', JSON.stringify(report));
 });

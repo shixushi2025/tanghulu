@@ -6,7 +6,7 @@ import { createToken, verifyToken, getAdminToken, tokenCookie, clearCookie, pass
 import { parseItemInput, isValidId, isHttpUrl, isCoverUrl } from '../src/lib/validation.ts';
 import { readJson, assertSameOrigin, secureResponse } from '../src/lib/http.ts';
 import { fingerprint, rateLimit } from '../src/lib/security.ts';
-import { getItemPage, getItemById } from '../src/lib/db.ts';
+import { getItemPage, getItemById, getContentOverview } from '../src/lib/db.ts';
 import { pageNumber, browseUrl } from '../src/lib/browse.ts';
 
 const sample = { title: '测试', category: 'book', summary: '内容摘要', date: '2024-02-29', body: '正文', tags: '读书，学习,读书', mood: ['深夜'] };
@@ -114,4 +114,29 @@ test('原子登录限流在超过阈值后拒绝', async () => {
 test('分页参数拒绝异常值并正确编码', () => {
   for (const value of ['-1', 'Infinity', '1.2', 'x']) assert.equal(pageNumber(value), 1);
   assert.equal(browseUrl('/', 'book', 'oldest', 2), '/?cat=book&sort=oldest&page=2#collection');
+});
+
+test('管理查询组合筛选、字面通配符、稳定分页及覆盖统计', async () => {
+  const { db, sqlite } = database();
+  try {
+    const overview = await getContentOverview(db);
+    assert.equal(overview.total, 63); assert.equal(overview.withCover, 60);
+    assert.equal(Object.values(overview.counts).reduce((a, b) => a + b, 0), overview.total);
+    assert.equal(overview.featured, sqlite.prepare('SELECT COUNT(*) AS n FROM items WHERE featured=1').get().n);
+    const missing = await getItemPage(db, { coverage: 'missing' });
+    assert.equal(missing.total, 3); assert.ok(missing.items.every(item => !item.cover));
+    const selected = await getItemPage(db, { category: 'book', coverage: 'present', featured: true });
+    assert.ok(selected.total > 0); assert.ok(selected.items.every(item => item.category === 'book' && item.cover && item.featured));
+    const second = await getItemPage(db, { category: 'tool', page: 2 });
+    const first = await getItemPage(db, { category: 'tool', page: 1 });
+    assert.equal(second.items.length, 12); assert.equal(first.items.length, 12);
+    assert.ok(!second.items.some(item => first.items.some(other => item.id === other.id)));
+    assert.ok(second.items.every(item => item.body === ''));
+    for (const query of ["' OR 1=1 --", '%', '_', '\\']) assert.equal((await getItemPage(db, { query })).total, 0);
+    assert.equal((await getItemPage(db, { query: 'atomic-habits' })).items[0].id, 'atomic-habits');
+    assert.equal((await getItemPage(db, { page: NaN, size: -20 })).items.length, 1);
+    assert.equal((await getItemPage(db, { size: 999 })).items.length, 50);
+    const empty = await getItemPage(db, { query: 'no-such-item', page: 900 });
+    assert.deepEqual([empty.total, empty.page, empty.pages, empty.items.length], [0, 1, 1, 0]);
+  } finally { sqlite.close(); }
 });

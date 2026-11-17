@@ -2284,3 +2284,8 @@ button:disabled { cursor: wait; opacity: .65; }
 .detail-cover { margin: 0; min-width: 0; }
 .image-credit { margin-top: 0.8rem; color: var(--muted); font-size: 0.72rem; line-height: 1.6; text-align: center; }
 .image-credit a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Search uses the same real covers as cards and details, preserving logo/cover aspect ratios. */
+.search-result__visual{position:relative;overflow:hidden}
+.search-result__visual.has-image>span{visibility:hidden}
+.search-result__visual img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:8px;background:#fffcf7}

@@ -135,16 +135,36 @@ export async function getRelatedItems(db: D1Database, category: string, id: stri
   return results.map(parseItem);
 }
 
-export async function getItemPage(db: D1Database, options: { category?: string; sort?: string; page?: number; size?: number }) {
-  const { category = '', sort = 'newest', page = 1, size = 12 } = options;
-  const where = category ? 'WHERE category=?' : '';
-  const args = category ? [category] : [];
+export async function getItemPage(db: D1Database, options: { category?: string; sort?: string; page?: number; size?: number; query?: string; coverage?: string; featured?: boolean }) {
+  const { category = '', sort = 'newest', page = 1, query = '', coverage = '', featured } = options;
+  const size = Number.isSafeInteger(options.size) ? Math.min(50, Math.max(1, options.size!)) : 12;
+  const clauses: string[] = [];
+  const args: (string | number)[] = [];
+  if (category) { clauses.push('category=?'); args.push(category); }
+  if (query) {
+    // Treat wildcard characters as literal search text; never interpolate user input into SQL.
+    const like = `%${query.slice(0, 100).replace(/[\\%_]/g, '\\$&')}%`;
+    clauses.push("(title LIKE ? ESCAPE '\\' OR id LIKE ? ESCAPE '\\' OR summary LIKE ? ESCAPE '\\')");
+    args.push(like, like, like);
+  }
+  if (coverage === 'missing') clauses.push("TRIM(COALESCE(cover, ''))=''");
+  if (coverage === 'present') clauses.push("TRIM(COALESCE(cover, ''))<>''");
+  if (featured !== undefined) { clauses.push('featured=?'); args.push(featured ? 1 : 0); }
+  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
   const total = await db.prepare(`SELECT COUNT(*) as count FROM items ${where}`).bind(...args).first<{ count: number }>();
   const pages = Math.max(1, Math.ceil((total?.count ?? 0) / size));
-  const current = Math.min(Math.max(1, page), pages);
+  const current = Math.min(Number.isSafeInteger(page) ? Math.max(1, page) : 1, pages);
   const order = sort === 'title' ? 'title COLLATE NOCASE, id' : sort === 'oldest' ? 'date ASC, id' : 'date DESC, id';
   const { results } = await db.prepare(`SELECT ${SUMMARY_COLUMNS} FROM items ${where} ORDER BY ${order} LIMIT ? OFFSET ?`).bind(...args, size, (current - 1) * size).all();
   return { items: results.map(parseItem), total: total?.count ?? 0, pages, page: current };
+}
+
+export async function getContentOverview(db: D1Database) {
+  const [counts, summary] = await Promise.all([
+    countByCategory(db),
+    db.prepare("SELECT COUNT(*) AS total, COALESCE(SUM(CASE WHEN TRIM(COALESCE(cover, ''))<>'' THEN 1 ELSE 0 END), 0) AS withCover, COALESCE(SUM(CASE WHEN featured=1 THEN 1 ELSE 0 END), 0) AS featured FROM items").first<{ total: number; withCover: number; featured: number }>(),
+  ]);
+  return { counts, total: summary?.total ?? 0, withCover: summary?.withCover ?? 0, featured: summary?.featured ?? 0 };
 }
 
 export async function getFeaturedItems(db: D1Database): Promise<Item[]> {

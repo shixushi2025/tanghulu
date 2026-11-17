@@ -1,0 +1,7 @@
+---
+import registry from '../data/images.json';
+const images = Object.entries(registry).sort(([a], [b]) => a.localeCompare(b));
+---
+<p class="editor-help">填写图片地址，或从已收录的站内图库选择。Logo、书封和海报均按原比例显示。</p>
+<details class="editor-gallery"><summary>从站内图库选择（{images.length} 张）</summary><label class="sr-only" for="cover-library">站内图库</label><select id="cover-library"><option value="">请选择与内容相符的图片</option>{images.map(([id, image]) => <option value={image.src}>{image.alt} · {id}</option>)}</select><p class="editor-help">仅选择与当前内容相符的素材，来源署名会随图片自动显示。</p></details>
+<div class="editor-preview"><div id="cover-preview"></div><p id="cover-preview-status" role="status">尚未填写封面，将显示分类占位图。</p></div>

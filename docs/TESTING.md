@@ -39,7 +39,7 @@ npm audit
 | 并发 | 同一访客 12 个并发浏览请求 | 只增加 1；接口均成功 |
 | 生产 CSP | 菜单、搜索与后台脚本 | 无内联执行脚本，无 CSP 控制台错误 |
 
-对应文件：`tests/unit.test.mjs`（22 个测试）、`tests/content.test.mjs`（3 个数据测试）、`tests/images.test.mjs`（2 个图片测试）、`tests/browser/site.spec.mjs`（12 个流程）、`tests/release.test.mjs`（已有库分阶段升级集成测试）。浏览器控制台 pageerror 和 CSP 错误会直接使测试失败。失败时保存 Playwright trace；成功时保存桌面与手机截图至 `test-results/`。
+对应文件：`tests/unit.test.mjs`（23 个测试）、`tests/content.test.mjs`（3 个数据测试）、`tests/images.test.mjs`（2 个图片测试）、`tests/browser/site.spec.mjs`（16 个流程）、`tests/release.test.mjs`（已有库分阶段升级集成测试）。浏览器控制台 pageerror 和 CSP 错误会直接使测试失败。失败时保存 Playwright trace；成功时保存桌面与手机截图至 `test-results/`。
 
 ## 本轮验证记录
 
@@ -52,3 +52,14 @@ npm audit
 - 用实际目标设备检查 iOS Safari／Android WebView；本轮浏览器自动化仅覆盖 Chromium。
 - 若要承诺容量，需在隔离环境定义并实测 p95 延迟、错误率与 D1 预算。本轮没有对生产施压，也不宣称负载容量指标。
 - 无障碍自动与人工检查可继续扩展屏幕阅读器、真实封面与长标题等场景。
+
+
+## 功能完整性复核结果
+
+本轮在 Node 24.22.1 / Astro 7.4.12 / Chromium 上重新执行 `npm run verify`：类型检查 0 错误、0 警告；23 单元 + 3 内容 + 2 图片 + 1 分阶段发布 + 16 浏览器，共 45 项通过。`npm audit` 为 0 个已知漏洞。不是沿用上次结果。
+
+新增验证：后台未登录查询统计与分页返回 401；分类/封面/精选/排序非法枚举及超长搜索返回 400；分页、组合筛选、全部 12 类统计与空状态一致；SQL 特殊字符不扩大查询；管理列表不读取正文。编辑器图库选择、有效/失效封面、清洗后的 Markdown 预览、原数据加载失败时禁止保存、重试后恢复均通过。搜索真实图片和加载失败回退通过。后台与编辑器 390px 无横向溢出，检查了生成的桌面与手机截图。
+
+只读性能样本：独立本地 Worker / D1，4 并发、共 40 次分页请求，全部成功；本次总耗时 110ms，p50 9ms、p95 12ms，最大响应 4,931 字节。测试门槛为成功响应、每页最多 12 条、不包含正文内容、响应小于 32KB；延迟作为观测值记录，不以易波动的本地时间充当生产 SLA。结果随 Playwright 附件保存。
+
+生产首页与健康接口在本轮检查中均为 200；这不证明用户此前报告的浏览器访问错误已经消失。生产发布结果须单独核实。真实 Safari/Android WebView、生产压力容量及额外素材核实仍在后续验收清单中。

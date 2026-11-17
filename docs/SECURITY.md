@@ -30,3 +30,10 @@
 锁文件更新到兼容安全版本。`@tailwindcss/typography` 固定依赖的旧 selector parser 存在复杂度漏洞，使用同主版本 `postcss-selector-parser ^6.1.5` override（[漏洞及修复版本公告](https://github.com/advisories/GHSA-rj75-hqrm-r3gf)）；保留构建和浏览器测试验证兼容。升级 typography 后检查是否可移除此覆盖。
 
 每次升级运行 `npm audit`、`npm run verify`。禁止无评估使用 `npm audit fix --force` 做破坏性降级。
+
+
+## 工作台扩展的安全约束
+
+管理统计和分页接口由 Worker 的 `/api/admin/` 鉴权边界保护；不能只依赖后台页面跳转。分类、封面状态、精选状态及排序为枚举，搜索最多 100 字，SQL 参数绑定且 `%` / `_` / 反斜杠按字面匹配。表格文本经过转义，图片通过 DOM 属性赋值，失效时显示占位。编辑器 Markdown 预览使用与详情相同的清洗器；页面中的脚本及事件属性不会进入预览 DOM。
+
+本站未启用 `@astrojs/node` 图片服务，也不以不可信输入决定 Astro 元素名。依赖审计仍需跟进 [动态标签 XSS 公告](https://github.com/withastro/astro/security/advisories/GHSA-mh32-jxcr-mh9f) 与 [Node 图片端点公告](https://github.com/withastro/astro/security/advisories/GHSA-r3h5-4585-7x3w)，并验证升级后的构建与浏览器行为，不能因当前触发条件不同而长期忽略升级。

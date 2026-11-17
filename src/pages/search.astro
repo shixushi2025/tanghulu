@@ -69,7 +69,7 @@ const popularQueries = ['AI 编程', '深夜', '睡眠', '通勤', '科幻', '�
     import type { FuseResult } from 'fuse.js';
     import Fuse from 'fuse.js';
 
-    interface SearchItem { id: string; title: string; summary: string; category: string; categoryLabel: string; categoryShortLabel: string; accent: string; tint: string; tags: string[]; mood: string[]; country: string }
+    interface SearchItem { cover: string; id: string; title: string; summary: string; category: string; categoryLabel: string; categoryShortLabel: string; accent: string; tint: string; tags: string[]; mood: string[]; country: string }
     import { api, load, type Item } from '../scripts/client';
     import { categoryConfig } from '../lib/categories';
     const searchItems: SearchItem[] = [];
@@ -132,6 +132,11 @@ const popularQueries = ['AI 编程', '深夜', '睡眠', '通勤', '科幻', '�
         const visual = createElement('div', 'search-result__visual');
         visual.setAttribute('aria-hidden', 'true');
         visual.append(createElement('span', '', item.categoryShortLabel));
+        if (item.cover) {
+          const image = document.createElement('img'); image.alt = ''; image.loading = 'lazy'; image.decoding = 'async'; image.referrerPolicy = 'no-referrer';
+          image.addEventListener('error', () => { image.remove(); visual.classList.remove('has-image'); }, { once: true });
+          image.src = item.cover; visual.classList.add('has-image'); visual.append(image);
+        }
 
         const body = createElement('div', 'search-result__body');
         const meta = createElement('div', 'search-result__meta');
