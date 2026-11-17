@@ -464,9 +464,18 @@
     },
     {
       "id": "podcast-stochastic",
-      "reviewed": "2026-11-06",
-      "status": "pending",
-      "sources": []
+      "reviewed": "2026-11-17",
+      "status": "verified",
+      "sources": [
+        {
+          "url": "https://www.xiaoyuzhoufm.com/podcast/5e7cc741418a84a046b0c2bd",
+          "title": "随机波动节目官方发布页"
+        },
+        {
+          "url": "https://www.xiaoyuzhoufm.com/episode/6af3e97ce3f66b332520c2d7",
+          "title": "随机波动第 181 期官方单集说明"
+        }
+      ]
     },
     {
       "id": "quiet",

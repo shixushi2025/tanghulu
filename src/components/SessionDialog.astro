@@ -1,0 +1,10 @@
+<dialog id="session-dialog" aria-labelledby="session-heading">
+  <form id="session-form">
+    <h2 id="session-heading">登录已过期</h2>
+    <p>重新登录后继续这次操作，已填写的内容会留在当前页面。</p>
+    <label for="session-password">管理密码</label>
+    <input id="session-password" type="password" autocomplete="current-password" required maxlength="1024" autofocus />
+    <p id="session-error" role="alert" hidden></p>
+    <div class="admin-dialog-actions"><button id="session-cancel" class="button button--secondary" type="button">暂不登录</button><button id="session-submit" class="button button--primary" type="submit">登录并继续</button></div>
+  </form>
+</dialog>

@@ -19,7 +19,7 @@ load(async () => {
   fragment.querySelector<HTMLElement>('.detail-contexts')!.hidden = !item.mood.length;
   const external = fragment.querySelector<HTMLAnchorElement>('.detail-actions a')!;
   external.hidden = !item.link; external.href = item.link || '#';
-  external.textContent = (item.category === 'tool' ? `打开 ${item.title}` : item.category === 'film' ? '去豆瓣看看' : item.category === 'podcast' ? '去听听' : item.category === 'book' ? '查看这本书' : '打开原页面') + ' ↗';
+  external.textContent = (item.category === 'tool' ? `打开 ${item.title}` : item.category === 'film' ? '查看影片资料' : item.category === 'podcast' ? '去听听' : item.category === 'book' ? '查看这本书' : '打开原页面') + ' ↗';
   // Only the server's sanitized Markdown enters this HTML sink; ordinary text is escaped.
   fragment.querySelector('.detail-article')!.innerHTML = `<p class="reading-meta">约 ${Math.max(1, Math.ceil(item.body.length / 400))} 分钟阅读 · 供你慢慢挑选</p>${html || '<p>这颗内容的详细介绍正在整理中。</p>'}`;
   const navigation = fragment.querySelector<HTMLElement>('.reading-nav')!;

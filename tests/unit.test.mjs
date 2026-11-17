@@ -7,6 +7,7 @@ import { parseItemInput, isValidId, isHttpUrl, isCoverUrl } from '../src/lib/val
 import { readJson, assertSameOrigin, secureResponse } from '../src/lib/http.ts';
 import { fingerprint, rateLimit } from '../src/lib/security.ts';
 import { getItemPage, getItemById, getContentOverview } from '../src/lib/db.ts';
+import { adminDestination, adminLoginUrl } from '../src/lib/admin-navigation.ts';
 import { pageNumber, browseUrl } from '../src/lib/browse.ts';
 
 const sample = { title: '测试', category: 'book', summary: '内容摘要', date: '2024-02-29', body: '正文', tags: '读书，学习,读书', mood: ['深夜'] };
@@ -120,11 +121,11 @@ test('管理查询组合筛选、字面通配符、稳定分页及覆盖统计',
   const { db, sqlite } = database();
   try {
     const overview = await getContentOverview(db);
-    assert.equal(overview.total, 63); assert.equal(overview.withCover, 60);
+    assert.equal(overview.total, 63); assert.equal(overview.withCover, 61);
     assert.equal(Object.values(overview.counts).reduce((a, b) => a + b, 0), overview.total);
     assert.equal(overview.featured, sqlite.prepare('SELECT COUNT(*) AS n FROM items WHERE featured=1').get().n);
     const missing = await getItemPage(db, { coverage: 'missing' });
-    assert.equal(missing.total, 3); assert.ok(missing.items.every(item => !item.cover));
+    assert.equal(missing.total, 2); assert.ok(missing.items.every(item => !item.cover));
     const selected = await getItemPage(db, { category: 'book', coverage: 'present', featured: true });
     assert.ok(selected.total > 0); assert.ok(selected.items.every(item => item.category === 'book' && item.cover && item.featured));
     const second = await getItemPage(db, { category: 'tool', page: 2 });
@@ -139,4 +140,11 @@ test('管理查询组合筛选、字面通配符、稳定分页及覆盖统计',
     const empty = await getItemPage(db, { query: 'no-such-item', page: 900 });
     assert.deepEqual([empty.total, empty.page, empty.pages, empty.items.length], [0, 1, 1, 0]);
   } finally { sqlite.close(); }
+});
+
+test('管理登录恢复只允许本站管理页面，拒绝外部与伪装地址', () => {
+  for (const value of [null, '', 'https://evil.example', '//evil.example/admin/dashboard', '/api/admin/items', '/admin/../api/items', '/admin/%2e%2e/api/items', '/admin/items/../new', '/admin/dashboard/extra', '/admin/unknown', '/admin/dashboard' + '?x='.repeat(1000)]) assert.equal(adminDestination(value), '/admin/dashboard');
+  assert.equal(adminDestination('/admin/items/atomic-habits/edit'), '/admin/items/atomic-habits/edit');
+  assert.equal(adminDestination('/admin/dashboard?cat=book&page=2#ignored'), '/admin/dashboard?cat=book&page=2');
+  assert.equal(adminLoginUrl('/admin/items/new'), '/admin?next=%2Fadmin%2Fitems%2Fnew');
 });

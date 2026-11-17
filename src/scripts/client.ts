@@ -2,6 +2,7 @@ import type { Item } from '../lib/db';
 import { categoryConfig } from '../lib/categories';
 import { imageMetadata } from '../lib/images';
 import { initializeCovers } from './covers';
+import { adminLoginUrl } from '../lib/admin-navigation';
 export type { Item };
 export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
 export async function api<T>(path: string): Promise<T> {
@@ -69,5 +70,5 @@ export function cards(target: Element, items: Item[], featured = false, offset =
 }
 export async function adminSession() {
   try { await api('/api/admin/session'); }
-  catch (error) { if (error instanceof ApiError && error.status === 401) location.replace('/admin'); throw error; }
+  catch (error) { if (error instanceof ApiError && error.status === 401) location.replace(adminLoginUrl(location.pathname + location.search)); throw error; }
 }

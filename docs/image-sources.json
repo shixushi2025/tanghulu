@@ -733,16 +733,24 @@
       "kind": "photo",
       "storage": "local",
       "reviewed": "2026-11-06"
+    },
+    {
+      "id": "podcast-stochastic",
+      "kind": "artwork",
+      "sourceUrl": "https://bts-image.xyzcdn.net/aHR0cHM6Ly9jZG4uZmlyZXNpZGUuZm0vZmlsZS9maXJlc2lkZS1pbWFnZXMtMjAyNC9wb2RjYXN0cy9pbWFnZXMvYS9hMDUwNzVkNS00ZjNhLTQ1YWMtYWZmZi01ODBmNzk1YzVkNzcvY292ZXIuanBnP3Y9MQ==.jpg",
+      "sourcePage": "https://www.xiaoyuzhoufm.com/podcast/5e7cc741418a84a046b0c2bd",
+      "provider": "节目官方发布页（小宇宙）",
+      "edition": "节目封面",
+      "storage": "local",
+      "rights": "节目封面归原权利人所有，仅用于对应播客的识别与介绍，不表示开放许可。",
+      "reviewed": "2026-11-17",
+      "alt": "随机波动 Stochastic Volatility 蓝色节目封面"
     }
   ],
   "pending": [
     {
       "id": "eight-sleep",
-      "reason": "尚未取得匹配且可核对的图片"
-    },
-    {
-      "id": "podcast-stochastic",
-      "reason": "尚未取得匹配且可核对的图片"
+      "reason": "本站作息记录编辑练习，没有对应品牌或作品封面，使用品牌占位图"
     },
     {
       "id": "podcast-kuaikedayu",

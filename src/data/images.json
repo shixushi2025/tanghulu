@@ -432,6 +432,17 @@
     "sourcePage": "https://lexfridman.com/podcast",
     "provider": "官网"
   },
+  "podcast-stochastic": {
+    "src": "/images/covers/podcast-stochastic-d305745317c7.webp",
+    "width": 720,
+    "height": 720,
+    "bytes": 30502,
+    "kind": "artwork",
+    "alt": "随机波动 Stochastic Volatility 蓝色节目封面",
+    "edition": "节目封面",
+    "sourcePage": "https://www.xiaoyuzhoufm.com/podcast/5e7cc741418a84a046b0c2bd",
+    "provider": "节目官方发布页（小宇宙）"
+  },
   "quiet": {
     "src": "/images/covers/quiet-02ee55263c23.webp",
     "width": 475,

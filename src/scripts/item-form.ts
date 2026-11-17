@@ -3,6 +3,7 @@ import { requiredElement } from '../lib/dom';
 import { isCoverUrl } from '../lib/validation';
 import { imageMetadata } from '../lib/images';
 import { renderMarkdown } from '../lib/markdown';
+import { adminRequest } from './admin-request';
 const form = requiredElement('#item-form', HTMLFormElement);
 const button = requiredElement('#submit-btn', HTMLButtonElement);
 const error = requiredElement('#form-error', HTMLElement);
@@ -82,7 +83,7 @@ form.addEventListener('submit', async event => {
   payload.featured = requiredElement('#f-featured', HTMLInputElement).checked;
   if (!itemId) payload.id = field('id');
   try {
-    const response = await fetch(itemId ? `/api/admin/items/${encodeURIComponent(itemId)}` : '/api/admin/items', {
+    const response = await adminRequest(itemId ? `/api/admin/items/${encodeURIComponent(itemId)}` : '/api/admin/items', {
       method: itemId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });
     const result: unknown = await response.json();

@@ -145,7 +145,7 @@ test('管理工作台分页、全部分类、组合筛选、图表与手机布�
   await page.goto('/admin'); await page.getByLabel('密码').fill(password); await page.getByRole('button', { name: '登录', exact: true }).click();
   await expect(page.locator('tbody tr')).toHaveCount(12);
   await expect(page.locator('[data-metric="total"]')).toHaveText('63');
-  await expect(page.locator('[data-metric="withCover"]')).toHaveText('60');
+  await expect(page.locator('[data-metric="withCover"]')).toHaveText('61');
   await expect(page.locator('#category-chart li')).toHaveCount(12);
   await page.getByRole('link', { name: '下一页 →', exact: true }).click();
   await expect(page).toHaveURL(/page=2/); await expect(page.locator('tbody tr')).toHaveCount(12);
@@ -155,7 +155,7 @@ test('管理工作台分页、全部分类、组合筛选、图表与手机布�
   await page.getByLabel('分类', { exact: true }).selectOption('');
   await page.getByLabel('封面', { exact: true }).selectOption('missing');
   await page.getByRole('button', { name: '筛选', exact: true }).click();
-  await expect(page.locator('tbody tr')).toHaveCount(3); await expect(page.locator('.admin-tag--missing')).toHaveCount(3);
+  await expect(page.locator('tbody tr')).toHaveCount(2); await expect(page.locator('.admin-tag--missing')).toHaveCount(2);
   await page.getByLabel('搜索内容', { exact: true }).fill('no-such-content');
   await page.getByRole('button', { name: '筛选', exact: true }).click();
   await expect(page.locator('.admin-empty')).toContainText('没有符合筛选条件');
@@ -208,6 +208,47 @@ test('搜索结果显示真实封面，失败仍可使用结果链接', async ({
   await expect(result.locator('.search-result__visual')).not.toHaveClass(/has-image/);
   await expect(result.locator('.search-result__visual span')).toBeVisible();
   await result.click(); await expect(page).toHaveURL(/item\/obsidian/);
+});
+
+test('管理深链接登录恢复、过期会话续存与取消不丢草稿', async ({ page, context }) => {
+  await page.goto('/admin/items/new');
+  await expect(page).toHaveURL(/admin\/?\?next=/);
+  await page.getByLabel('密码', { exact: true }).fill(password);
+  await page.getByRole('button', { name: '登录', exact: true }).click();
+  await expect(page).toHaveURL(/admin\/items\/new/);
+  await page.locator('#f-title').fill('会话恢复测试'); await page.locator('#f-id').fill('session-recovery');
+  await page.locator('#f-summary').fill('登录过期后仍然保留的摘要');
+  await context.clearCookies();
+  await page.getByRole('button', { name: '创建', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: '登录已过期' })).toBeVisible();
+  await page.getByRole('button', { name: '暂不登录' }).click();
+  await expect(page.locator('#f-summary')).toHaveValue('登录过期后仍然保留的摘要');
+  await expect(page.locator('#form-error')).toBeVisible();
+  await page.getByRole('button', { name: '创建', exact: true }).click();
+  await page.getByLabel('管理密码', { exact: true }).fill(password);
+  await page.getByRole('button', { name: '登录并继续' }).click();
+  await expect(page).toHaveURL(/item\/session-recovery/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('会话恢复测试');
+  expect((await page.request.delete('/api/admin/items/session-recovery', { headers })).ok()).toBe(true);
+});
+
+test('分享复制成功、取消及权限拒绝回退', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async value => { window.sharedUrl = value; } } });
+  });
+  await page.goto('/item/interstellar?source=test#section-1');
+  await page.getByRole('button', { name: /分享这颗/ }).click();
+  await expect(page.locator('#share-feedback')).toContainText('已复制');
+  expect(await page.evaluate(() => window.sharedUrl)).toBe(`${origin}/item/interstellar`);
+  await page.evaluate(() => { Object.defineProperty(navigator, 'share', { configurable: true, value: async () => { throw new DOMException('cancel', 'AbortError'); } }); });
+  await page.getByRole('button', { name: /分享这颗/ }).click();
+  await expect(page.locator('#share-manual')).not.toBeVisible();
+  await expect(page.locator('#share-button')).toBeEnabled();
+  await page.evaluate(() => { Object.defineProperty(navigator, 'share', { configurable: true, value: undefined }); navigator.clipboard.writeText = async () => { throw new Error('denied'); }; });
+  await page.getByRole('button', { name: /分享这颗/ }).click();
+  await expect(page.getByLabel('复制此链接分享')).toHaveValue(`${origin}/item/interstellar`);
+  await expect(page.getByLabel('复制此链接分享')).toBeFocused();
 });
 
 test('登录限流最终返回 429', async ({ request }) => {
@@ -292,4 +333,30 @@ test('只读列表并发与响应体积预算', async ({ request }, testInfo) =>
   const report = { environment: 'isolated local Worker / D1; not production capacity', requests: timings.length, concurrency: 4, durationMs: Math.round(performance.now() - started), p50Ms: Math.round(timings[Math.floor(timings.length * 0.5)]), p95Ms: Math.round(timings[Math.ceil(timings.length * 0.95) - 1]), maximumBytes };
   await testInfo.attach('read-only-performance', { body: JSON.stringify(report, null, 2), contentType: 'application/json' });
   console.log('Read-only performance:', JSON.stringify(report));
+});
+
+
+test('全部分类及主要阅读页面的桌面手机视觉验收', async ({ page }) => {
+  const categories = ['film','book','tool','health','podcast','social','communication','car','camera','creator','video','other'];
+  for (const category of categories) {
+    const response = await page.goto(`/category/${category}`); expect(response.status()).toBe(200);
+    await expect(page.locator('.category-grid .item-card').first()).toBeVisible();
+  }
+  await page.goto('/item/podcast-stochastic');
+  await expect(page.locator('.detail-poster img')).toHaveAttribute('src', imageFixtures['podcast-stochastic'].src);
+  await expect(page.locator('.detail-article')).toContainText('第 181 期');
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const [name, path, ready] of [['detail','/item/podcast-stochastic','.detail-article'],['search','/search?q=AI','.search-result'],['category','/category/book','.category-grid .item-card'],['about','/about','h1'],['login','/admin','h1'],['not-found','/does-not-exist','h1']]) {
+      const response = await page.goto(path); expect(response.status()).toBe(name === 'not-found' ? 404 : 200);
+      await expect(page.locator(ready).first()).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+      await expect.poll(() => page.locator('img').evaluateAll(images => images.filter(image => {
+        const rect = image.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0 && rect.top < innerHeight && rect.bottom > 0;
+      }).every(image => image.complete && image.naturalWidth > 0))).toBe(true);
+      await page.screenshot({ path: `test-results/${name}-${width}.png`, animations: 'disabled' });
+    }
+  }
 });

@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import '../styles/admin.css';
+import SessionDialog from '../components/SessionDialog.astro';
 interface Props { title: string; editor?: boolean }
 const { title, editor = false } = Astro.props;
 ---
@@ -16,5 +17,6 @@ const { title, editor = false } = Astro.props;
     <main id="admin-main" class:list={['admin-main', { 'admin-main--editor': editor }]}>
       <slot />
     </main>
+    <SessionDialog />
   </body>
 </html>

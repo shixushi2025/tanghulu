@@ -87,15 +87,28 @@ export function initializeDetailActions() {
       }
 
       document.getElementById('share-button')?.addEventListener('click', async () => {
-        const button = document.getElementById('share-button');
+        const button = document.querySelector<HTMLButtonElement>('#share-button');
+        const status = document.getElementById('share-feedback');
+        const manual = document.getElementById('share-manual');
+        const input = document.querySelector<HTMLInputElement>('#share-url');
+        if (!button || button.disabled) return;
+        const url = new URL(`/item/${encodeURIComponent(itemId)}`, location.origin).href;
+        button.disabled = true;
+        if (status) status.textContent = '';
+        if (manual) manual.hidden = true;
         try {
           if (navigator.share) {
-            await navigator.share({ title: `${itemTitle} · 糖葫芦`, url: location.href });
+            await navigator.share({ title: `${itemTitle} · 糖葫芦`, url });
           } else {
-            await navigator.clipboard.writeText(location.href);
-            if (button) button.textContent = '链接已复制 ✓';
+            await navigator.clipboard.writeText(url);
+            if (status) status.textContent = '链接已复制，可以粘贴分享了。';
           }
-        } catch (error) { if (button && !(error instanceof DOMException && error.name === 'AbortError')) button.textContent = '复制失败，请复制地址栏链接'; }
+        } catch (error) {
+          if (!(error instanceof DOMException && error.name === 'AbortError')) {
+            if (status) status.textContent = '浏览器未允许直接分享，请复制下方链接。';
+            if (manual && input) { manual.hidden = false; input.value = url; input.focus(); input.select(); }
+          }
+        } finally { button.disabled = false; }
       });
 
       if (itemId) {

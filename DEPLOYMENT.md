@@ -49,13 +49,13 @@ cf 与 Wrangler 的 OAuth 会话独立，本次 cf 授权有效；不能把 Wran
 
 | 内容 | 存放和发布方式 | 更新策略 |
 | --- | --- | --- |
-| 60 张 Logo、书封、海报等 | Git 中的 `public/images/covers/` → `dist/` → Workers Static Assets | 已压缩 WebP，合计约 845 KiB；哈希文件名，一年 immutable 缓存 |
+| 61 张 Logo、书封、海报等 | Git 中的 `public/images/covers/` → `dist/` → Workers Static Assets | 已压缩 WebP，合计约 875 KiB；哈希文件名，一年 immutable 缓存 |
 | 63 条内容、评分、浏览数 | D1；封面字段只存路径 / URL，不存图片二进制 | 后台编辑立即生效；批量补充通过增量 SQL |
 | 历史浏览量 | 现有 `TANGHULU_VIEWS` KV namespace | 保留绑定，首次读取旧基线；新计数写 D1 |
 | 图片出处、版本与许可 | `docs/image-sources.json`、`src/data/images.json`、公开署名文件 | 随图片一起提交，详情显示来源与必要署名 |
 | 管理密码与匿名化密钥 | Worker Secrets；本地 `.dev.vars` | 不进 Git、不进浏览器资源 |
 
-当前规模直接发布静态图片即可，不需要先接 R2 或收费图片处理服务。访问页面时不抓取第三方图片；构建也不联网重新获取图片。`images:sync` 是编辑人员主动运行的离线准备步骤。未确认的三个条目保留占位图。
+当前规模直接发布静态图片即可，不需要先接 R2 或收费图片处理服务。访问页面时不抓取第三方图片；构建也不联网重新获取图片。`images:sync` 是编辑人员主动运行的离线准备步骤。两条内容保留占位图：睡眠记录没有对应品牌封面，「快克大鱼」身份待确认。
 
 以后若需要后台上传图片，再增加私有写入的 R2 bucket、受认证的上传接口和公开图片域名；数据库仍只保存 URL。这个上传功能尚未实现，不能把 Worker 临时文件系统当作持久图片库。
 
@@ -122,10 +122,11 @@ npm run db:status -- --remote
 
 升级脚本执行前检查表结构，每个实际升级阶段先导出数据库到 `.backups/`，导出失败即停止。备份目录被 Git 忽略，文件权限设为 0600，包含私有数据，需妥善保存。用 `--local` 替换 `--remote` 可演练；可附加 `--config <独立 wrangler.toml>` 指向隔离配置；本地数据库保存在该配置所在目录的 `.wrangler/state`。
 
-脚本只运行明确列出的 `0004_featured.sql`、`0004_security_metrics.sql` 至 `0007_content_images.sql`，用独立的 `tanghulu_release_migrations` 记录文件名及 SHA-256。已记录的迁移不重放；已执行文件被改动时拒绝升级。未来新增迁移需要显式加入脚本和测试，不能修改已发布的 SQL。
+脚本只运行明确列出的 `0004_featured.sql`、`0004_security_metrics.sql` 至 `0008_stochastic_verified.sql`，用独立的 `tanghulu_release_migrations` 记录文件名及 SHA-256。已记录的迁移不重放；已执行文件被改动时拒绝升级。未来新增迁移需要显式加入脚本和测试，不能修改已发布的 SQL。
 
 - schema：已有 featured 字段只登记迁移，不重跑 ALTER / 初始精选覆盖；缺字段时添加并初始化。添加安全、限流、浏览计数结构；清除孤立评分，将历史原始 IP 标识匿名化，保留有效评分值。原始身份不能通过代码回滚恢复。
 - content：补齐原有 55 条、新增 8 条；按旧字段精确匹配保护后台编辑；给标题 / 分类相符的空封面配图，保留自定义封面、评分、浏览量以及已有 `featured` 字段。
+- 0008：只在全部旧内容字段匹配时补齐随机波动的核实介绍、来源和封面；先发布新图片，再执行 content 阶段。后台自定义条目跳过，不能强制覆盖。
 - 重复执行安全；迁移记录最后写入，中途中断后可重试这些幂等迁移。执行期间应暂停后台编辑，避免与人工修改竞争。
 
 历史 `0003_seed.sql` 使用 REPLACE，**不要在已有数据库上盲目运行全部 migrations apply**，尤其是旧库曾用 SQL 文件手工初始化、没有 Wrangler 迁移记录的情况。升级脚本不会伪造历史 `d1_migrations`，两套流程不要混用。

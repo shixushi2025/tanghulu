@@ -570,3 +570,8 @@
   }
 }
 
+
+#session-form p { margin: 16px 0; font-size: 14px; color: var(--muted); }
+#session-form label { display: block; margin-bottom: 8px; }
+#session-password { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+#session-error { color: var(--red-dark) !important; }

@@ -238,6 +238,12 @@ podcast-lex
 原图: https://lexfridman.com/wordpress/wp-content/uploads/2026/10/lex_fridman_podcast_social_1200x630.png
 说明: 品牌标识及官网图片归各权利人所有，仅用于对应条目的识别与介绍。
 
+podcast-stochastic
+显示文件: /images/covers/podcast-stochastic-d305745317c7.webp
+来源: https://www.xiaoyuzhoufm.com/podcast/5e7cc741418a84a046b0c2bd
+原图: https://bts-image.xyzcdn.net/aHR0cHM6Ly9jZG4uZmlyZXNpZGUuZm0vZmlsZS9maXJlc2lkZS1pbWFnZXMtMjAyNC9wb2RjYXN0cy9pbWFnZXMvYS9hMDUwNzVkNS00ZjNhLTQ1YWMtYWZmZi01ODBmNzk1YzVkNzcvY292ZXIuanBnP3Y9MQ==.jpg
+说明: 节目封面归原权利人所有，仅用于对应播客的识别与介绍，不表示开放许可。
+
 quiet
 显示文件: /images/covers/quiet-02ee55263c23.webp
 来源: https://susancain.net/book/quiet/

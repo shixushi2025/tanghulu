@@ -1,6 +1,7 @@
 import { api, load, adminSession, escapeHtml, type Item } from './client';
 import { allCategories, categoryConfig } from '../lib/categories';
 import { requiredElement } from '../lib/dom';
+import { adminRequest } from './admin-request';
 const query = new URLSearchParams(location.search);
 const filters = document.querySelector<HTMLFormElement>('.admin-filters')!;
 for (const name of ['q', 'cat', 'coverage', 'featured', 'sort']) {
@@ -63,7 +64,7 @@ confirm.addEventListener('click', async () => {
   if (!pendingId || confirm.disabled) return;
   confirm.disabled = true; confirm.textContent = '删除中…';
   try {
-    const response = await fetch(`/api/admin/items/${encodeURIComponent(pendingId)}`, { method: 'DELETE' });
+    const response = await adminRequest(`/api/admin/items/${encodeURIComponent(pendingId)}`, { method: 'DELETE' });
     if (!response.ok) throw new Error('删除失败，请检查登录状态后重试。');
     location.reload();
   } catch (cause) { error.textContent = cause instanceof Error ? cause.message : '网络错误'; error.hidden = false; }

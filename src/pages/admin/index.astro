@@ -11,7 +11,7 @@ import '../../styles/global.css';
     <title>Admin · 糖葫芦</title>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: var(--sans); background: var(--paper); color: #1c1917; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+      body { font-family: var(--sans); background: var(--paper); color: #1c1917; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
       .card { background: #fff; border: 1px solid #e7e5e4; border-radius: 12px; padding: 2rem; width: 100%; max-width: 360px; }
       .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.125rem; margin-bottom: 1.5rem; }
       .logo img { width: 24px; height: 24px; }
@@ -25,26 +25,29 @@ import '../../styles/global.css';
     </style>
   </head>
   <body>
-    <div class="card">
+    <main class="card"><form id="login-form">
       <a href="/" class="logo">
         <img src="/favicon.svg" alt="" />
         <span>糖葫芦 · 内容工作台</span>
       </a>
+      <h1 style="font-size:1.4rem;margin-bottom:1rem">登录内容工作台</h1>
       <p style="color:var(--muted);font-size:.875rem;margin-bottom:1.5rem">把下一颗值得的，认真串进来。</p>
       <label for="pwd">密码</label>
-      <input id="pwd" type="password" placeholder="输入管理密码" autocomplete="current-password" />
-      <button id="btn">登录</button>
+      <input id="pwd" type="password" required maxlength="1024" placeholder="输入管理密码" autocomplete="current-password" />
+      <button id="btn" type="submit">登录</button>
       <p id="err" class="error" role="alert" hidden></p>
-    </div>
+      <noscript><p class="error">请启用 JavaScript 后登录工作台。</p></noscript>
+    </form></main>
     <script>
       import { requiredElement } from '../../lib/dom';
+      import { adminDestination } from '../../lib/admin-navigation';
       const input = requiredElement('#pwd', HTMLInputElement);
       const btn = requiredElement('#btn', HTMLButtonElement);
       const err = requiredElement('#err', HTMLElement);
 
       async function login() {
         const password = input.value;
-        if (!password) return;
+        if (!password || btn.disabled) return;
         btn.disabled = true;
         err.hidden = true;
         try {
@@ -54,7 +57,7 @@ import '../../styles/global.css';
             body: JSON.stringify({ password }),
           });
           if (res.ok) {
-            location.href = '/admin/dashboard';
+            location.href = adminDestination(new URLSearchParams(location.search).get('next'));
           } else {
             const data = await res.json();
             err.textContent = data.error ?? '登录失败';
@@ -67,8 +70,7 @@ import '../../styles/global.css';
         btn.disabled = false;
       }
 
-      btn.addEventListener('click', login);
-      input.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+      requiredElement('#login-form', HTMLFormElement).addEventListener('submit', event => { event.preventDefault(); void login(); });
       input.focus();
     </script>
   </body>

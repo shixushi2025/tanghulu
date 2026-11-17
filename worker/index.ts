@@ -1,6 +1,7 @@
 import { getAdminToken, verifyToken } from '../src/lib/auth';
 import { assertSameOrigin, HttpError, secureResponse } from '../src/lib/http';
 import { isValidId } from '../src/lib/validation';
+import { adminLoginUrl } from '../src/lib/admin-navigation';
 import * as publicApi from './handlers/public';
 import * as login from './handlers/login';
 import * as logout from './handlers/logout';
@@ -46,7 +47,7 @@ export default {
       }
       if (path.startsWith('/admin/') && path !== '/admin/index.html') {
         try { await requireAdmin(request, env); }
-        catch (error) { if (error instanceof HttpError && error.status === 401) return secureResponse(Response.redirect(new URL('/admin', url), 302), url); throw error; }
+        catch (error) { if (error instanceof HttpError && error.status === 401) return secureResponse(Response.redirect(new URL(adminLoginUrl(path + url.search), url), 302), url); throw error; }
         const edit = path.match(/^\/admin\/items\/([^/]+)\/edit$/);
         if (edit) {
           if (!isValidId(edit[1])) return errorPage(request, env, 404);

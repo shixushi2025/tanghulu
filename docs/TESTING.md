@@ -39,7 +39,7 @@ npm audit
 | 并发 | 同一访客 12 个并发浏览请求 | 只增加 1；接口均成功 |
 | 生产 CSP | 菜单、搜索与后台脚本 | 无内联执行脚本，无 CSP 控制台错误 |
 
-对应文件：`tests/unit.test.mjs`（23 个测试）、`tests/content.test.mjs`（3 个数据测试）、`tests/images.test.mjs`（2 个图片测试）、`tests/browser/site.spec.mjs`（16 个流程）、`tests/release.test.mjs`（已有库分阶段升级集成测试）。浏览器控制台 pageerror 和 CSP 错误会直接使测试失败。失败时保存 Playwright trace；成功时保存桌面与手机截图至 `test-results/`。
+对应文件：`tests/unit.test.mjs`（24 个测试）、`tests/content.test.mjs`（4 个数据测试）、`tests/images.test.mjs`（2 个图片测试）、`tests/browser/site.spec.mjs`（19 个流程）、`tests/release.test.mjs`（已有库分阶段升级集成测试）。浏览器控制台 pageerror 和 CSP 错误会直接使测试失败。失败时保存 Playwright trace；成功时保存桌面与手机截图至 `test-results/`。
 
 ## 本轮验证记录
 
@@ -63,3 +63,9 @@ npm audit
 只读性能样本：独立本地 Worker / D1，4 并发、共 40 次分页请求，全部成功；本次总耗时 110ms，p50 9ms、p95 12ms，最大响应 4,931 字节。测试门槛为成功响应、每页最多 12 条、不包含正文内容、响应小于 32KB；延迟作为观测值记录，不以易波动的本地时间充当生产 SLA。结果随 Playwright 附件保存。
 
 生产首页与健康接口在本轮检查中均为 200；这不证明用户此前报告的浏览器访问错误已经消失。生产发布结果须单独核实。真实 Safari/Android WebView、生产压力容量及额外素材核实仍在后续验收清单中。
+
+## 会话、分享与素材补全验收
+
+本次完整 `npm run verify`：24 单元 + 4 内容 + 2 图片 + 1 发布升级 + 19 浏览器，共 50 项通过，类型检查无错误或警告。新增管理深链接登录返回、失效会话原地续存、取消登录保留草稿、分享成功/取消/权限拒绝回退、0008 内容保护及幂等测试。全部 12 类路由与六种主要页面的 1440px/390px 布局已覆盖。截图等待首屏图片加载完成，再检查布局；不能把图片尚未加载的截图当作视觉验收通过。
+
+本地只读 40 次请求、4 并发，p95 13ms、最大 4,931 字节；仍不是生产容量承诺。新增图片已核对原节目官方发布页。用户的生产浏览器访问问题仍待错误码定位：服务端 HTTP 200 与公共 DNS 正常不能代替用户设备验收。

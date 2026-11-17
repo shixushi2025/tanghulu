@@ -69,6 +69,9 @@ const externalLabel = '打开原页面';
           <button id="share-button" class="button button--secondary" type="button">分享这颗 <span aria-hidden="true">↗</span></button>
         </div>
 
+        <p id="share-feedback" role="status" aria-live="polite" class="share-feedback"></p>
+        <div id="share-manual" class="share-manual" hidden><label for="share-url">复制此链接分享</label><input id="share-url" type="text" readonly /></div>
+
         <div class="detail-stats" aria-label="社区数据">
           <div><strong id="community-avg">—</strong><span>社区评分 / 5</span></div>
           <div><strong id="community-count">—</strong><span>人留下评分</span></div>
