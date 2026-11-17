@@ -251,6 +251,40 @@ test('分享复制成功、取消及权限拒绝回退', async ({ page }) => {
   await expect(page.getByLabel('复制此链接分享')).toBeFocused();
 });
 
+test('分享抓取不执行 JS 也获得真实标题封面，后台更新立即生效且元信息不可注入', async ({ browser, request }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  try {
+    await page.goto(`${origin}/item/interstellar?from=share`);
+    await expect(page).toHaveTitle('星际穿越 · 糖葫芦');
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', 'https://tanghulu.life' + imageFixtures.interstellar.src);
+    await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute('content', String(imageFixtures.interstellar.width));
+    await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', 'https://tanghulu.life/item/interstellar');
+    const head = await request.head('/item/interstellar');
+    expect(head.status()).toBe(200); expect(await head.body()).toHaveLength(0);
+    expect(head.headers()['cache-control']).toBe('no-store'); expect(head.headers().etag).toBeUndefined();
+    expect((await request.get('/item/not-real')).status()).toBe(404);
+
+    expect((await request.post('/api/admin/login', { headers, data: { password } })).ok()).toBeTruthy();
+    const data = { id: 'metadata-probe', title: '测试 </title><img id="injected"> &quot;', category: 'book', summary: '"><script id="injected">bad()</script> & "摘要"', date: '2026-11-17', cover: '', body: '测试' };
+    expect((await request.post('/api/admin/items', { headers, data })).status()).toBe(201);
+    try {
+      await page.goto(`${origin}/item/metadata-probe`);
+      await expect(page).toHaveTitle(data.title + ' · 糖葫芦');
+      await expect(page.locator('meta[name=description]')).toHaveAttribute('content', data.summary);
+      await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', data.title + ' · 糖葫芦');
+      await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute('content', data.summary);
+      await expect(page.locator('#injected')).toHaveCount(0);
+      await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', 'https://tanghulu.life/og.png');
+      expect((await request.put('/api/admin/items/metadata-probe', { headers, data: { ...data, title: '后台已更新', cover: 'https://example.org/custom.webp?a=1&b=2' } })).ok()).toBeTruthy();
+      await page.reload();
+      await expect(page).toHaveTitle('后台已更新 · 糖葫芦');
+      await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', 'https://example.org/custom.webp?a=1&b=2');
+      await expect(page.locator('meta[property="og:image:width"]')).toHaveCount(0);
+    } finally { expect((await request.delete('/api/admin/items/metadata-probe', { headers })).ok()).toBeTruthy(); }
+  } finally { await context.close(); }
+});
+
 test('登录限流最终返回 429', async ({ request }) => {
   let status = 0;
   for (let i = 0; i < 11; i++) status = (await request.post('/api/admin/login', { headers, data: { password: 'wrong' } })).status();

@@ -79,25 +79,31 @@ test('内容升级不清除评分或浏览量，重复执行无副作用', () =>
 });
 
 
-test('已核实节目增量迁移只补旧占位，不覆盖编辑，保留互动且幂等', () => {
-  const migration = readFileSync('migrations/0008_stochastic_verified.sql', 'utf8');
+for (const [file, id, source] of [
+  ['0008_stochastic_verified.sql', 'podcast-stochastic', 'xiaoyuzhoufm.com'],
+  ['0009_book_source.sql', 'zishishinei', 'cces.fudan.edu.cn'],
+]) test(`${id} 核实迁移不覆盖任一字段编辑，保留互动且幂等`, () => {
+  const migration = readFileSync(`migrations/${file}`, 'utf8');
   const db = new DatabaseSync(':memory:');
   try {
-    for (const file of migrations.filter(name => name < '0008')) db.exec(readFileSync(`migrations/${file}`, 'utf8'));
-    const original = db.prepare("SELECT * FROM items WHERE id='podcast-stochastic'").get();
+    for (const prior of migrations.filter(name => name < file)) db.exec(readFileSync(`migrations/${prior}`, 'utf8'));
+    const read = () => db.prepare('SELECT * FROM items WHERE id=?').get(id);
+    const original = read();
     for (const field of columns.filter(name => name !== 'featured')) {
-      db.prepare(`UPDATE items SET ${field}=? WHERE id='podcast-stochastic'`).run(['tags', 'mood'].includes(field) ? '["人工编辑"]' : '人工编辑');
-      const edited = db.prepare("SELECT * FROM items WHERE id='podcast-stochastic'").get();
+      db.prepare(`UPDATE items SET ${field}=? WHERE id=?`).run(['tags', 'mood'].includes(field) ? '["人工编辑"]' : '人工编辑', id);
+      const edited = read();
       db.exec(migration);
-      assert.deepEqual(db.prepare("SELECT * FROM items WHERE id='podcast-stochastic'").get(), edited, field);
-      db.prepare(`UPDATE items SET ${field}=? WHERE id='podcast-stochastic'`).run(original[field]);
+      assert.deepEqual(read(), edited, field);
+      db.prepare(`UPDATE items SET ${field}=? WHERE id=?`).run(original[field], id);
     }
-    db.exec("UPDATE items SET featured=1 WHERE id='podcast-stochastic'; INSERT INTO ratings(item_id,score,fingerprint) VALUES ('podcast-stochastic',4,'migration-reader'); INSERT INTO view_totals(item_id,count) VALUES ('podcast-stochastic',19)");
+    db.prepare('UPDATE items SET featured=1 WHERE id=?').run(id);
+    db.prepare("INSERT INTO ratings(item_id,score,fingerprint) VALUES (?,4,'migration-reader')").run(id);
+    db.prepare('INSERT INTO view_totals(item_id,count) VALUES (?,19)').run(id);
     db.exec(migration);
     const updated = snapshot(db); db.exec(migration); assert.equal(snapshot(db), updated);
-    const item = db.prepare("SELECT * FROM items WHERE id='podcast-stochastic'").get();
-    assert.equal(item.featured, 1); assert.match(item.link, /xiaoyuzhoufm/); assert.match(item.cover, /podcast-stochastic/); assert.ok(!item.summary.includes('待核实'));
-    assert.equal(db.prepare("SELECT score FROM ratings WHERE item_id='podcast-stochastic'").get().score, 4);
-    assert.equal(db.prepare("SELECT count FROM view_totals WHERE item_id='podcast-stochastic'").get().count, 19);
+    const item = read();
+    assert.equal(item.featured, 1); assert.equal(new URL(item.link).hostname, source === 'xiaoyuzhoufm.com' ? 'www.xiaoyuzhoufm.com' : source); assert.ok(item.cover.includes(id)); assert.ok(!item.summary.includes('待核实'));
+    assert.equal(db.prepare('SELECT score FROM ratings WHERE item_id=?').get(id).score, 4);
+    assert.equal(db.prepare('SELECT count FROM view_totals WHERE item_id=?').get(id).count, 19);
   } finally { db.close(); }
 });

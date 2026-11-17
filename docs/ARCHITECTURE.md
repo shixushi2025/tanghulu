@@ -4,7 +4,7 @@
 
 浏览器 → Cloudflare Static Assets（静态 HTML、图片、CSS、JS）；浏览器脚本 → 同源 /api/* → 唯一 Worker → lib 服务 → Cloudflare D1 / KV。
 
-- `worker/index.ts`：请求路由、同源写入检查、管理访问控制、统一错误与安全头；深链接只转发静态模板，不运行 Astro SSR。
+- `worker/index.ts`：请求路由、同源写入检查、管理访问控制、统一错误与安全头；详情深链接补入分享元信息后转发静态模板，不运行 Astro SSR。
 - `worker/handlers/*`：公开内容、后台 CRUD、评分和浏览接口。
 - `src/scripts/client.ts`：有超时的 API 请求、重试状态、安全模板替换和图片渲染。
 - `src/lib/markdown.ts`：Worker 详情解析与后台预览共用白名单清洗；仅编辑页面下载预览解析器。
@@ -77,3 +77,7 @@ Astro 在构建阶段输出静态多页面模板，没有服务端适配器或�
 后台深链接未登录时携带 next 返回登录页；adminDestination 只接受本站管理路由白名单，拒绝外站及非管理路径。写入收到 401 时，admin-request 原地弹出登录框，保留编辑草稿；成功后只重发该次被鉴权拒绝的请求一次。取消保留表单，网络异常不自动重发写操作。密码不存入草稿或本地存储。
 
 详情分享优先系统分享，其次剪贴板；取消系统分享静默结束，权限或其他错误显示可手动选择复制的链接。链接移除查询参数及片段，避免分享筛选或跟踪信息。
+
+`worker/item-metadata.ts` 使用 HTMLRewriter 流式修改详情模板的 head；沿用原有存在性查询，一次 SELECT 只读 ID、标题、摘要和封面，不读正文。标准链接固定生产域名及条目路径，去除查询参数；站内图片转为绝对地址，已登记图片携带真实尺寸，未登记远程图片不伪造尺寸。空封面、非法或 HTTP 封面回退站点分享图；外部 HTTPS 地址只写入元信息，Worker 不主动请求该地址。Logo 使用较适合方形图的 summary 卡片。
+
+标题使用文本写入，meta/link 的值显式 HTML 转义；保留 CSP 与 no-store，移除静态模板的 ETag、Last-Modified 和 Content-Length，防止错误复用模板校验器。后台更新后的下一次详情请求即可读取新元信息。平台自身的分享缓存、裁切和展示规则不由本站控制。

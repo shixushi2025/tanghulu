@@ -8,6 +8,7 @@ import { readJson, assertSameOrigin, secureResponse } from '../src/lib/http.ts';
 import { fingerprint, rateLimit } from '../src/lib/security.ts';
 import { getItemPage, getItemById, getContentOverview } from '../src/lib/db.ts';
 import { adminDestination, adminLoginUrl } from '../src/lib/admin-navigation.ts';
+import { itemMetadata } from '../src/lib/item-metadata.ts';
 import { pageNumber, browseUrl } from '../src/lib/browse.ts';
 
 const sample = { title: '测试', category: 'book', summary: '内容摘要', date: '2024-02-29', body: '正文', tags: '读书，学习,读书', mood: ['深夜'] };
@@ -147,4 +148,19 @@ test('管理登录恢复只允许本站管理页面，拒绝外部与伪装地�
   assert.equal(adminDestination('/admin/items/atomic-habits/edit'), '/admin/items/atomic-habits/edit');
   assert.equal(adminDestination('/admin/dashboard?cat=book&page=2#ignored'), '/admin/dashboard?cat=book&page=2');
   assert.equal(adminLoginUrl('/admin/items/new'), '/admin?next=%2Fadmin%2Fitems%2Fnew');
+});
+
+test('分享元信息使用正确封面尺寸，拒绝非法地址并回退站点图', () => {
+  const item = { id: 'test', title: '<测试> & "引号"', summary: '介绍', cover: '' };
+  assert.equal(itemMetadata(item).canonical, 'https://tanghulu.life/item/test');
+  for (const cover of ['', 'javascript:alert(1)', '//evil.example/img', 'https://a:b@example.org/x', 'http://example.org/x', '/images/covers/../bad.webp']) {
+    const meta = itemMetadata({ ...item, cover });
+    assert.equal(meta.image, 'https://tanghulu.life/og.png'); assert.equal(meta.width, 1536);
+  }
+  const remote = itemMetadata({ ...item, cover: 'https://example.org/custom.webp' });
+  assert.equal(remote.image, 'https://example.org/custom.webp'); assert.equal(remote.width, undefined);
+  const registry = JSON.parse(readFileSync('src/data/images.json', 'utf8'));
+  const local = itemMetadata({ ...item, cover: registry.obsidian.src });
+  assert.equal(local.width, registry.obsidian.width); assert.equal(local.height, registry.obsidian.height);
+  assert.equal(local.card, 'summary'); assert.equal(local.title, '<测试> & "引号" · 糖葫芦');
 });

@@ -704,9 +704,18 @@
     },
     {
       "id": "zishishinei",
-      "reviewed": "2026-11-06",
-      "status": "pending",
-      "sources": []
+      "reviewed": "2026-11-17",
+      "status": "verified",
+      "sources": [
+        {
+          "title": "复旦大学作品与作者介绍",
+          "url": "https://cces.fudan.edu.cn/info/1022/6207.htm"
+        },
+        {
+          "title": "声东击西第 226 期作者访谈",
+          "url": "https://etw.fm/226"
+        }
+      ]
     },
     {
       "id": "zotero",

@@ -20,7 +20,7 @@ const accepted = new Set(['--remote', '--local', '--config', configPath, '--phas
 if (args.some(arg => !accepted.has(arg))) throw new Error('Unknown argument');
 const target = [remote ? '--remote' : '--local'];
 const wrangler = resolve('node_modules/wrangler/bin/wrangler.js');
-const upgrades = ['0004_featured.sql', '0004_security_metrics.sql', '0005_editorial_content.sql', '0006_content_refresh.sql', '0007_content_images.sql', '0008_stochastic_verified.sql'];
+const upgrades = ['0004_featured.sql', '0004_security_metrics.sql', '0005_editorial_content.sql', '0006_content_refresh.sql', '0007_content_images.sql', '0008_stochastic_verified.sql', '0009_book_source.sql'];
 function cli(command, json = false) {
   const result = spawnSync(process.execPath, [wrangler, 'd1', ...command, '--config', resolve(configPath), ...target, ...(json ? ['--json'] : [])], { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024, env: { ...process.env, CI: '1' } });
   if (result.status !== 0) throw new Error(result.stderr || result.stdout || 'Wrangler failed');

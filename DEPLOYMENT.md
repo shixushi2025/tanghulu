@@ -8,11 +8,11 @@ Cloudflare [Workers Static Assets](https://developers.cloudflare.com/workers/sta
 
 - `/`、`/category/*`、`/search`、`/about`、CSS、JS、图片：直接提供 Astro 构建的静态文件。
 - `/api/*`：唯一 Worker 内的 JSON API，查询 D1、验证管理权限、处理评分和统计。
-- `/item/:id`：Worker 检查条目存在后返回静态详情模板；浏览器获取最新正文。未知条目返回真实 404。
+- `/item/:id`：Worker 查询条目 ID、标题、摘要及封面，将最新分享元信息写入静态详情模板；浏览器获取正文。未知条目返回真实 404。
 - `/admin/*`：Worker 验证登录后返回静态后台模板；API 再独立验证权限。静态页面没有内嵌私有数据。
 - `/random`：查询当前 D1 后 302 跳转。
 
-这是静态多页面前端，使用 `404-page`，不把所有未知路径降级成首页。API 导航不会得到 HTML，失效图片和错误链接保持 404。内容需要 JavaScript；搜索引擎及分享抓取器若不执行 JS，只能读取静态模板元信息。当前未实现详情 SEO 预渲染或边缘元信息注入，不能宣称与原 SSR 抓取效果相同。
+这是静态多页面前端，使用 `404-page`，不把所有未知路径降级成首页。API 导航不会得到 HTML，失效图片和错误链接保持 404。Worker 使用官方 [HTMLRewriter](https://developers.cloudflare.com/workers/runtime-apis/html-rewriter/) 为详情响应注入最新标题、摘要、canonical、Open Graph 与 Twitter 封面信息；无需执行 JavaScript 即可读取分享元信息。正文与交互仍通过浏览器 API 加载，未实现全文预渲染，不能宣称完整 SSR 抓取效果。保持 Astro 静态构建和单 Worker，没有增加服务端框架。
 
 ## main 自动部署：Workers Builds
 
@@ -124,11 +124,12 @@ npm run db:status -- --remote
 
 升级脚本执行前检查表结构，每个实际升级阶段先导出数据库到 `.backups/`，导出失败即停止。备份目录被 Git 忽略，文件权限设为 0600，包含私有数据，需妥善保存。用 `--local` 替换 `--remote` 可演练；可附加 `--config <独立 wrangler.toml>` 指向隔离配置；本地数据库保存在该配置所在目录的 `.wrangler/state`。
 
-脚本只运行明确列出的 `0004_featured.sql`、`0004_security_metrics.sql` 至 `0008_stochastic_verified.sql`，用独立的 `tanghulu_release_migrations` 记录文件名及 SHA-256。已记录的迁移不重放；已执行文件被改动时拒绝升级。未来新增迁移需要显式加入脚本和测试，不能修改已发布的 SQL。
+脚本只运行明确列出的 `0004_featured.sql`、`0004_security_metrics.sql` 至 `0009_book_source.sql`，用独立的 `tanghulu_release_migrations` 记录文件名及 SHA-256。已记录的迁移不重放；已执行文件被改动时拒绝升级。未来新增迁移需要显式加入脚本和测试，不能修改已发布的 SQL。
 
 - schema：已有 featured 字段只登记迁移，不重跑 ALTER / 初始精选覆盖；缺字段时添加并初始化。添加安全、限流、浏览计数结构；清除孤立评分，将历史原始 IP 标识匿名化，保留有效评分值。原始身份不能通过代码回滚恢复。
 - content：补齐原有 55 条、新增 8 条；按旧字段精确匹配保护后台编辑；给标题 / 分类相符的空封面配图，保留自定义封面、评分、浏览量以及已有 `featured` 字段。
 - 0008：只在全部旧内容字段匹配时补齐随机波动的核实介绍、来源和封面；先发布新图片，再执行 content 阶段。后台自定义条目跳过，不能强制覆盖。
+- 0009：通过复旦大学作品介绍与作者访谈补齐《置身事内》的来源和正文；全部旧字段匹配才更新，不改变封面、精选、评分和浏览量。
 - 重复执行安全；迁移记录最后写入，中途中断后可重试这些幂等迁移。执行期间应暂停后台编辑，避免与人工修改竞争。
 
 历史 `0003_seed.sql` 使用 REPLACE，**不要在已有数据库上盲目运行全部 migrations apply**，尤其是旧库曾用 SQL 文件手工初始化、没有 Wrangler 迁移记录的情况。升级脚本不会伪造历史 `d1_migrations`，两套流程不要混用。

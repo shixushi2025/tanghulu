@@ -40,7 +40,8 @@ test('已有 D1 分阶段升级：备份、保留后台编辑与 featured、匿�
     assert.match(query("SELECT cover FROM items WHERE id='atomic-habits'")[0].cover, /^\/images\/covers\/atomic-habits-/);
     assert.deepEqual(query("SELECT score,fingerprint FROM ratings WHERE item_id='quiet'")[0], { score: 4, fingerprint: 'legacy:1' });
     assert.equal(query("SELECT count FROM view_totals WHERE item_id='quiet'")[0].count, 23);
-    assert.equal(query('SELECT COUNT(*) AS n FROM tanghulu_release_migrations')[0].n, 6);
+    assert.equal(query('SELECT COUNT(*) AS n FROM tanghulu_release_migrations')[0].n, 7);
+    assert.equal(query("SELECT link FROM items WHERE id='zishishinei'")[0].link, 'https://cces.fudan.edu.cn/info/1022/6207.htm');
     assert.match(query("SELECT cover FROM items WHERE id='podcast-stochastic'")[0].cover, /^\/images\/covers\/podcast-stochastic-/);
     assert.match(query("SELECT link FROM items WHERE id='podcast-stochastic'")[0].link, /xiaoyuzhoufm/);
     const snapshot = query('SELECT * FROM items ORDER BY id');

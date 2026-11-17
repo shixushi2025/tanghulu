@@ -2,6 +2,8 @@ import { getAdminToken, verifyToken } from '../src/lib/auth';
 import { assertSameOrigin, HttpError, secureResponse } from '../src/lib/http';
 import { isValidId } from '../src/lib/validation';
 import { adminLoginUrl } from '../src/lib/admin-navigation';
+import { withItemMetadata } from './item-metadata';
+import type { ItemMetadataSource } from '../src/lib/item-metadata';
 import * as publicApi from './handlers/public';
 import * as login from './handlers/login';
 import * as logout from './handlers/logout';
@@ -42,8 +44,12 @@ export default {
       // Only deep links need a small router. HTML itself is built once by Astro.
       if (path.startsWith('/item/')) {
         const id = path.slice(6);
-        if (!isValidId(id) || !await env.TANGHULU_DB.prepare('SELECT id FROM items WHERE id=?').bind(id).first()) return errorPage(request, env, 404);
-        return shell(request, env, '/item', false);
+        if (!isValidId(id)) return errorPage(request, env, 404);
+        const entry = await env.TANGHULU_DB.prepare('SELECT id,title,summary,cover FROM items WHERE id=?').bind(id).first<ItemMetadataSource>();
+        if (!entry) return errorPage(request, env, 404);
+        const response = withItemMetadata(await shell(new Request(request, { method: 'GET' }), env, '/item', false), entry);
+        if (request.method === 'HEAD') { await response.body?.cancel(); return new Response(null, response); }
+        return response;
       }
       if (path.startsWith('/admin/') && path !== '/admin/index.html') {
         try { await requireAdmin(request, env); }
