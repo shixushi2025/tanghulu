@@ -1,7 +1,27 @@
 ---
 import registry from '../data/images.json';
 const images = Object.entries(registry).sort(([a], [b]) => a.localeCompare(b));
+const kinds: Record<string, string> = { logo: 'Logo', book: '书封', poster: '海报', photo: '照片', artwork: '节目与插画' };
 ---
 <p class="editor-help">填写图片地址，或从已收录的站内图库选择。Logo、书封和海报均按原比例显示。</p>
-<details class="editor-gallery"><summary>从站内图库选择（{images.length} 张）</summary><label class="sr-only" for="cover-library">站内图库</label><select id="cover-library"><option value="">请选择与内容相符的图片</option>{images.map(([id, image]) => <option value={image.src}>{image.alt} · {id}</option>)}</select><p class="editor-help">仅选择与当前内容相符的素材，来源署名会随图片自动显示。</p></details>
+<button class="editor-gallery-open" id="cover-library-open" type="button" aria-haspopup="dialog">浏览站内图库 · {images.length} 张</button>
+<dialog id="cover-library" class="image-library" aria-labelledby="image-library-title">
+  <div class="image-library__header"><div><p class="section-kicker">IMAGE LIBRARY</p><h2 id="image-library-title">为内容选择一张好图</h2></div><button id="cover-library-close" type="button" class="button button--secondary">关闭</button></div>
+  <p class="editor-help">选择与当前内容相符的素材。书封保留版本信息，来源署名随图片显示。</p>
+  <div class="image-library__filters">
+    <div><label for="cover-library-query">搜索图片</label><input id="cover-library-query" type="search" placeholder="名称、英文 ID 或来源" maxlength="100" /></div>
+    <div><label for="cover-library-kind">图片类型</label><select id="cover-library-kind"><option value="">全部类型</option>{Object.entries(kinds).map(([kind, label]) => <option value={kind}>{label}</option>)}</select></div>
+  </div>
+  <p id="cover-library-count" class="editor-help" role="status">共 {images.length} 张图片</p>
+  <ul class="image-library__grid">
+    {images.map(([id, image]) => <li data-library-card data-kind={image.kind} data-search={`${id} ${image.alt} ${image.provider} ${image.edition}`.toLowerCase()}>
+      <button type="button" data-cover-src={image.src} aria-label={`选择 ${image.alt}`} aria-pressed="false">
+        <span class="image-library__visual"><img data-src={image.src} alt="" width={image.width} height={image.height} loading="lazy" decoding="async" /><span class="image-library__unavailable" hidden>预览不可用</span><span class="image-library__selected">已选</span></span>
+        <strong>{image.alt}</strong><small>{kinds[image.kind]}{image.edition ? ` · ${image.edition}` : ''}</small>
+      </button>
+      <a href={image.sourcePage} target="_blank" rel="noopener noreferrer" aria-label={`${image.alt}的图片来源（新窗口）`}>{image.provider} ↗</a>
+    </li>)}
+  </ul>
+  <div id="cover-library-empty" class="image-library__empty" hidden><p>没有找到匹配图片</p><button type="button" id="cover-library-reset">清除筛选</button></div>
+</dialog>
 <div class="editor-preview"><div id="cover-preview"></div><p id="cover-preview-status" role="status">尚未填写封面，将显示分类占位图。</p></div>

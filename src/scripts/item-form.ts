@@ -12,13 +12,46 @@ const id = document.querySelector<HTMLInputElement>('#f-id');
 const coverInput = requiredElement('#f-cover', HTMLInputElement);
 const coverPreview = requiredElement('#cover-preview', HTMLElement);
 const coverStatus = requiredElement('#cover-preview-status', HTMLElement);
-const library = requiredElement('#cover-library', HTMLSelectElement);
+const library = requiredElement('#cover-library', HTMLDialogElement);
+const libraryOpen = requiredElement('#cover-library-open', HTMLButtonElement);
+const libraryQuery = requiredElement('#cover-library-query', HTMLInputElement);
+const libraryKind = requiredElement('#cover-library-kind', HTMLSelectElement);
+const libraryCards = Array.from(library.querySelectorAll<HTMLElement>('[data-library-card]'));
+const libraryButtons = Array.from(library.querySelectorAll<HTMLButtonElement>('[data-cover-src]'));
+function filterLibrary() {
+  const query = libraryQuery.value.trim().toLocaleLowerCase();
+  let count = 0;
+  for (const card of libraryCards) {
+    card.hidden = Boolean((libraryKind.value && card.dataset.kind !== libraryKind.value) || !card.dataset.search?.includes(query));
+    if (!card.hidden) {
+      count++;
+      const image = card.querySelector<HTMLImageElement>('img[data-src]');
+      if (image && library.open && !image.hasAttribute('src')) image.src = image.dataset.src!;
+    }
+  }
+  requiredElement('#cover-library-count', HTMLElement).textContent = `找到 ${count} 张图片`;
+  requiredElement('#cover-library-empty', HTMLElement).hidden = count !== 0;
+}
+libraryOpen.addEventListener('click', () => { library.showModal(); filterLibrary(); libraryQuery.focus(); });
+requiredElement('#cover-library-close', HTMLButtonElement).addEventListener('click', () => library.close());
+library.addEventListener('close', () => libraryOpen.focus());
+// Search is inside the editor form: Enter must never publish the draft.
+libraryQuery.addEventListener('keydown', event => { if (event.key === 'Enter') event.preventDefault(); });
+libraryQuery.addEventListener('input', filterLibrary);
+libraryKind.addEventListener('change', filterLibrary);
+requiredElement('#cover-library-reset', HTMLButtonElement).addEventListener('click', () => {
+  libraryQuery.value = ''; libraryKind.value = ''; filterLibrary(); libraryQuery.focus();
+});
+library.querySelectorAll<HTMLImageElement>('img').forEach(image => image.addEventListener('error', () => {
+  image.hidden = true;
+  const fallback = image.nextElementSibling; if (fallback instanceof HTMLElement) fallback.hidden = false;
+}));
 let coverRevision = 0;
 function previewCover() {
   const revision = ++coverRevision;
   coverPreview.replaceChildren();
   const source = coverInput.value.trim();
-  library.value = source;
+  libraryButtons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.coverSrc === source)));
   if (!source) { coverStatus.textContent = '尚未填写封面，将显示分类占位图。'; return; }
   if (!isCoverUrl(source)) { coverStatus.textContent = '请使用站内封面路径或有效的 HTTP(S) 图片地址。'; return; }
   coverStatus.textContent = '正在加载封面…';
@@ -36,11 +69,11 @@ function previewCover() {
 }
 let coverTimer: ReturnType<typeof setTimeout>;
 coverInput.addEventListener('input', () => { clearTimeout(coverTimer); coverTimer = setTimeout(previewCover, 300); });
-library.addEventListener('change', () => {
-  if (!library.value) return;
-  clearTimeout(coverTimer); coverInput.value = library.value;
+libraryButtons.forEach(button => button.addEventListener('click', () => {
+  clearTimeout(coverTimer); coverInput.value = button.dataset.coverSrc!;
   coverInput.dispatchEvent(new Event('input', { bubbles: true }));
-});
+  clearTimeout(coverTimer); previewCover(); library.close();
+}));
 const body = requiredElement('#f-body', HTMLTextAreaElement);
 const bodyPreview = requiredElement('#body-preview', HTMLElement);
 const previewToggle = requiredElement('#body-preview-toggle', HTMLButtonElement);
@@ -69,7 +102,7 @@ title.addEventListener('input', () => {
   if (id && !id.readOnly && !idManual) id.value = title.value.toLowerCase().replace(/[^a-z0-9\s-]/g, '').trim().replace(/\s+/g, '-').slice(0, 100);
 });
 let dirty = false;
-form.addEventListener('input', () => { dirty = true; });
+form.addEventListener('input', event => { if (event.target instanceof HTMLElement && !library.contains(event.target)) dirty = true; });
 window.addEventListener('beforeunload', event => { if (dirty) event.preventDefault(); });
 form.addEventListener('submit', async event => {
   event.preventDefault();
